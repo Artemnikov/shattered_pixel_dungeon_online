@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { TILE_SIZE, MOVE_DURATION, CAMERA_LERP, easeOutQuad } from '../constants';
+import { TILE_SIZE, MOVE_DURATION, CAMERA_LERP } from '../constants';
 import { DEST_TILE_SIZE } from './sewers/constants';
 import { buildWaterClipPath, drawWaterBackground, getWaterTextureForDepth } from './sewers/draw';
 import { drawGrid, drawGridCaps } from './draw/grid';
@@ -56,10 +56,11 @@ export default function useGameRenderer({
       ];
       allEntities.forEach(entity => {
         if (entity.targetPos && entity.animStartTime != null && entity.animStartPos) {
+          // Linear (constant-velocity) interpolation so multi-tile travel glides without the
+          // per-tile deceleration micro-stop that easeOut produced at each boundary.
           const t = Math.min((now - entity.animStartTime) / MOVE_DURATION, 1.0);
-          const eased = easeOutQuad(t);
-          entity.renderPos.x = entity.animStartPos.x + (entity.targetPos.x - entity.animStartPos.x) * eased;
-          entity.renderPos.y = entity.animStartPos.y + (entity.targetPos.y - entity.animStartPos.y) * eased;
+          entity.renderPos.x = entity.animStartPos.x + (entity.targetPos.x - entity.animStartPos.x) * t;
+          entity.renderPos.y = entity.animStartPos.y + (entity.targetPos.y - entity.animStartPos.y) * t;
         }
       });
     };

@@ -1040,15 +1040,15 @@ class GameInstance:
             if player.path_queue:
                 now = time.time()
                 if now - player.last_auto_move_time >= AUTO_MOVE_INTERVAL:
+                    dx, dy = player.path_queue.pop(0)
                     floor = self._get_or_create_floor(player.floor_id)
-                    adjacent_enemy = any(
-                        abs(m.pos.x - player.pos.x) <= 1 and abs(m.pos.y - player.pos.y) <= 1
-                        for m in floor.mobs.values() if m.is_alive
-                    )
-                    if adjacent_enemy:
+                    nx, ny = player.pos.x + dx, player.pos.y + dy
+                    # Stop (don't auto-attack/desync) if a live mob physically blocks the
+                    # next tile. Travel that leads away from enemies never hits this, so the
+                    # player can always walk away even with an enemy right next to them.
+                    if any(m.is_alive and m.pos.x == nx and m.pos.y == ny for m in floor.mobs.values()):
                         player.path_queue = []
                     else:
-                        dx, dy = player.path_queue.pop(0)
                         player.last_auto_move_time = now
                         self.move_entity(player.id, dx, dy)
 

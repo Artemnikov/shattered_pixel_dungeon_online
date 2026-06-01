@@ -140,21 +140,28 @@ export default function useGameSocket({
           };
         } else {
           const existing = entitiesRef.current.players[p.id];
-          const currentTarget = existing.targetPos || existing.renderPos;
-          const dx = p.pos.x - currentTarget.x;
-          const dy = p.pos.y - currentTarget.y;
+          // Only restart the movement animation when the server position actually changed.
+          // STATE_UPDATE arrives at 20Hz but a travel step lands every ~150ms; resetting the
+          // interpolation every tick would rubber-band the sprite before it reaches the tile.
+          const moved = !existing.targetPos
+            || existing.targetPos.x !== p.pos.x || existing.targetPos.y !== p.pos.y;
+          if (moved) {
+            const currentTarget = existing.targetPos || existing.renderPos;
+            const dx = p.pos.x - currentTarget.x;
+            const dy = p.pos.y - currentTarget.y;
 
-          if (Math.abs(dx) > Math.abs(dy)) {
-            if (dx > 0) { existing.facing = 'RIGHT'; existing.flipX = false; }
-            else if (dx < 0) { existing.facing = 'LEFT'; existing.flipX = true; }
-          } else {
-            if (dy > 0) existing.facing = 'DOWN';
-            else if (dy < 0) existing.facing = 'UP';
+            if (Math.abs(dx) > Math.abs(dy)) {
+              if (dx > 0) { existing.facing = 'RIGHT'; existing.flipX = false; }
+              else if (dx < 0) { existing.facing = 'LEFT'; existing.flipX = true; }
+            } else {
+              if (dy > 0) existing.facing = 'DOWN';
+              else if (dy < 0) existing.facing = 'UP';
+            }
+
+            existing.animStartPos = { x: existing.renderPos.x, y: existing.renderPos.y };
+            existing.animStartTime = performance.now();
+            existing.targetPos = p.pos;
           }
-
-          existing.animStartPos = { x: existing.renderPos.x, y: existing.renderPos.y };
-          existing.animStartTime = performance.now();
-          existing.targetPos = p.pos;
           existing.name = p.name;
           existing.hp = p.hp;
           existing.max_hp = p.max_hp;
@@ -207,13 +214,19 @@ export default function useGameSocket({
           };
         } else {
           const existing = entitiesRef.current.mobs[m.id];
-          const currentTarget = existing.targetPos || existing.renderPos;
-          if (m.pos.x > currentTarget.x) existing.facing = 'RIGHT';
-          else if (m.pos.x < currentTarget.x) existing.facing = 'LEFT';
+          // Only restart the movement animation when the server position actually changed
+          // (see player guard above) so the mob glides instead of rubber-banding.
+          const moved = !existing.targetPos
+            || existing.targetPos.x !== m.pos.x || existing.targetPos.y !== m.pos.y;
+          if (moved) {
+            const currentTarget = existing.targetPos || existing.renderPos;
+            if (m.pos.x > currentTarget.x) existing.facing = 'RIGHT';
+            else if (m.pos.x < currentTarget.x) existing.facing = 'LEFT';
 
-          existing.animStartPos = { x: existing.renderPos.x, y: existing.renderPos.y };
-          existing.animStartTime = performance.now();
-          existing.targetPos = m.pos;
+            existing.animStartPos = { x: existing.renderPos.x, y: existing.renderPos.y };
+            existing.animStartTime = performance.now();
+            existing.targetPos = m.pos;
+          }
           existing.hp = m.hp;
         }
       });
