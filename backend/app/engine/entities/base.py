@@ -162,7 +162,14 @@ class Player(Entity):
     websocket_id: Optional[str] = None
     is_downed: bool = False
     death_processed: bool = False
-    regen_ticks: int = 0
+    # Over-time healing, mirroring SPD's Healing buff. Each application heals
+    # `heal_pct_per_tick` of the remaining `heal_left` (plus a flat amount), with a
+    # minimum of 1, until exhausted. `heal_cooldown` throttles applications so heals
+    # land at a readable cadence rather than every 20Hz tick.
+    heal_left: float = 0.0
+    heal_pct_per_tick: float = 0.0
+    heal_flat_per_tick: float = 0.0
+    heal_cooldown: int = 0
     path_queue: List[Tuple[int, int]] = []
     last_auto_move_time: float = 0.0
     is_admin: bool = False
@@ -192,6 +199,14 @@ class Player(Entity):
     def get_total_defense(self) -> int:
         # Wearables can provide defense in the future, for now they boost health
         return self.defense
+
+    def set_heal(self, amount: float, percent_per_tick: float, flat_per_tick: float):
+        # Multiple healing sources don't stack; they combine the best of each
+        # property (mirrors Healing.setHeal in the original game).
+        self.heal_left = max(self.heal_left, amount)
+        self.heal_pct_per_tick = max(self.heal_pct_per_tick, percent_per_tick)
+        self.heal_flat_per_tick = max(self.heal_flat_per_tick, flat_per_tick)
+        self.heal_cooldown = 0  # first tick applies immediately
 
     def get_total_max_hp(self) -> int:
         bonus = 0

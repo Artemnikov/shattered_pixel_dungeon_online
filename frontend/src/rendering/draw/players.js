@@ -1,4 +1,4 @@
-import { TILE_SIZE, TILE_SCALE, PLAYER_ATTACK_DURATION } from '../../constants';
+import { TILE_SIZE, TILE_SCALE, PLAYER_ATTACK_DURATION, PLAYER_OPERATE_DURATION } from '../../constants';
 import { drawWhiteSilhouette } from './flash';
 
 export function drawPlayers(ctx, { entitiesRef, visionRef, assetImages, playerAnimRef, myPlayerId }) {
@@ -21,13 +21,15 @@ export function drawPlayers(ctx, { entitiesRef, visionRef, assetImages, playerAn
       const IDLE_FRAMES   = [0, 0, 0, 1, 0, 0, 1, 1];
       const ATTACK_FRAMES = [13, 14, 15, 0]; // ~15fps swing (frames 13,14,15,idle)
       const DIE_FRAMES    = [8, 9, 10, 11, 12, 11]; // SPD HeroSprite die animation
+      const OPERATE_FRAMES = [16, 17, 16, 17]; // SPD HeroSprite operate (drink) @8fps
 
       const now = performance.now();
       const anim = (playerAnimRef && playerAnimRef.current[player.id]) || {};
       const isAttacking = !player.is_downed && anim.attackUntil && now < anim.attackUntil;
+      const isOperating = !player.is_downed && !isAttacking && anim.operateUntil && now < anim.operateUntil;
       const isFlashing = anim.flashUntil && now < anim.flashUntil;
 
-      const isMoving = !player.is_downed && !isAttacking && player.targetPos && (
+      const isMoving = !player.is_downed && !isAttacking && !isOperating && player.targetPos && (
         Math.abs(player.targetPos.x - player.renderPos.x) > 0.05 ||
         Math.abs(player.targetPos.y - player.renderPos.y) > 0.05
       );
@@ -42,6 +44,10 @@ export function drawPlayers(ctx, { entitiesRef, visionRef, assetImages, playerAn
         const elapsed = now - (anim.attackUntil - PLAYER_ATTACK_DURATION);
         const fi = Math.min(Math.floor(elapsed / (PLAYER_ATTACK_DURATION / ATTACK_FRAMES.length)), ATTACK_FRAMES.length - 1);
         frameIndex = ATTACK_FRAMES[fi];
+      } else if (isOperating) {
+        const elapsed = now - (anim.operateUntil - PLAYER_OPERATE_DURATION);
+        const fi = Math.min(Math.floor(elapsed / (PLAYER_OPERATE_DURATION / OPERATE_FRAMES.length)), OPERATE_FRAMES.length - 1);
+        frameIndex = OPERATE_FRAMES[fi];
       } else if (isMoving) {
         frameIndex = RUN_FRAMES[Math.floor(now / 50) % RUN_FRAMES.length];
       } else {
@@ -72,7 +78,7 @@ export function drawPlayers(ctx, { entitiesRef, visionRef, assetImages, playerAn
       const playerHpPercent = player.hp / (player.max_hp + healthBoost);
       ctx.fillStyle = '#111';
       ctx.fillRect(x + 2, y - 12, hpBarWidth, 4);
-      ctx.fillStyle = player.regen_ticks > 0 ? '#f1c40f' : '#2ecc71';
+      ctx.fillStyle = player.heal_left > 0 ? '#f1c40f' : '#2ecc71';
       ctx.fillRect(x + 2, y - 12, hpBarWidth * playerHpPercent, 4);
     }
 

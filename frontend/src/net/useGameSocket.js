@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
-import { TILE_SIZE, PLAYER_ATTACK_DURATION, HIT_CONNECT_DELAY, FLASH_DURATION } from '../constants';
+import { TILE_SIZE, PLAYER_ATTACK_DURATION, PLAYER_OPERATE_DURATION, HIT_CONNECT_DELAY, FLASH_DURATION } from '../constants';
 import { getWsBaseUrl } from '../config/urls';
 import AudioManager from '../audio/AudioManager';
-import { spawnBlood } from '../rendering/draw/particles';
+import { spawnBlood, spawnHeal } from '../rendering/draw/particles';
+import { spawnFloatingText } from '../rendering/draw/floatingText';
 
 // Blood color per mob (default red; Goo bleeds green like its acidic body).
 const BLOOD_COLORS = { Goo: '#8eb300' };
@@ -24,6 +25,7 @@ export default function useGameSocket({
   dyingMobsRef,
   playerAnimRef,
   particlesRef,
+  floatingTextRef,
   wasDownedRef,
   setGrid,
   setDepth,
@@ -108,7 +110,7 @@ export default function useGameSocket({
             maxHp: p.max_hp + healthBoost,
             name: p.name,
             isDowned: p.is_downed,
-            isRegen: (p.regen_ticks || 0) > 0,
+            isRegen: (p.heal_left || 0) > 0,
           });
         }
 
@@ -149,7 +151,7 @@ export default function useGameSocket({
             AudioManager.play('DEATH');
           }
           existing.is_downed = p.is_downed;
-          existing.regen_ticks = p.regen_ticks;
+          existing.heal_left = p.heal_left;
           existing.class_type = p.class_type;
         }
       });
@@ -231,6 +233,7 @@ export default function useGameSocket({
           handleEvent(event, {
             myPlayerIdRef, gridRef, setGrid, entitiesRef,
             projectilesRef, mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef,
+            floatingTextRef,
           });
         });
       }
@@ -248,9 +251,36 @@ export default function useGameSocket({
 function handleEvent(event, {
   myPlayerIdRef, gridRef, setGrid, entitiesRef,
   projectilesRef, mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef,
+  floatingTextRef,
 }) {
   if (event.type === 'PLAY_SOUND') {
     AudioManager.play(event.data.sound);
+    return;
+  }
+
+  if (event.type === 'DRINK') {
+    AudioManager.play('DRINK');
+    // Play the "operate" gesture (raise item) on the drinker, mirroring
+    // Potion.drink() -> hero.sprite.operate() in the original game.
+    const pid = event.data.player;
+    if (playerAnimRef && entitiesRef.current.players[pid]) {
+      if (!playerAnimRef.current[pid]) playerAnimRef.current[pid] = {};
+      playerAnimRef.current[pid].operateUntil = performance.now() + PLAYER_OPERATE_DURATION;
+    }
+    return;
+  }
+
+  if (event.type === 'HEAL') {
+    // Green "+N" rising number plus upward sparkles, mirroring the original's
+    // FloatingText.HEALING and Speck.HEALING when the Healing buff ticks.
+    const cx = event.data.x * TILE_SIZE + TILE_SIZE / 2;
+    const cy = event.data.y * TILE_SIZE; // above the sprite's feet
+    if (floatingTextRef) {
+      spawnFloatingText(floatingTextRef, cx, cy, `+${event.data.amount}`, '#2ecc71');
+    }
+    if (particlesRef) {
+      spawnHeal(particlesRef, cx, cy + TILE_SIZE / 2, 4);
+    }
     return;
   }
 

@@ -13,6 +13,7 @@ import secretSound from '../assets/sounds/secret.mp3';
 import waterStepSound from '../assets/sounds/water.mp3';
 import grassStepSound from '../assets/sounds/grass.mp3';
 import descendSound from '../assets/pixel-dungeon/audio/descend.mp3';
+import drinkSound from '../assets/sounds/drink.mp3';
 
 class AudioManager {
     constructor() {
@@ -36,6 +37,7 @@ class AudioManager {
         this.loadSound('DEATH', deathSound);
         this.loadSound('SECRET', secretSound);
         this.loadSound('STAIRS_DOWN', descendSound);
+        this.loadSound('DRINK', drinkSound);
 
         const doorSounds = import.meta.glob('../assets/sounds/door_open.mp3', { eager: true, query: '?url' });
         const doorUrl = doorSounds['../assets/sounds/door_open.mp3']?.default;

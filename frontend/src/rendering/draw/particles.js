@@ -30,6 +30,26 @@ export function spawnBlood(particlesRef, cx, cy, awayAngle, count, color = '#bb0
       maxLife: life,
       size: 1 + Math.floor(Math.random() * 2), // 1-2 px squares
       color,
+      gravity: true,
+    });
+  }
+}
+
+// Healing sparkles, mirroring Speck.HEALING: green specks drifting straight up
+// (~20 px/s) over ~1s, no gravity. Spawned spread across the sprite's width.
+export function spawnHeal(particlesRef, cx, cy, count, color = '#2ecc71') {
+  for (let i = 0; i < count; i++) {
+    const life = 0.8 + Math.random() * 0.4;
+    particlesRef.current.push({
+      x: cx + (Math.random() - 0.5) * 14,
+      y: cy + (Math.random() - 0.5) * 6,
+      vx: (Math.random() - 0.5) * 6,
+      vy: -20,
+      life,
+      maxLife: life,
+      size: 1 + Math.floor(Math.random() * 2),
+      color,
+      gravity: false,
     });
   }
 }
@@ -48,7 +68,7 @@ export function advanceAndDrawParticles(ctx, { particlesRef }) {
       particles.splice(i, 1);
       continue;
     }
-    p.vy += GRAVITY * dt;
+    if (p.gravity !== false) p.vy += GRAVITY * dt;
     p.x += p.vx * dt;
     p.y += p.vy * dt;
 

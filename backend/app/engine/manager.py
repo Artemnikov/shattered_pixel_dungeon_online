@@ -40,6 +40,10 @@ SEWERS_MAX_FLOOR = 4
 
 AUTO_MOVE_INTERVAL = 0.15
 
+# The tick loop runs at 20Hz; heal once per ~second so floating numbers stay
+# readable and the cadence matches the original game's per-turn healing.
+HEAL_TICK_INTERVAL = 20
+
 @dataclass
 class FloorState:
     floor_id: int
@@ -960,10 +964,7 @@ class GameInstance:
                         player.last_auto_move_time = now
                         self.move_entity(player.id, dx, dy)
 
-            if player.regen_ticks > 0:
-                player.regen_ticks -= 1
-                regen_amount = (player.get_total_max_hp() * 0.5) / 50
-                player.hp = min(player.get_total_max_hp(), player.hp + regen_amount)
+            self._apply_heal_tick(player)
 
         for floor_id, floor in self.floors.items():
             active_players = [p for p in self._players_on_floor(floor_id) if p.is_alive and not p.is_downed]
@@ -1008,6 +1009,37 @@ class GameInstance:
                     elif random.random() < 0.05:
                         dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0)])
                         self.move_entity(mob.id, dx, dy)
+
+    def _apply_heal_tick(self, player: Player):
+        # Mirrors Healing.act() from the original game: heal a decaying chunk of the
+        # remaining pool each application, emitting a HEAL event for the floating
+        # number + sparkle particles on the client.
+        if player.heal_left <= 0:
+            return
+
+        player.heal_cooldown -= 1
+        if player.heal_cooldown > 0:
+            return
+
+        amt = round(player.heal_left * player.heal_pct_per_tick) + player.heal_flat_per_tick
+        amt = max(1, min(amt, player.heal_left))
+
+        if player.hp < player.get_total_max_hp():
+            player.hp = min(player.get_total_max_hp(), player.hp + amt)
+
+        player.heal_left -= amt
+        player.heal_cooldown = HEAL_TICK_INTERVAL
+
+        self.add_event(
+            "HEAL",
+            {"target": player.id, "amount": int(amt), "x": player.pos.x, "y": player.pos.y},
+            floor_id=player.floor_id,
+        )
+
+        if player.heal_left <= 0:
+            player.heal_left = 0.0
+            player.heal_pct_per_tick = 0.0
+            player.heal_flat_per_tick = 0.0
 
     def _find_nearest_player(self, pos: Position, floor_id: int) -> Optional[Player]:
         candidates = [p for p in self._players_on_floor(floor_id) if p.is_alive and not p.is_downed]

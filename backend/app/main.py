@@ -171,7 +171,12 @@ async def game_websocket(websocket: WebSocket, game_id: str, class_type: str = "
                         if item.type == "potion":
                             # Use potion
                             if getattr(item, "effect", "") == "regen":
-                                player.regen_ticks = 50 # 50 ticks of regeneration
+                                # Mirrors PotionOfHealing.heal(): heal 0.8*maxHP+14 over
+                                # time, 25% of the remaining pool per heal-tick. (SPD also
+                                # cures debuffs here; the remake has no buff system yet,
+                                # so there is nothing to cure.)
+                                amount = round(0.8 * player.get_total_max_hp() + 14)
+                                player.set_heal(amount, 0.25, 0)
                                 player.inventory.pop(item_idx)
                                 game.add_event("DRINK", {"player": player_id, "type": "regen"}, floor_id=player.floor_id)
             
