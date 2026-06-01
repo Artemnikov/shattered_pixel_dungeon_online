@@ -37,6 +37,7 @@ export const getItemSpriteCoords = (itemName, itemType) => {
       return ITEM_SPRITES[key];
     }
   }
+  if (itemType === 'grave') return [3, 2]; // GRAVE cell in items.png (SPD ItemSpriteSheet)
   if (itemType === 'potion') return [12, 14];
   if (itemType === 'weapon') return [14, 14];
   if (itemType === 'wearable') return [14, 12];

@@ -100,9 +100,8 @@ export default function useGameSocket({
             wearable: p.equipped_wearable,
           });
           const healthBoost = p.equipped_wearable ? p.equipped_wearable.health_boost : 0;
-          if (p.is_downed && !wasDownedRef.current) {
-            AudioManager.play('DEATH');
-          }
+          // Death sound is played for all players (incl. local) by the entity-sync
+          // transition below, so it is not duplicated here.
           wasDownedRef.current = p.is_downed;
           setMyStats({
             hp: p.hp,
@@ -121,6 +120,7 @@ export default function useGameSocket({
             animStartTime: null,
             facing: 'RIGHT',
             flipX: false,
+            deathStart: p.is_downed ? performance.now() : null,
           };
         } else {
           const existing = entitiesRef.current.players[p.id];
@@ -143,6 +143,11 @@ export default function useGameSocket({
           existing.hp = p.hp;
           existing.max_hp = p.max_hp;
           existing.equipped_wearable = p.equipped_wearable;
+          // Start the death animation (and death sound) the instant a player dies.
+          if (p.is_downed && !existing.is_downed) {
+            existing.deathStart = performance.now();
+            AudioManager.play('DEATH');
+          }
           existing.is_downed = p.is_downed;
           existing.regen_ticks = p.regen_ticks;
           existing.class_type = p.class_type;

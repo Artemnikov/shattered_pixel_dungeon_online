@@ -19,6 +19,7 @@ import Toolbar from './ui/Toolbar';
 import InventoryModal from './ui/InventoryModal';
 import MessageLog from './ui/MessageLog';
 import LoadingOverlay from './ui/LoadingOverlay';
+import GameOverScreen from './ui/GameOverScreen';
 
 function App() {
   // --- screen flow / session state ---
@@ -229,6 +230,22 @@ function App() {
     isRefocusingRef, isDraggingRef,
   });
 
+  // Reset transient game state on death so a fresh run starts clean (no stale
+  // corpse, dim overlay, or game-over flag carried over from the previous run).
+  const resetForRestart = () => {
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      socketRef.current.close();
+    }
+    entitiesRef.current = { players: {}, mobs: {} };
+    visionRef.current = { visible: new Set(), discovered: new Set() };
+    myPlayerIdRef.current = null;
+    wasDownedRef.current = false;
+    setMyPlayerId(null);
+    setGrid([]);
+    setMyStats({ hp: 0, maxHp: 10, name: '' });
+    setInventory([]);
+  };
+
   // --- screen flow ---
   if (gameState === 'WELCOME') {
     return <WelcomeScreen onStart={() => setGameState('SELECT')} />;
@@ -281,6 +298,13 @@ function App() {
         />
         <MessageLog messages={messages} />
       </div>
+
+      {!!myStats.isDowned && (
+        <GameOverScreen
+          onNewGame={() => { resetForRestart(); setGameState('SELECT'); }}
+          onMenu={() => { resetForRestart(); setGameState('WELCOME'); }}
+        />
+      )}
     </div>
   );
 }
