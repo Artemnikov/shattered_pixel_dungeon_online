@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+debug_map.txt
+repro_los.py
+Dockerfile
+.dockerignore
+.git/

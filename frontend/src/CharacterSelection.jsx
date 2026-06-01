@@ -1,218 +1,172 @@
-import { useState, useRef, useEffect } from 'react';
+// "Choose Your Hero" screen — a faithful re-implementation of Shattered Pixel
+// Dungeon's HeroSelectScene: the selected class's splash-art banner fills the
+// background with left/right vignette fades, a row of small pixel class busts
+// (cropped at frame 0,90,12,15 of each hero sprite sheet) lets you pick, and the
+// hero's name + original short description show in the left UI column. The
+// remake-specific difficulty + name controls are kept in the same column.
+import { useEffect, useRef, useState } from 'react';
+import './heroSelect.css';
 import AudioManager from './audio/AudioManager';
-import warriorArt from './assets/pixel-dungeon/art/warrior.png';
+import Icon from './menu/Icon';
+import { effectiveMusicVolume, subscribe } from './menu/menuSettings';
+
 import themeMusic from './assets/pixel-dungeon/themes/theme_1.ogg';
 import descendSound from './assets/pixel-dungeon/audio/descend.mp3';
-import mageArt from './assets/pixel-dungeon/art/mage.png';
-import rogueArt from './assets/pixel-dungeon/art/rogue.png';
-import huntressArt from './assets/pixel-dungeon/art/huntress.png';
+
+import warriorSplash from './assets/pixel-dungeon/splashes/warrior.jpg';
+import mageSplash from './assets/pixel-dungeon/splashes/mage.jpg';
+import rogueSplash from './assets/pixel-dungeon/splashes/rogue.jpg';
+import huntressSplash from './assets/pixel-dungeon/splashes/huntress.jpg';
+
+import warriorSheet from './assets/pixel-dungeon/sprites/warrior.png';
+import mageSheet from './assets/pixel-dungeon/sprites/mage.png';
+import rogueSheet from './assets/pixel-dungeon/sprites/rogue.png';
+import huntressSheet from './assets/pixel-dungeon/sprites/huntress.png';
+
+// class bust frame within the 256x128 hero sprite sheet (from HeroSelectScene.HeroBtn)
+const HERO_FRAME = { x: 0, y: 90, w: 12, h: 15 };
+const SHEET_W = 256, SHEET_H = 128;
+
+const HEROES = [
+  {
+    id: 'warrior', name: 'Warrior', sheet: warriorSheet, splash: warriorSplash,
+    desc: 'The Warrior endures extra damage with shielding granted by his broken seal. The seal can be moved between armors and transfers a single upgrade.',
+  },
+  {
+    id: 'mage', name: 'Mage', sheet: mageSheet, splash: mageSplash,
+    desc: "The Mage is an arcane expert and carries a magical staff that's stronger than a wand. The staff can be imbued with any wand the Mage finds.",
+  },
+  {
+    id: 'rogue', name: 'Rogue', sheet: rogueSheet, splash: rogueSplash,
+    desc: 'The Rogue can evade enemies and strike from invisibility using his cloak of shadows. He also detects secrets and traps from a greater distance.',
+  },
+  {
+    id: 'huntress', name: 'Huntress', sheet: huntressSheet, splash: huntressSplash,
+    desc: 'The Huntress is a master of thrown weapons and has a magical bow with infinite arrows. She also travels through tall grass without trampling it.',
+  },
+];
+
+function HeroBust({ sheet, scale = 3, selected }) {
+  const f = HERO_FRAME;
+  return (
+    <span
+      className="hero-bust"
+      style={{
+        width: f.w * scale,
+        height: f.h * scale,
+        backgroundImage: `url(${sheet})`,
+        backgroundRepeat: 'no-repeat',
+        backgroundSize: `${SHEET_W * scale}px ${SHEET_H * scale}px`,
+        backgroundPosition: `-${f.x * scale}px -${f.y * scale}px`,
+        imageRendering: 'pixelated',
+        filter: selected ? 'none' : 'brightness(0.6)',
+      }}
+    />
+  );
+}
 
 const CharacterSelection = ({ onSelect }) => {
   const [selectedClass, setSelectedClass] = useState('warrior');
   const [difficulty, setDifficulty] = useState('normal');
   const [playerName, setPlayerName] = useState('');
+  const [landscape, setLandscape] = useState(
+    typeof window !== 'undefined' ? window.innerWidth > window.innerHeight : true
+  );
   const audioRef = useRef(null);
-  const tryPlayRef = useRef(null);
 
+  const hero = HEROES.find(h => h.id === selectedClass) || HEROES[0];
+
+  useEffect(() => {
+    const onResize = () => setLandscape(window.innerWidth > window.innerHeight);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // theme music (loops; volume from settings) — carried over from the previous screen
   useEffect(() => {
     const audio = new Audio(themeMusic);
     audio.loop = true;
+    audio.volume = effectiveMusicVolume();
     audioRef.current = audio;
-    let cancelled = false;
 
-    const stopAudio = () => {
+    const tryPlay = () => { audio.play().catch(() => {}); };
+    tryPlay();
+    document.addEventListener('pointerdown', tryPlay, { once: true });
+    const unsub = subscribe(() => { audio.volume = effectiveMusicVolume(); });
+
+    return () => {
+      unsub();
+      document.removeEventListener('pointerdown', tryPlay);
       audio.pause();
       audio.currentTime = 0;
     };
-
-    const tryPlay = () => {
-      const p = audio.play();
-      if (p !== undefined) p.then(() => { if (cancelled) stopAudio(); }).catch(() => {});
-    };
-    tryPlayRef.current = tryPlay;
-
-    const played = audio.play();
-    if (played !== undefined) {
-      played.then(() => {
-        if (cancelled) stopAudio();
-      }).catch(() => {
-        document.addEventListener('click', tryPlay, { once: true });
-        document.addEventListener('mousemove', tryPlay, { once: true });
-      });
-    }
-
-    return () => {
-      cancelled = true;
-      if (played !== undefined) {
-        played.then(stopAudio).catch(() => {});
-      } else {
-        stopAudio();
-      }
-      document.removeEventListener('click', tryPlay);
-      document.removeEventListener('mousemove', tryPlay);
-    };
   }, []);
 
-  const classes = [
-    { id: 'warrior', name: 'Warrior', art: warriorArt, desc: 'Starts with a Shortsword and Cloth Armor.' },
-    { id: 'mage', name: 'Mage', art: mageArt, desc: 'Starts with a Magic Staff (4 charges).' },
-    { id: 'rogue', name: 'Rogue', art: rogueArt, desc: 'Starts with a Dagger and Cloak.' },
-    { id: 'huntress', name: 'Archer', art: huntressArt, desc: 'Starts with a Spirit Bow.' },
-  ];
+  const pick = (id) => { AudioManager.play('CLICK'); setSelectedClass(id); };
+
+  const start = () => {
+    AudioManager.play('CLICK');
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
+    new Audio(descendSound).play().catch(() => {});
+    onSelect(selectedClass, difficulty, playerName.trim());
+  };
 
   return (
-    <div className="character-selection-screen">
-      <h1>Select Your Hero</h1>
+    <div className={`hero-select ${landscape ? 'landscape' : 'portrait'}`}>
+      {/* splash-art banner background; keyed so the brighten-in animation replays on change */}
+      <img key={hero.id} className="hero-splash" src={hero.splash} alt="" />
+      <div className="hero-vignette-left" />
+      <div className="hero-vignette-right" />
 
-      <div className="difficulty-container">
-        <label>Difficulty: </label>
-        <div className="difficulty-options">
-          {['easy', 'normal', 'hard'].map(d => (
+      <div className="hero-ui">
+        <h1 className="hero-title">Choose Your Hero</h1>
+
+        <div className="hero-busts">
+          {HEROES.map(h => (
             <button
-              key={d}
-              className={`diff-btn ${difficulty === d ? 'active' : ''}`}
-              onClick={() => { AudioManager.play('CLICK'); setDifficulty(d); }}
+              key={h.id}
+              className={`hero-bust-btn ${selectedClass === h.id ? 'selected' : ''}`}
+              onClick={() => pick(h.id)}
+              aria-label={h.name}
             >
-              {d.toUpperCase()}
+              <HeroBust sheet={h.sheet} selected={selectedClass === h.id} />
             </button>
           ))}
         </div>
-      </div>
 
-      <div className="classes-container">
-        {classes.map((c) => (
-          <div
-            key={c.id}
-            className={`class-card ${selectedClass === c.id ? 'selected' : ''}`}
-            onClick={() => { AudioManager.play('CLICK'); setSelectedClass(c.id); }}
-          >
-            <div className="art-preview">
-              <img src={c.art} alt={c.name} style={{ width: '100%', height: 'auto', borderRadius: '4px' }} />
+        <h2 className="hero-name">{hero.name}</h2>
+        <p className="hero-desc">{hero.desc}</p>
+
+        <div className="hero-options">
+          <div className="hero-difficulty">
+            <span className="hero-opt-label">Difficulty</span>
+            <div className="hero-diff-btns">
+              {['easy', 'normal', 'hard'].map(d => (
+                <button
+                  key={d}
+                  className={`hero-diff-btn ${difficulty === d ? 'active' : ''}`}
+                  onClick={() => { AudioManager.play('CLICK'); setDifficulty(d); }}
+                >
+                  {d.toUpperCase()}
+                </button>
+              ))}
             </div>
-            <h3>{c.name}</h3>
-            <p>{c.desc}</p>
           </div>
-        ))}
-      </div>
-      <div className="name-container">
-        <input
-          className="name-input"
-          type="text"
-          placeholder="Enter your name (optional)"
-          maxLength={20}
-          value={playerName}
-          onChange={e => setPlayerName(e.target.value)}
-        />
-      </div>
+          <input
+            className="hero-name-input"
+            type="text"
+            placeholder="Name (optional)"
+            maxLength={20}
+            value={playerName}
+            onChange={e => setPlayerName(e.target.value)}
+          />
+        </div>
 
-      <button className="start-btn" onClick={() => {
-          AudioManager.play('CLICK');
-          if (tryPlayRef.current) {
-            document.removeEventListener('click', tryPlayRef.current);
-            document.removeEventListener('mousemove', tryPlayRef.current);
-          }
-          if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
-          }
-          new Audio(descendSound).play().catch(() => {});
-          onSelect(selectedClass, difficulty, playerName.trim());
-        }}>
-        Enter Dungeon
-      </button>
-
-      <style jsx>{`
-        .character-selection-screen {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          height: 100vh;
-          background-color: #111;
-          color: white;
-          font-family: monospace;
-        }
-        .difficulty-container {
-          display: flex;
-          align-items: center;
-          gap: 15px;
-          margin-bottom: 20px;
-          background: #222;
-          padding: 10px 20px;
-          border-radius: 8px;
-          border: 1px solid #444;
-        }
-        .difficulty-options {
-          display: flex;
-          gap: 10px;
-        }
-        .diff-btn {
-          background: #333;
-          border: 1px solid #555;
-          color: #888;
-          padding: 5px 15px;
-          cursor: pointer;
-          border-radius: 4px;
-          font-family: monospace;
-        }
-        .diff-btn.active {
-          background: #e67e22;
-          color: white;
-          border-color: #d35400;
-        }
-        .classes-container {
-          display: flex;
-          gap: 20px;
-          margin: 20px 0 40px 0;
-        }
-        .class-card {
-          border: 2px solid #444;
-          padding: 20px;
-          border-radius: 8px;
-          cursor: pointer;
-          width: 200px;
-          text-align: center;
-          transition: all 0.2s;
-        }
-        .class-card:hover {
-          background-color: #222;
-        }
-        .class-card.selected {
-          border-color: #f1c40f;
-          background-color: #222;
-          box-shadow: 0 0 15px rgba(241, 196, 15, 0.3);
-        }
-        .name-container {
-          margin-bottom: 20px;
-        }
-        .name-input {
-          background: #222;
-          border: 1px solid #555;
-          color: white;
-          padding: 8px 16px;
-          border-radius: 4px;
-          font-family: monospace;
-          font-size: 16px;
-          text-align: center;
-          width: 260px;
-          outline: none;
-        }
-        .name-input:focus {
-          border-color: #f1c40f;
-        }
-        .start-btn {
-          font-size: 24px;
-          padding: 15px 40px;
-          background-color: #27ae60;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-        }
-        .start-btn:hover {
-          background-color: #2ecc71;
-        }
-      `}</style>
+        <button className="hero-start-btn" onClick={start}>
+          <Icon name="ENTER" scale={2} />
+          <span>Enter Dungeon</span>
+        </button>
+      </div>
     </div>
   );
 };

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import './App.css';
 
 import CharacterSelection from './CharacterSelection';
-import WelcomeScreen from './WelcomeScreen';
+import MainMenu from './menu/MainMenu';
 
 import { TILE_SIZE } from './constants';
 import useAudioUnlock from './audio/useAudioUnlock';
@@ -249,7 +249,7 @@ function App() {
 
   // --- screen flow ---
   if (gameState === 'WELCOME') {
-    return <WelcomeScreen onStart={() => setGameState('SELECT')} />;
+    return <MainMenu onStart={() => setGameState('SELECT')} />;
   }
 
   if (gameState === 'SELECT') {

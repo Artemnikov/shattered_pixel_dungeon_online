@@ -1,16 +1,18 @@
 FROM python:3.11-slim
 
+RUN addgroup --system app && adduser --system --ingroup app app
+
 WORKDIR /app
 
-# Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
 COPY . .
 
-# Set python path to allow imports from backend.app
 ENV PYTHONPATH=/app
+
+RUN chown -R app:app /app
+USER app
 
 EXPOSE 8080
 

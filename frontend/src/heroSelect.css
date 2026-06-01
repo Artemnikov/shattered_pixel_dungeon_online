@@ -1,0 +1,185 @@
+/* "Choose Your Hero" — faithful HeroSelectScene look (splash banner + vignette) */
+
+.hero-select {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #2d2f31;
+  font-family: monospace;
+  color: #fff;
+}
+
+.hero-splash {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: heroSplashIn 0.6s ease-out;
+}
+@keyframes heroSplashIn {
+  from { filter: brightness(1.7); }
+  to { filter: brightness(1); }
+}
+
+/* vignette fades flanking the splash (matches fadeLeft / fadeRight) */
+.hero-vignette-left,
+.hero-vignette-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+.hero-vignette-left {
+  left: 0;
+  width: 48%;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.7) 45%, rgba(0, 0, 0, 0) 100%);
+}
+.hero-vignette-right {
+  right: 0;
+  width: 12%;
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+/* ---- UI column ---- */
+.hero-ui {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hero-select.landscape .hero-ui {
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: clamp(300px, 36%, 460px);
+  justify-content: center;
+  align-items: center;
+  padding: 4vh 28px;
+  text-align: center;
+}
+
+.hero-select.portrait .hero-vignette-left,
+.hero-select.portrait .hero-vignette-right { display: none; }
+.hero-select.portrait .hero-ui {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  align-items: center;
+  padding: 16px 16px 22px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.55) 35%, rgba(0, 0, 0, 0.88) 100%);
+}
+.hero-select.portrait .hero-desc { display: none; }
+.hero-select.portrait .hero-title { font-size: 18px; }
+
+.hero-title {
+  margin: 0;
+  font-size: 22px;
+  color: #ffe070;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+}
+
+/* ---- class busts ---- */
+.hero-busts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.hero-bust-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  background: linear-gradient(#4a4a52, #313139);
+  border: 2px solid #1c1c22;
+  border-radius: 6px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 2px 0 rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: filter 0.1s, border-color 0.1s, transform 0.05s;
+}
+.hero-bust-btn:hover { filter: brightness(1.2); }
+.hero-bust-btn:active { transform: translateY(1px); }
+.hero-bust-btn.selected {
+  border-color: #ffe070;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 10px rgba(255, 224, 112, 0.5);
+}
+.hero-bust { display: inline-block; }
+
+.hero-name {
+  margin: 2px 0 0;
+  font-size: 20px;
+  color: #ffe070;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+}
+.hero-desc {
+  margin: 0;
+  max-width: 320px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #e6e6e6;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95);
+}
+
+/* ---- remake options (difficulty + name) ---- */
+.hero-options {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.hero-difficulty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hero-opt-label { color: #ccc; font-size: 13px; }
+.hero-diff-btns { display: flex; gap: 6px; }
+.hero-diff-btn {
+  padding: 4px 12px;
+  font-family: monospace;
+  font-size: 12px;
+  color: #bbb;
+  background: #333842;
+  border: 1px solid #1c1c22;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.hero-diff-btn.active { background: #e67e22; color: #fff; border-color: #d35400; }
+.hero-name-input {
+  width: 220px;
+  padding: 7px 12px;
+  font-family: monospace;
+  font-size: 14px;
+  text-align: center;
+  color: #fff;
+  background: rgba(20, 20, 24, 0.8);
+  border: 1px solid #444;
+  border-radius: 4px;
+  outline: none;
+}
+.hero-name-input:focus { border-color: #ffe070; }
+
+/* ---- start ---- */
+.hero-start-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 12px 28px;
+  font-family: monospace;
+  font-size: 18px;
+  color: #fff;
+  background: #27ae60;
+  border: 2px solid #1e8449;
+  border-radius: 6px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: filter 0.1s, transform 0.05s;
+}
+.hero-start-btn:hover { filter: brightness(1.12); }
+.hero-start-btn:active { transform: translateY(1px); }

@@ -1,0 +1,199 @@
+/* Title scene + menu panels for Online Pixel Dungeon */
+
+.opd-mainmenu {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #16151a;
+  font-family: monospace;
+  color: #fff;
+}
+
+.opd-title-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ---- menu overlay (buttons / version / fade) ---- */
+.opd-menu-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 6vh;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+.opd-menu-overlay.hidden { opacity: 0; pointer-events: none; }
+.opd-menu-overlay > * { pointer-events: auto; }
+
+.opd-fade-catcher {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  cursor: pointer;
+}
+
+.opd-menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(92vw, 520px);
+}
+.opd-menu-overlay.portrait .opd-menu-buttons { width: min(80vw, 300px); }
+
+.opd-menu-row {
+  display: flex;
+  gap: 8px;
+}
+.opd-menu-row > * { flex: 1 1 0; }
+
+/* ---- chrome-style button ---- */
+.opd-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 12px;
+  font-family: monospace;
+  font-size: 16px;
+  color: #fff;
+  background: linear-gradient(#4a4a52, #313139);
+  border: 2px solid #1c1c22;
+  border-radius: 6px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 2px 0 rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: filter 0.1s, transform 0.05s;
+}
+.opd-menu-btn:hover { filter: brightness(1.2); }
+.opd-menu-btn:active { transform: translateY(1px); }
+.opd-menu-btn.accent { color: #ffe070; }
+.opd-menu-btn.accent .opd-menu-btn-label { font-weight: bold; }
+
+.opd-icon { flex: 0 0 auto; }
+
+.opd-version {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  font-size: 12px;
+  color: #888;
+}
+
+.opd-fade-btn {
+  margin-top: 10px;
+  width: 34px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.opd-fade-btn:hover { opacity: 1; }
+
+/* ---- panels ---- */
+.opd-panel-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+}
+.opd-panel {
+  width: min(90vw, 460px);
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  background: #26252b;
+  border: 2px solid #0d0d11;
+  border-radius: 8px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+}
+.opd-panel.wide { width: min(92vw, 640px); }
+
+.opd-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #0d0d11;
+}
+.opd-panel-header h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 20px;
+  color: #ffe070;
+}
+.opd-panel-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.7;
+  display: flex;
+}
+.opd-panel-close:hover { opacity: 1; }
+
+.opd-panel-body {
+  padding: 14px 16px;
+  overflow-y: auto;
+  line-height: 1.5;
+}
+
+.opd-section-title {
+  margin: 14px 0 8px;
+  font-size: 15px;
+  color: #f1c40f;
+}
+.opd-section-title:first-child { margin-top: 0; }
+
+/* settings */
+.opd-setting-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+}
+.opd-setting-row label { flex: 1; }
+.opd-setting-row input[type="range"] { flex: 1.4; }
+.opd-setting-val { width: 44px; text-align: right; color: #aaa; }
+.opd-toggle {
+  min-width: 56px;
+  padding: 5px 12px;
+  font-family: monospace;
+  color: #ccc;
+  background: #3a3a42;
+  border: 1px solid #1c1c22;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.opd-toggle.on { background: #27ae60; color: #fff; border-color: #1e8449; }
+
+/* changelog / guide */
+.opd-changelog-entry, .opd-guide-section { margin-bottom: 16px; }
+.opd-changelog-name { color: #ccc; font-size: 13px; }
+.opd-panel-body ul { margin: 0; padding-left: 18px; }
+.opd-panel-body li { margin: 4px 0; }
+.opd-guide-section p { margin: 6px 0; color: #ddd; }
+
+/* about */
+.opd-about { text-align: center; }
+.opd-about-title { font-size: 22px; color: #ffe070; margin: 4px 0; }
+.opd-about-version { color: #888; margin: 0 0 14px; }
+.opd-about p { color: #ddd; margin: 10px 0; }
+.opd-about-links a { color: #5dade2; text-decoration: none; }
+.opd-about-links a:hover { text-decoration: underline; }
+
+/* empty states */
+.opd-empty { text-align: center; padding: 24px 0; color: #ccc; }
+.opd-empty-sub { color: #888; font-size: 13px; margin-top: 6px; }
