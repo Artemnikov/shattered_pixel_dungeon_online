@@ -35,6 +35,10 @@ export default function useGameSocket({
   setMyStats,
   setMessages,
   setDifficulty,
+  setGold,
+  setEnergy,
+  setBelongings,
+  setQuickslot,
 }) {
   useEffect(() => {
     if (!enabled) return;
@@ -85,6 +89,8 @@ export default function useGameSocket({
 
       if (typeof data.depth === 'number') setDepth(data.depth);
       if (data.difficulty) setDifficulty(data.difficulty);
+      if (typeof data.gold === 'number' && setGold) setGold(data.gold);
+      if (typeof data.energy === 'number' && setEnergy) setEnergy(data.energy);
 
       // Sync players
       const currentServerPlayerIds = new Set(data.players.map(p => p.id));
@@ -101,6 +107,8 @@ export default function useGameSocket({
             weapon: p.equipped_weapon,
             wearable: p.equipped_wearable,
           });
+          if (setBelongings) setBelongings(p.belongings || null);
+          if (setQuickslot) setQuickslot(p.quickslot || null);
           const healthBoost = p.equipped_wearable ? p.equipped_wearable.health_boost : 0;
           // Death sound is played for all players (incl. local) by the entity-sync
           // transition below, so it is not duplicated here.

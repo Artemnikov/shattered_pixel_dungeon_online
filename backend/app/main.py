@@ -81,6 +81,10 @@ class ConnectionManager:
                         })
                         self.last_sent_floor[game_id][player_id] = player_floor
                     
+                    player_obj = game.players.get(player_id)
+                    gold = player_obj.gold if player_obj else 0
+                    energy = player_obj.energy if player_obj else 0
+
                     await connection.send_json({
                         "type": "STATE_UPDATE",
                         "depth": player_floor,
@@ -89,6 +93,8 @@ class ConnectionManager:
                         "mobs": state["mobs"],
                         "items": state.get("items", []),
                         "visible_tiles": state.get("visible_tiles", []),
+                        "gold": gold,
+                        "energy": energy,
                         "events": game.filter_events_for_player(events, player_id)
                     })
                 except Exception as e:
@@ -139,56 +145,46 @@ async def game_websocket(websocket: WebSocket, game_id: str, class_type: str = "
                     player.path_queue = list(path)
                     player.last_auto_move_time = 0.0
 
+            elif message["type"] == "EXECUTE_ITEM_ACTION":
+                # Generic SPD-style dispatch: {item_id, action, target_x?, target_y?}.
+                game.execute_item_action(
+                    player_id, message["item_id"], message["action"],
+                    message.get("target_x"), message.get("target_y"),
+                )
+
+            elif message["type"] == "SET_QUICKSLOT":
+                game.set_quickslot(player_id, message["index"], message["item_id"])
+
+            elif message["type"] == "USE_QUICKSLOT":
+                game.use_quickslot(
+                    player_id, message["index"],
+                    message.get("target_x"), message.get("target_y"),
+                )
+
+            # --- legacy handlers (thin wrappers over the generic dispatch) ---
             elif message["type"] == "EQUIP_ITEM":
-                item_id = message["item_id"]
-                if player_id in game.players:
-                    game.players[player_id].equip_item(item_id)
-            
+                game.execute_item_action(player_id, message["item_id"], "EQUIP")
+
             elif message["type"] == "DROP_ITEM":
-                item_id = message["item_id"]
-                if player_id in game.players:
-                    player = game.players[player_id]
-                    item_idx = next((i for i, item in enumerate(player.inventory) if item.id == item_id), -1)
-                    if item_idx != -1:
-                        item = player.inventory.pop(item_idx)
-                        item.pos = Position(x=player.pos.x, y=player.pos.y)
-                        floor = game._get_or_create_floor(player.floor_id)
-                        floor.items[item.id] = item
-                        if player.equipped_wearable and player.equipped_wearable.id == item_id:
-                            player.equipped_wearable = None
-            
+                game.execute_item_action(player_id, message["item_id"], "DROP")
+
+            elif message["type"] == "USE_ITEM":
+                game.use_item(player_id, message["item_id"])
+
             elif message["type"] == "CHANGE_DIFFICULTY":
                 new_difficulty = message["difficulty"]
                 game.change_difficulty(new_difficulty)
 
-            elif message["type"] == "USE_ITEM":
-                item_id = message["item_id"]
-                if player_id in game.players:
-                    player = game.players[player_id]
-                    item_idx = next((i for i, item in enumerate(player.inventory) if item.id == item_id), -1)
-                    if item_idx != -1:
-                        item = player.inventory[item_idx]
-                        if item.type == "potion":
-                            # Use potion
-                            if getattr(item, "effect", "") == "regen":
-                                # Mirrors PotionOfHealing.heal(): heal 0.8*maxHP+14 over
-                                # time, 25% of the remaining pool per heal-tick. (SPD also
-                                # cures debuffs here; the remake has no buff system yet,
-                                # so there is nothing to cure.)
-                                amount = round(0.8 * player.get_total_max_hp() + 14)
-                                player.set_heal(amount, 0.25, 0)
-                                player.inventory.pop(item_idx)
-                                game.add_event("DRINK", {"player": player_id, "type": "regen"}, floor_id=player.floor_id)
-            
             elif message["type"] == "RANGED_ATTACK":
-                item_id = message["item_id"]
-                target_x = message["target_x"]
-                target_y = message["target_y"]
-                game.perform_ranged_attack(player_id, item_id, target_x, target_y)
+                game.perform_ranged_attack(
+                    player_id, message["item_id"], message["target_x"], message["target_y"],
+                )
 
             elif message["type"] == "SEARCH":
                 game.search(player_id)
 
+            elif message["type"] == "WAIT":
+                game.search(player_id)
 
     except WebSocketDisconnect:
         manager.disconnect(game_id, websocket)

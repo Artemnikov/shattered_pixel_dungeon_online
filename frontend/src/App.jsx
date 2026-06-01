@@ -16,7 +16,7 @@ import useDebugApi from './dev/useDebugApi';
 
 import StatusPane from './ui/StatusPane';
 import Toolbar from './ui/Toolbar';
-import InventoryModal from './ui/InventoryModal';
+import WndBag from './ui/WndBag';
 import MessageLog from './ui/MessageLog';
 import LoadingOverlay from './ui/LoadingOverlay';
 import GameOverScreen from './ui/GameOverScreen';
@@ -37,10 +37,20 @@ function App() {
   const [showInventory, setShowInventory] = useState(false);
   const [inventory, setInventory] = useState([]);
   const [equippedItems, setEquippedItems] = useState({ weapon: null, wearable: null });
+  const [belongings, setBelongings] = useState(null);
+  const [quickslot, setQuickslot] = useState(null);
   const [targetingMode, setTargetingMode] = useState(false);
   const [myStats, setMyStats] = useState({ hp: 0, maxHp: 10, name: '' });
   const [depth, setDepth] = useState(1);
   const [, setCamera] = useState({ x: 0, y: 0 });
+  const getInitialInterfaceSize = () => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    return (w > h && Math.min(w / 360, h / 200) >= 2) ? 2 : 0;
+  };
+  const [interfaceSize, setInterfaceSize] = useState(getInitialInterfaceSize());
+  const [gold, setGold] = useState(0);
+  const [energy, setEnergy] = useState(0);
 
   // --- shared refs ---
   const canvasRef = useRef(null);
@@ -85,6 +95,12 @@ function App() {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    const canFitFullUI = Math.min(viewport.width / 360, viewport.height / 200) >= 2;
+    const detected = (viewport.width > viewport.height && canFitFullUI) ? 2 : 0;
+    setInterfaceSize(detected);
+  }, [viewport]);
+
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const toggleFullscreen = () => {
@@ -119,6 +135,7 @@ function App() {
     mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef, floatingTextRef, wasDownedRef,
     setGrid, setDepth, setMyPlayerId, setInventory,
     setEquippedItems, setMyStats, setMessages, setDifficulty,
+    setGold, setEnergy, setBelongings, setQuickslot,
   });
 
   const { hasDraggedRef } = useCanvasControls({
@@ -148,9 +165,61 @@ function App() {
   const useItem = (itemId) => {
     socketRef.current.send(JSON.stringify({ type: 'USE_ITEM', item_id: itemId }));
   };
+
+  // --- SPD-style generic item-action dispatch ---
+  const TARGETED_ACTIONS = ['THROW', 'ZAP'];
+  const send = (msg) => {
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify(msg));
+    }
+  };
+  const executeItemAction = (itemId, action, tx, ty) => {
+    if (TARGETED_ACTIONS.includes(action) && tx === undefined) {
+      // Needs a target cell: enter targeting, resolve on the next canvas click.
+      setTargetingMode({ itemId, action });
+      setShowInventory(false);
+      return;
+    }
+    send({ type: 'EXECUTE_ITEM_ACTION', item_id: itemId, action, target_x: tx, target_y: ty });
+  };
+  const assignQuickslot = (itemId) => {
+    const slots = quickslot?.slots || [];
+    let idx = slots.findIndex(s => !s.item_id);
+    if (idx < 0) idx = 0;
+    send({ type: 'SET_QUICKSLOT', index: idx, item_id: itemId });
+  };
+  const useQuickslotSlot = (index, item) => {
+    const action = item?.default_action;
+    if (action && TARGETED_ACTIONS.includes(action)) {
+      setTargetingMode({ itemId: item.id, action });
+      return;
+    }
+    send({ type: 'USE_QUICKSLOT', index });
+  };
+
+  // Flatten belongings into an id->item map for quickslot resolution.
+  const itemsById = {};
+  if (belongings) {
+    ['weapon', 'armor', 'artifact', 'misc', 'ring'].forEach(k => {
+      if (belongings[k]) itemsById[belongings[k].id] = belongings[k];
+    });
+    const walk = (bag) => {
+      (bag?.items || []).forEach(it => {
+        itemsById[it.id] = it;
+        if (it.items) walk(it);
+      });
+    };
+    walk(belongings.backpack);
+  }
   const triggerSearch = () => {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify({ type: 'SEARCH' }));
+    }
+  };
+
+  const triggerWait = () => {
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify({ type: 'WAIT' }));
     }
   };
 
@@ -172,7 +241,20 @@ function App() {
     const tileY = Math.floor(worldY / TILE_SIZE);
 
     if (targetingModeRef.current) {
-      const weaponId = typeof targetingModeRef.current === 'string' ? targetingModeRef.current : equippedItems.weapon?.id;
+      const tm = targetingModeRef.current;
+      // New SPD-style path: an item action awaiting a target cell.
+      if (tm && typeof tm === 'object' && tm.action) {
+        send({
+          type: 'EXECUTE_ITEM_ACTION',
+          item_id: tm.itemId,
+          action: tm.action,
+          target_x: tileX,
+          target_y: tileY,
+        });
+        return;
+      }
+      // Legacy path: equipped ranged weapon kept armed for repeat fire.
+      const weaponId = typeof tm === 'string' ? tm : equippedItems.weapon?.id;
       if (weaponId) {
         socketRef.current.send(JSON.stringify({
           type: 'RANGED_ATTACK',
@@ -258,7 +340,8 @@ function App() {
 
   useKeyboardControls({
     socketRef, inventory, setShowInventory,
-    handleToolbarClick, handleToolbarDoubleClick, triggerSearch,
+    handleToolbarClick, handleToolbarDoubleClick,
+    triggerSearch, triggerWait,
     isRefocusingRef, isDraggingRef,
   });
 
@@ -292,7 +375,12 @@ function App() {
     }} />;
   }
 
-  const toolbarItems = Array.from({ length: 5 }).map((_, i) => inventory[i] || null);
+  // Toolbar quickslots mirror the real quickslot state (as in the original game),
+  // resolving each slot's item id against the flattened belongings.
+  const toolbarItems = Array.from({ length: 6 }).map((_, i) => {
+    const slot = quickslot?.slots?.[i];
+    return slot && slot.item_id ? (itemsById[slot.item_id] || null) : null;
+  });
 
   return (
     <div className="game-container">
@@ -310,25 +398,32 @@ function App() {
         />
       </div>
 
-      <InventoryModal
-        open={showInventory}
-        inventory={inventory}
-        onClose={() => setShowInventory(false)}
-        onEquip={equipItem}
-        onUse={useItem}
-        onDrop={dropItem}
-      />
-
-      <div className="game-hud-bottom">
+      {/* Bottom-centered HUD: message log, then toolbar, then the inventory
+          pane below it (toggled open/closed with 'f' or the bag button). */}
+      <div className="hud-bottom">
+        <MessageLog messages={messages} />
         <Toolbar
+          mode={interfaceSize > 0 ? 'group' : 'split'}
+          interfaceSize={interfaceSize}
+          flipToolbar={false}
+          quickSwapper={false}
+          canvasWidth={viewport.width}
           items={toolbarItems}
-          targetingMode={targetingMode}
           equippedItems={equippedItems}
+          targetingMode={targetingMode}
+          onWait={triggerWait}
+          onSearch={triggerSearch}
+          onInventory={() => setShowInventory(v => !v)}
           onSlotClick={handleToolbarClick}
           onSlotDoubleClick={handleToolbarDoubleClick}
-          onOpenInventory={() => setShowInventory(true)}
         />
-        <MessageLog messages={messages} />
+        {showInventory && (
+          <WndBag
+            belongings={belongings}
+            onAction={executeItemAction}
+            onAssignQuickslot={assignQuickslot}
+          />
+        )}
       </div>
 
       <button className="fullscreen-btn" onClick={toggleFullscreen} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>

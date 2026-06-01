@@ -82,7 +82,7 @@ def test_locked_door_requires_matching_key_and_unlocks_with_patch():
     assert neighbor is not None
     player.pos.x, player.pos.y = neighbor
 
-    player.inventory = [item for item in player.inventory if not (isinstance(item, Key) and item.key_id == key_id)]
+    player.belongings.backpack.items = [item for item in player.inventory if not (isinstance(item, Key) and item.key_id == key_id)]
 
     game.flush_events()
     game.move_entity(player.id, door_x - player.pos.x, door_y - player.pos.y)

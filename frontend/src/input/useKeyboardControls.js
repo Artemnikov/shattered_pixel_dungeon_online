@@ -7,6 +7,7 @@ export default function useKeyboardControls({
   handleToolbarClick,
   handleToolbarDoubleClick,
   triggerSearch,
+  triggerWait,
   isRefocusingRef,
   isDraggingRef,
 }) {
@@ -23,6 +24,11 @@ export default function useKeyboardControls({
         triggerSearch();
         return;
       }
+      if (e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        if (triggerWait) triggerWait();
+        return;
+      }
 
       let direction = null;
       if (e.key === 'ArrowUp' || e.key === 'w') direction = 'UP';
@@ -30,7 +36,7 @@ export default function useKeyboardControls({
       if (e.key === 'ArrowLeft' || e.key === 'a') direction = 'LEFT';
       if (e.key === 'ArrowRight' || e.key === 'd') direction = 'RIGHT';
 
-      if (['1', '2', '3', '4', '5'].includes(e.key)) {
+      if (['1', '2', '3', '4', '5', '6'].includes(e.key)) {
         const index = parseInt(e.key) - 1;
         const item = inventory[index];
         if (item) {
@@ -62,5 +68,5 @@ export default function useKeyboardControls({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [inventory, handleToolbarClick, handleToolbarDoubleClick, socketRef, setShowInventory, triggerSearch, isRefocusingRef, isDraggingRef]);
+  }, [inventory, handleToolbarClick, handleToolbarDoubleClick, socketRef, setShowInventory, triggerSearch, triggerWait, isRefocusingRef, isDraggingRef]);
 }
