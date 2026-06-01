@@ -161,6 +161,7 @@ class Player(Entity):
     equipped_wearable: Optional[Wearable] = None
     websocket_id: Optional[str] = None
     is_downed: bool = False
+    death_processed: bool = False
     regen_ticks: int = 0
     path_queue: List[Tuple[int, int]] = []
     last_auto_move_time: float = 0.0
@@ -177,7 +178,9 @@ class Player(Entity):
         if self.hp <= 0:
             self.hp = 0
             self.is_downed = True
-            # Player is not "dead" (is_alive remains True for DBNO)
+            # Death is permanent: HP reaching 0 is a real death. The full death
+            # sequence (inventory scatter + grave) is run once in update_tick.
+            self.is_alive = False
         return dmg
 
     def get_total_attack(self) -> int:

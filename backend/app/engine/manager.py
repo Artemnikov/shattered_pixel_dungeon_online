@@ -673,6 +673,7 @@ class GameInstance:
                 isinstance(entity, Player)
                 and isinstance(target_entity, Player)
                 and target_entity.is_downed
+                and target_entity.is_alive  # death is permanent: cannot revive a dead player
                 and entity.faction == target_entity.faction
             ):
                 revive_potion_idx = next(
@@ -748,6 +749,7 @@ class GameInstance:
                 i_id
                 for i_id, i in floor.items.items()
                 if i.pos and i.pos.x == entity.pos.x and i.pos.y == entity.pos.y
+                and i.type != "grave"  # graves are scenery, not pickable
             ]
             for i_id in items_to_pickup:
                 item = floor.items[i_id]
@@ -888,7 +890,57 @@ class GameInstance:
             if player.floor_id > 1:
                 self._move_player_to_floor(player, player.floor_id - 1, TileType.STAIRS_DOWN)
 
+    def _kill_player(self, player: Player, floor: FloorState, floor_id: int):
+        # Run the death sequence once: scatter the backpack and mark the spot
+        # with a grave (mirrors Hero.reallyDie in Shattered Pixel Dungeon).
+        player.death_processed = True
+
+        # Collect passable 8-neighbour cells with no item on them, shuffled.
+        free_cells: List[Tuple[int, int]] = []
+        for ox in (-1, 0, 1):
+            for oy in (-1, 0, 1):
+                if ox == 0 and oy == 0:
+                    continue
+                cx, cy = player.pos.x + ox, player.pos.y + oy
+                if not (0 <= cx < self.width and 0 <= cy < self.height):
+                    continue
+                if not floor.flags or not floor.flags.passable[cy][cx]:
+                    continue
+                if any(i.pos and i.pos.x == cx and i.pos.y == cy for i in floor.items.values()):
+                    continue
+                free_cells.append((cx, cy))
+        random.shuffle(free_cells)
+
+        # Drop every backpack item; overflow lands on the death tile itself.
+        dropped_items = list(player.inventory)
+        for idx, item in enumerate(dropped_items):
+            if idx < len(free_cells):
+                cx, cy = free_cells[idx]
+            else:
+                cx, cy = player.pos.x, player.pos.y
+            item.pos = Position(x=cx, y=cy)
+            floor.items[item.id] = item
+        player.inventory = []
+        player.equipped_weapon = None
+        player.equipped_wearable = None
+
+        # Grave marker on the death tile.
+        grave_id = f"grave_{uuid.uuid4().hex[:8]}"
+        floor.items[grave_id] = Item(
+            id=grave_id,
+            name="Grave",
+            type="grave",
+            pos=Position(x=player.pos.x, y=player.pos.y),
+        )
+
+        self.add_event("DEATH", {"target": player.id}, floor_id=floor_id)
+
     def update_tick(self):
+        # Process any players that died since the last tick (from any source).
+        for player in self.players.values():
+            if not player.is_alive and not player.death_processed:
+                self._kill_player(player, self._get_or_create_floor(player.floor_id), player.floor_id)
+
         for player in self.players.values():
             if player.is_downed or not player.is_alive:
                 continue

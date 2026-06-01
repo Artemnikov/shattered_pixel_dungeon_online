@@ -124,6 +124,16 @@ export default function useGameRenderer({
 
       ctx.restore();
 
+      // Vision loss: when the local player is dead, dim the screen but keep the
+      // world visible so they can still spectate (alpha ramps 0 -> 0.55 over 2s).
+      const me = entitiesRef.current.players[myPlayerIdRef.current];
+      if (me && me.is_downed) {
+        const elapsed = performance.now() - (me.deathStart || performance.now());
+        const alpha = Math.min(elapsed / 2000, 1) * 0.55;
+        ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
       animationFrameId = requestAnimationFrame(render);
     };
 

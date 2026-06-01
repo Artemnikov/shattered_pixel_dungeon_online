@@ -20,19 +20,25 @@ export function drawPlayers(ctx, { entitiesRef, visionRef, assetImages, playerAn
       const RUN_FRAMES    = [2, 3, 4, 5, 6, 7];
       const IDLE_FRAMES   = [0, 0, 0, 1, 0, 0, 1, 1];
       const ATTACK_FRAMES = [13, 14, 15, 0]; // ~15fps swing (frames 13,14,15,idle)
+      const DIE_FRAMES    = [8, 9, 10, 11, 12, 11]; // SPD HeroSprite die animation
 
       const now = performance.now();
       const anim = (playerAnimRef && playerAnimRef.current[player.id]) || {};
-      const isAttacking = anim.attackUntil && now < anim.attackUntil;
+      const isAttacking = !player.is_downed && anim.attackUntil && now < anim.attackUntil;
       const isFlashing = anim.flashUntil && now < anim.flashUntil;
 
-      const isMoving = !isAttacking && player.targetPos && (
+      const isMoving = !player.is_downed && !isAttacking && player.targetPos && (
         Math.abs(player.targetPos.x - player.renderPos.x) > 0.05 ||
         Math.abs(player.targetPos.y - player.renderPos.y) > 0.05
       );
 
       let frameIndex;
-      if (isAttacking) {
+      if (player.is_downed) {
+        // Play the death animation once @20fps, then hold the final corpse frame.
+        const elapsed = now - (player.deathStart || now);
+        const fi = Math.min(Math.floor(elapsed / 50), DIE_FRAMES.length - 1);
+        frameIndex = DIE_FRAMES[fi];
+      } else if (isAttacking) {
         const elapsed = now - (anim.attackUntil - PLAYER_ATTACK_DURATION);
         const fi = Math.min(Math.floor(elapsed / (PLAYER_ATTACK_DURATION / ATTACK_FRAMES.length)), ATTACK_FRAMES.length - 1);
         frameIndex = ATTACK_FRAMES[fi];
@@ -60,21 +66,14 @@ export function drawPlayers(ctx, { entitiesRef, visionRef, assetImages, playerAn
       ctx.restore();
     }
 
-    if (player.id !== myPlayerId) {
+    if (player.id !== myPlayerId && !player.is_downed) {
       const hpBarWidth = TILE_SIZE - 4;
       const healthBoost = player.equipped_wearable ? player.equipped_wearable.health_boost : 0;
       const playerHpPercent = player.hp / (player.max_hp + healthBoost);
       ctx.fillStyle = '#111';
       ctx.fillRect(x + 2, y - 12, hpBarWidth, 4);
-      ctx.fillStyle = player.is_downed ? '#e74c3c' : (player.regen_ticks > 0 ? '#f1c40f' : '#2ecc71');
+      ctx.fillStyle = player.regen_ticks > 0 ? '#f1c40f' : '#2ecc71';
       ctx.fillRect(x + 2, y - 12, hpBarWidth * playerHpPercent, 4);
-    }
-
-    if (player.is_downed) {
-      ctx.fillStyle = '#e74c3c';
-      ctx.textAlign = 'center';
-      ctx.font = '24px Arial';
-      ctx.fillText("☠️", x + TILE_SIZE / 2, y - 25);
     }
 
     if (player.id !== myPlayerId) {
