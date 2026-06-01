@@ -65,8 +65,7 @@ def test_audio_events():
     print("\n--- Testing Ranged Hit Sound (Bow) ---")
     # Equip Bow
     bow = Bow(id="bow-1", name="Test Bow", pos=Position(x=0,y=0), damage=5, strength_requirement=10, attack_cooldown=0)
-    player.inventory.append(bow)
-    player.equipped_weapon = bow
+    player.belongings.weapon = bow
     
     # Back off separate
     game.mobs[mob_id].pos.x = player.pos.x + 2 
@@ -87,8 +86,7 @@ def test_audio_events():
     # Equip Staff
     from app.engine.entities.base import Staff
     staff = Staff(id="staff-1", name="Test Staff", pos=Position(x=0,y=0), damage=2, magic_damage=5, strength_requirement=10, attack_cooldown=0, charges=10)
-    player.inventory.append(staff)
-    player.equipped_weapon = staff
+    player.belongings.weapon = staff
     
     # Ensure mob is alive/reset
     game.mobs[mob_id].hp = 50

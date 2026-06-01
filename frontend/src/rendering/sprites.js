@@ -1,34 +1,43 @@
 import { TILE_SIZE, TILE_SCALE } from '../constants';
 
-// Item Sprite Mapping (Simplified based on ItemSpriteSheet.java)
-// Format: { name_keyword: [col, row] }
+// Item Sprite Mapping
+// Format: { name_keyword: [col, row] } — 0-indexed column/row in items.png (16x16 cells)
 export const ITEM_SPRITES = {
-  // Weapon Tier 1
-  "Shortsword": [13, 13],
-  "Mage's Staff": [15, 16],
-  "Dagger": [12, 13],
-  "Spirit Bow": [0, 10],
+  // Tier 1 weapons
+  "Shortsword":     [13, 13],
+  "Dagger":         [12, 13],
+  "Mage's Staff":   [15, 16],
+  "Staff":          [15, 16],
 
-  // Weapon Tier 2
-  "Wooden Club": [15, 15],
-  "Spear": [0, 7],
+  // Tier 2 weapons
+  "Wooden Club":    [15, 15],
+  "Spear":          [0, 7],
 
-  // Wearable
-  "Cloth Armor": [15, 12],
-  "Leather Vest": [14, 13],
-  "Rogue's Cloak": [9, 15],
-  "Broken Shield": [12, 16],
+  // Bows / ranged
+  "Spirit Bow":     [0, 10],
+  "Bow":            [0, 10],
+
+  // Wearables
+  "Cloth Armor":    [15, 12],
+  "Leather Vest":   [14, 13],
+  "Rogue's Cloak":  [9, 15],
+  "Broken Shield":  [12, 16],
 
   // Potions
-  "Potion": [12, 14],
+  "Potion":               [12, 14],
+  "Health Potion":        [12, 14],
+  "Reviving Potion":      [12, 14],
 
-  // Default
-  "default": [8, 13],
+  // Throwables
+  "Stone":          [10, 10],
+  "Boomerang":      [11, 10],
+  "Throwable Dagger": [12, 13],
 
-  // Throwables (Approximated)
-  "Stone": [10, 10],
-  "Boomerang": [11, 10],
-  "Throwable Dagger": [12, 13]
+  // Keys
+  "Key":            [3, 2],
+
+  // Default fallback (question mark / SOMETHING)
+  "default":        [8, 13],
 };
 
 export const getItemSpriteCoords = (itemName, itemType) => {
@@ -37,11 +46,12 @@ export const getItemSpriteCoords = (itemName, itemType) => {
       return ITEM_SPRITES[key];
     }
   }
-  if (itemType === 'grave') return [3, 2]; // GRAVE cell in items.png (SPD ItemSpriteSheet)
-  if (itemType === 'potion') return [12, 14];
-  if (itemType === 'weapon') return [14, 14];
+  if (itemType === 'grave')   return [3, 2];
+  if (itemType === 'potion')  return [12, 14];
+  if (itemType === 'weapon')  return [14, 14];
   if (itemType === 'wearable') return [14, 12];
   if (itemType === 'throwable') return [11, 10];
+  if (itemType === 'key')     return [3, 2];
   return ITEM_SPRITES["default"];
 };
 

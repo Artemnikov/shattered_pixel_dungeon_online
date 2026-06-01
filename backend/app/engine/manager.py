@@ -13,10 +13,13 @@ from app.engine.dungeon.generator import (
 )
 from app.engine.dungeon.terrain_flags import FloorFlagMaps, build_flag_maps
 from app.engine.entities.base import (
+    Bag,
+    Belongings,
     Boomerang,
     Bow,
     CharacterClass,
     Difficulty,
+    Effect,
     EntityType,
     Faction,
     HealthPotion,
@@ -25,14 +28,17 @@ from app.engine.entities.base import (
     Mob as MobEntity,
     Player,
     Position,
+    QuickSlot,
     RevivingPotion,
     Staff,
     Stone,
     Throwable,
     ThrowableDagger,
+    Wand,
     Weapon,
     Wearable,
 )
+from app.engine.entities import item_actions
 
 
 MAX_FLOOR_ID = 50
@@ -86,6 +92,13 @@ class GameInstance:
 
         self.difficulty = Difficulty.NORMAL
         self.player_count = 0
+
+        # Shared per-run identification knowledge (co-op semantics, mirrors SPD's
+        # per-Dungeon catalog): once any player IDs a potion/scroll kind, the whole
+        # party knows it. `kind_labels` holds the scrambled per-run display names
+        # for still-unidentified kinds.
+        self.identified_kinds: set = set()
+        self.kind_labels: Dict[str, str] = {}
 
         self.generate_floor(1)
 
@@ -333,6 +346,7 @@ class GameInstance:
                         defense=1,
                         attack_cooldown=4.0,
                         faction=Faction.DUNGEON,
+                        exp=2 + floor.floor_id,
                     )
                 elif is_scorpio_floor:
                     floor.mobs[mob_id] = MobEntity(
@@ -345,6 +359,7 @@ class GameInstance:
                         defense=1,
                         attack_cooldown=3.5,
                         faction=Faction.DUNGEON,
+                        exp=2 + floor.floor_id,
                     )
                 else:
                     floor.mobs[mob_id] = MobEntity(
@@ -357,6 +372,7 @@ class GameInstance:
                         defense=0,
                         attack_cooldown=5.0,
                         faction=Faction.DUNGEON,
+                        exp=2 + floor.floor_id,
                     )
 
         num_items = 4 + random.randint(0, 3)
@@ -447,6 +463,7 @@ class GameInstance:
             defense=3 if is_goo else 5 + floor.floor_id,
             attack_cooldown=2.5 if is_goo else 3.0,
             faction=Faction.DUNGEON,
+            exp=10 + floor.floor_id,
         )
 
     def add_player(self, player_id: str, name: str, class_type: str = CharacterClass.WARRIOR, is_admin: bool = False) -> Player:
@@ -455,12 +472,12 @@ class GameInstance:
 
         self.player_count += 1
 
-        inventory = []
-        equipped_weapon = None
-        equipped_wearable = None
+        # Starting gear goes straight into the relevant equip slots (SPD-style:
+        # equipped items live in Belongings, not the backpack).
+        belongings = Belongings()
 
         if class_type == CharacterClass.WARRIOR:
-            w = Weapon(
+            belongings.weapon = Weapon(
                 id=str(uuid.uuid4()),
                 name="Shortsword",
                 damage=3,
@@ -468,14 +485,10 @@ class GameInstance:
                 strength_requirement=10,
                 attack_cooldown=3.0,
             )
-            inventory.append(w)
-            equipped_weapon = w
-            a = Wearable(id=str(uuid.uuid4()), name="Cloth Armor", strength_requirement=10, health_boost=5)
-            inventory.append(a)
-            equipped_wearable = a
+            belongings.armor = Wearable(id=str(uuid.uuid4()), name="Cloth Armor", strength_requirement=10, health_boost=5)
 
         elif class_type == CharacterClass.MAGE:
-            w = Staff(
+            belongings.weapon = Staff(
                 id=str(uuid.uuid4()),
                 name="Mage's Staff",
                 damage=2,
@@ -484,11 +497,9 @@ class GameInstance:
                 charges=4,
                 attack_cooldown=3.0,
             )
-            inventory.append(w)
-            equipped_weapon = w
 
         elif class_type == CharacterClass.ROGUE:
-            w = Weapon(
+            belongings.weapon = Weapon(
                 id=str(uuid.uuid4()),
                 name="Dagger",
                 damage=2,
@@ -496,22 +507,16 @@ class GameInstance:
                 strength_requirement=9,
                 attack_cooldown=1.5,
             )
-            inventory.append(w)
-            equipped_weapon = w
-            a = Wearable(id=str(uuid.uuid4()), name="Rogue's Cloak", strength_requirement=9, health_boost=2)
-            inventory.append(a)
-            equipped_wearable = a
+            belongings.armor = Wearable(id=str(uuid.uuid4()), name="Rogue's Cloak", strength_requirement=9, health_boost=2)
 
         elif class_type == CharacterClass.HUNTRESS:
-            w = Bow(
+            belongings.weapon = Bow(
                 id=str(uuid.uuid4()),
                 name="Spirit Bow",
                 damage=2,
                 strength_requirement=10,
                 attack_cooldown=3.5,
             )
-            inventory.append(w)
-            equipped_weapon = w
 
         player = Player(
             id=player_id,
@@ -523,9 +528,7 @@ class GameInstance:
             defense=1,
             faction=Faction.PLAYER,
             class_type=class_type,
-            inventory=inventory,
-            equipped_weapon=equipped_weapon,
-            equipped_wearable=equipped_wearable,
+            belongings=belongings,
             floor_id=1,
             is_admin=is_admin,
         )
@@ -741,6 +744,9 @@ class GameInstance:
 
                     if not target_entity.is_alive:
                         self.add_event("DEATH", {"target": target_entity.id}, floor_id=floor_id)
+                        if isinstance(entity, Player) and isinstance(target_entity, MobEntity):
+                            if entity.earn_exp(target_entity.exp):
+                                self.add_event("LEVEL_UP", {"player": entity.id}, floor_id=floor_id)
             return
 
         tile = floor.grid[new_y][new_x]
@@ -792,19 +798,19 @@ class GameInstance:
         floor_id = player.floor_id
         floor = self._get_or_create_floor(floor_id)
 
-        item = None
-        if player.equipped_weapon and player.equipped_weapon.id == item_id:
-            item = player.equipped_weapon
-        else:
-            item = next((i for i in player.inventory if i.id == item_id), None)
+        item = player.belongings.get_item(item_id)
 
         if not item:
             return None
 
         is_throwable = isinstance(item, Throwable)
         is_weapon = isinstance(item, Weapon)
+        is_wand = isinstance(item, Wand)
 
-        if not (is_throwable or (is_weapon and getattr(item, "projectile_type", None))):
+        if not (is_throwable or is_wand or (is_weapon and getattr(item, "projectile_type", None))):
+            return None
+
+        if is_wand and item.charges <= 0:
             return None
 
         current_time = time.time()
@@ -853,8 +859,10 @@ class GameInstance:
 
         damage_dealt = 0
         if target_entity and player.faction != target_entity.faction:
-            if is_weapon:
-                if item == player.equipped_weapon:
+            if is_wand:
+                attack_power = item.damage  # wands don't scale with strength
+            elif is_weapon:
+                if player.belongings.weapon and item.id == player.belongings.weapon.id:
                     attack_power = player.get_total_attack()
                 else:
                     attack_power = item.damage + (player.strength // 2)
@@ -877,13 +885,74 @@ class GameInstance:
 
             if not target_entity.is_alive:
                 self.add_event("DEATH", {"target": target_entity.id}, floor_id=floor_id)
+                if isinstance(target_entity, MobEntity):
+                    if player.earn_exp(target_entity.exp):
+                        self.add_event("LEVEL_UP", {"player": player.id}, floor_id=floor_id)
 
-        if is_throwable and item.consumable and item in player.inventory:
-            player.inventory.remove(item)
-            if player.equipped_weapon == item:
-                player.equipped_weapon = None
+        if is_wand:
+            item.charges -= 1
+        elif is_throwable and item.consumable:
+            removed = player.belongings.backpack.detach(item.id)
+            if removed is not None and player.belongings.get_item(item.id) is None:
+                player.quickslot.convert_to_placeholder(removed)
 
         return damage_dealt
+
+    # --- generic item-action dispatch -------------------------------------
+    def execute_item_action(self, player_id: str, item_id: str, action: str,
+                            target_x: Optional[int] = None, target_y: Optional[int] = None):
+        player = self.players.get(player_id)
+        if not player or not player.is_alive or player.is_downed:
+            return
+        item = player.belongings.get_item(item_id)
+        if item is None:
+            return
+        if action not in item.actions(player):
+            return  # server-authoritative: reject actions the item doesn't offer
+        handler = item_actions.ITEM_ACTION_DISPATCH.get(action)
+        if handler is not None:
+            handler(self, player, item, target_x, target_y)
+
+    def set_quickslot(self, player_id: str, index: int, item_id: str):
+        player = self.players.get(player_id)
+        if not player:
+            return
+        item = player.belongings.get_item(item_id)
+        if item is not None:
+            player.quickslot.set_slot(index, item)
+
+    def use_quickslot(self, player_id: str, index: int,
+                      target_x: Optional[int] = None, target_y: Optional[int] = None):
+        player = self.players.get(player_id)
+        if not player or not (0 <= index < len(player.quickslot.slots)):
+            return
+        entry = player.quickslot.slots[index]
+        if not entry.item_id:
+            return
+        item = player.belongings.get_item(entry.item_id)
+        if item is None:
+            return
+        action = item.default_action()
+        if action:
+            self.execute_item_action(player_id, item.id, action, target_x, target_y)
+
+    def use_item(self, player_id: str, item_id: str,
+                 target_x: Optional[int] = None, target_y: Optional[int] = None):
+        player = self.players.get(player_id)
+        if not player:
+            return
+        item = player.belongings.get_item(item_id)
+        if item is None:
+            return
+        action = item.default_action()
+        if action:
+            self.execute_item_action(player_id, item_id, action, target_x, target_y)
+
+    def identify_kind(self, item):
+        # Reveal a potion/scroll kind for the whole party (co-op shared knowledge).
+        self.identified_kinds.add(item.kind)
+        item.level_known = True
+        item.cursed_known = True
 
     def next_floor(self, player_id: Optional[str] = None):
         target_players = []
@@ -928,8 +997,10 @@ class GameInstance:
                 free_cells.append((cx, cy))
         random.shuffle(free_cells)
 
-        # Drop every backpack item; overflow lands on the death tile itself.
-        dropped_items = list(player.inventory)
+        # Drop everything the hero carried — equipped gear plus the backpack's
+        # top-level items (sub-bags drop whole). Overflow lands on the death tile.
+        dropped_items = [s for s in player.belongings.equipped_slots() if s is not None]
+        dropped_items += list(player.belongings.backpack.items)
         for idx, item in enumerate(dropped_items):
             if idx < len(free_cells):
                 cx, cy = free_cells[idx]
@@ -937,9 +1008,8 @@ class GameInstance:
                 cx, cy = player.pos.x, player.pos.y
             item.pos = Position(x=cx, y=cy)
             floor.items[item.id] = item
-        player.inventory = []
-        player.equipped_weapon = None
-        player.equipped_wearable = None
+        player.belongings = Belongings()
+        player.quickslot = QuickSlot()
 
         # Grave marker on the death tile.
         grave_id = f"grave_{uuid.uuid4().hex[:8]}"
@@ -957,6 +1027,11 @@ class GameInstance:
         for player in self.players.values():
             if not player.is_alive and not player.death_processed:
                 self._kill_player(player, self._get_or_create_floor(player.floor_id), player.floor_id)
+
+        # Keep each player's active_effects list in sync with current state so the
+        # client can render the buff indicator (mirrors SPD's BuffIndicator).
+        for player in self.players.values():
+            self._sync_effects(player)
 
         for player in self.players.values():
             if player.is_downed or not player.is_alive:
@@ -1023,6 +1098,21 @@ class GameInstance:
                     elif random.random() < 0.05:
                         dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0)])
                         self.move_entity(mob.id, dx, dy)
+
+    def _sync_effects(self, player: Player):
+        # Derive the generic active_effects list from current state. Currently the
+        # only active effect is the regen/healing buff (icon 44 = BuffIndicator.HEALING).
+        # `duration` tracks the largest pool seen so the client can show progress.
+        existing = {e.key: e for e in player.active_effects}
+        effects = []
+        if player.heal_left > 0:
+            prev = existing.get("regen")
+            duration = max(prev.duration if prev else 0.0, player.heal_left)
+            effects.append(Effect(
+                key="regen", name="Healing", icon=44,
+                remaining=player.heal_left, duration=duration,
+            ))
+        player.active_effects = effects
 
     def _apply_heal_tick(self, player: Player):
         # Mirrors Healing.act() from the original game: heal a decaying chunk of the
@@ -1243,6 +1333,86 @@ class GameInstance:
                             visible.append((tx, ty))
         return visible
 
+    # --- identification masking -------------------------------------------
+    # Per-run scrambled display names for still-unidentified consumable kinds
+    # (mirrors SPD's randomised potion colours / scroll runes).
+    _POTION_LABELS = ["Crimson", "Azure", "Charcoal", "Ivory", "Golden", "Magenta",
+                      "Turquoise", "Jade", "Indigo", "Amber", "Bistre", "Rose"]
+    _SCROLL_LABELS = ["Kaunan", "Sowilo", "Laguz", "Yngvi", "Gyfu", "Raido",
+                      "Isaz", "Mannaz", "Naudiz", "Berkanan", "Odal", "Tiwaz"]
+
+    def _label_for(self, kind: str, typ: str) -> str:
+        if kind not in self.kind_labels:
+            pool = self._POTION_LABELS if typ == "potion" else self._SCROLL_LABELS
+            used = set(self.kind_labels.values())
+            nxt = next((f"{w} Potion" if typ == "potion" else f"Scroll of {w}"
+                        for w in pool
+                        if (f"{w} Potion" if typ == "potion" else f"Scroll of {w}") not in used),
+                       kind)
+            self.kind_labels[kind] = nxt
+        return self.kind_labels[kind]
+
+    def _mask_item_dict(self, d: Optional[dict]) -> Optional[dict]:
+        # Recursively obscure unidentified potion/scroll types in a serialized
+        # item dict: scramble the name, collapse `kind` to the generic category so
+        # the client can't read the subtype, and hide subtype fields.
+        if not d:
+            return d
+        items = d.get("items")
+        if isinstance(items, list):
+            for it in items:
+                self._mask_item_dict(it)
+        if d.get("type") in ("potion", "scroll") and d.get("kind") not in self.identified_kinds:
+            d["name"] = self._label_for(d["kind"], d["type"])
+            d["kind"] = d["type"]
+            d.pop("effect", None)
+            d["level_known"] = False
+        return d
+
+    def _serialize_player(self, p: Player) -> dict:
+        d = p.model_dump()
+
+        # Map every live item by id so we can attach the server-authoritative
+        # action list (SPD's Item.actions) the client renders its menu from.
+        id2item: Dict[str, object] = {}
+
+        def collect(bag):
+            id2item[bag.id] = bag
+            for it in bag.items:
+                id2item[it.id] = it
+                if isinstance(it, Bag):
+                    collect(it)
+
+        collect(p.belongings.backpack)
+        for s in p.belongings.equipped_slots():
+            if s is not None:
+                id2item[s.id] = s
+
+        def process(node):
+            if not node:
+                return
+            for it in (node.get("items") or []):
+                process(it)
+            live = id2item.get(node.get("id"))
+            if live is not None:
+                node["actions"] = live.actions(p)
+                node["default_action"] = live.default_action()
+            self._mask_item_dict(node)
+
+        belongings = d.get("belongings", {})
+        for slot in ("weapon", "armor", "artifact", "misc", "ring"):
+            process(belongings.get(slot))
+        process(belongings.get("backpack"))
+        # Legacy computed views serialize as independent copies — process too.
+        for it in (d.get("inventory") or []):
+            process(it)
+        process(d.get("equipped_weapon"))
+        process(d.get("equipped_wearable"))
+        return d
+
+    def _serialize_floor_item(self, item) -> dict:
+        return self._mask_item_dict(item.model_dump())
+
     def get_state(self, player_id: Optional[str] = None):
         if player_id and player_id in self.players:
             player = self.players[player_id]
@@ -1253,9 +1423,9 @@ class GameInstance:
                 all_tiles = [(x, y) for y in range(self.height) for x in range(self.width)]
                 return {
                     "depth": player.floor_id,
-                    "players": [p.dict() for p in floor_players],
-                    "mobs": [m.dict() for m in floor.mobs.values() if m.is_alive],
-                    "items": [i.dict() for i in floor.items.values() if i.pos],
+                    "players": [self._serialize_player(p) for p in floor_players],
+                    "mobs": [m.model_dump() for m in floor.mobs.values() if m.is_alive],
+                    "items": [self._serialize_floor_item(i) for i in floor.items.values() if i.pos],
                     "visible_tiles": all_tiles,
                     "open_doors": self._get_open_doors(floor),
                     "grid": floor.grid,
@@ -1266,9 +1436,9 @@ class GameInstance:
 
             return {
                 "depth": player.floor_id,
-                "players": [p.dict() for p in floor_players],
-                "mobs": [m.dict() for m in floor.mobs.values() if m.is_alive and (m.pos.x, m.pos.y) in visible_set],
-                "items": [i.dict() for i in floor.items.values() if i.pos and (i.pos.x, i.pos.y) in visible_set],
+                "players": [self._serialize_player(p) for p in floor_players],
+                "mobs": [m.model_dump() for m in floor.mobs.values() if m.is_alive and (m.pos.x, m.pos.y) in visible_set],
+                "items": [self._serialize_floor_item(i) for i in floor.items.values() if i.pos and (i.pos.x, i.pos.y) in visible_set],
                 "visible_tiles": visible_tiles,
                 "open_doors": self._get_open_doors(floor),
                 "grid": floor.grid,
@@ -1277,9 +1447,9 @@ class GameInstance:
         floor = self._get_or_create_floor(self.depth)
         return {
             "depth": self.depth,
-            "players": [p.dict() for p in self._players_on_floor(self.depth)],
-            "mobs": [m.dict() for m in floor.mobs.values() if m.is_alive],
-            "items": [i.dict() for i in floor.items.values() if i.pos],
+            "players": [self._serialize_player(p) for p in self._players_on_floor(self.depth)],
+            "mobs": [m.model_dump() for m in floor.mobs.values() if m.is_alive],
+            "items": [self._serialize_floor_item(i) for i in floor.items.values() if i.pos],
             "open_doors": self._get_open_doors(floor),
             "grid": floor.grid,
         }
