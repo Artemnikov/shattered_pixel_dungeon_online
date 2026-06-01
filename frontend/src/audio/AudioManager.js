@@ -14,6 +14,7 @@ import waterStepSound from '../assets/sounds/water.mp3';
 import grassStepSound from '../assets/sounds/grass.mp3';
 import descendSound from '../assets/pixel-dungeon/audio/descend.mp3';
 import drinkSound from '../assets/sounds/drink.mp3';
+import { effectiveSfxVolume } from '../menu/menuSettings';
 
 class AudioManager {
     constructor() {
@@ -21,6 +22,11 @@ class AudioManager {
         this.sounds = {};
         this.enabled = true;
         this.loadedSounds = {};
+
+        // master gain for all SFX, driven by user settings (volume + mute)
+        this.masterGain = this.audioCtx.createGain();
+        this.masterGain.gain.value = effectiveSfxVolume();
+        this.masterGain.connect(this.audioCtx.destination);
 
         this.loadSound('ATTACK_BOW', atkBowSound);
         this.loadSound('ATTACK_MAGIC', zapSound);
@@ -62,6 +68,7 @@ class AudioManager {
 
     play(soundName) {
         if (!this.enabled) return;
+        this.masterGain.gain.value = effectiveSfxVolume();
         if (this.audioCtx.state === 'suspended') {
             this.audioCtx.resume();
         }
@@ -120,6 +127,7 @@ class AudioManager {
 
     playStep(tileType) {
         if (!this.enabled) return;
+        this.masterGain.gain.value = effectiveSfxVolume();
         const rate = 0.9 + Math.random() * 0.2;
         let key = 'STEP';
         if (tileType === 7) key = 'STEP_WATER';
@@ -157,7 +165,7 @@ class AudioManager {
             noise.connect(gain);
         }
 
-        gain.connect(this.audioCtx.destination);
+        gain.connect(this.masterGain);
         noise.start();
     }
 
@@ -165,7 +173,7 @@ class AudioManager {
         const source = this.audioCtx.createBufferSource();
         source.buffer = buffer;
         source.playbackRate.value = rate;
-        source.connect(this.audioCtx.destination);
+        source.connect(this.masterGain);
         source.start(0);
     }
 
@@ -180,7 +188,7 @@ class AudioManager {
         gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + delay + duration);
 
         osc.connect(gain);
-        gain.connect(this.audioCtx.destination);
+        gain.connect(this.masterGain);
 
         osc.start(this.audioCtx.currentTime + delay);
         osc.stop(this.audioCtx.currentTime + delay + duration);
