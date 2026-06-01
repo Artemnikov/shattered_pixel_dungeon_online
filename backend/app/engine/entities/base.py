@@ -170,6 +170,8 @@ class Player(Entity):
     heal_pct_per_tick: float = 0.0
     heal_flat_per_tick: float = 0.0
     heal_cooldown: int = 0
+    # Throttles the passive +10/s healing while standing in a floor's entrance room.
+    room_heal_cooldown: int = 0
     path_queue: List[Tuple[int, int]] = []
     last_auto_move_time: float = 0.0
     is_admin: bool = False

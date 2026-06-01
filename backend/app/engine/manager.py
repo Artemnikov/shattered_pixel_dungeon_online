@@ -44,6 +44,9 @@ AUTO_MOVE_INTERVAL = 0.15
 # readable and the cadence matches the original game's per-turn healing.
 HEAL_TICK_INTERVAL = 20
 
+# HP restored per second while a player stands in a floor's entrance (up-stairs) room.
+ROOM_HEAL_AMOUNT = 10
+
 @dataclass
 class FloorState:
     floor_id: int
@@ -270,6 +273,16 @@ class GameInstance:
             return True
 
         return False
+
+    def _is_in_entrance_room(self, floor: FloorState, x: int, y: int) -> bool:
+        if not floor.rooms:
+            return False
+
+        room = floor.rooms[0]  # entrance / up-stairs room
+        return (
+            room.x <= x < room.x + room.width
+            and room.y <= y < room.y + room.height
+        )
 
     def _spawn_content(self, floor: FloorState):
         floor_tiles = [
@@ -965,6 +978,7 @@ class GameInstance:
                         self.move_entity(player.id, dx, dy)
 
             self._apply_heal_tick(player)
+            self._apply_room_heal_tick(player)
 
         for floor_id, floor in self.floors.items():
             active_players = [p for p in self._players_on_floor(floor_id) if p.is_alive and not p.is_downed]
@@ -1040,6 +1054,36 @@ class GameInstance:
             player.heal_left = 0.0
             player.heal_pct_per_tick = 0.0
             player.heal_flat_per_tick = 0.0
+
+    def _apply_room_heal_tick(self, player: Player):
+        # Passive sanctuary healing: standing in a floor's entrance (up-stairs) room
+        # restores ROOM_HEAL_AMOUNT HP per second, reusing the same green HEAL event
+        # as health potions for the floating number + sparkles on the client.
+        floor = self.floors.get(player.floor_id)
+        if floor is None or not floor.rooms:
+            return
+
+        if not self._is_in_entrance_room(floor, player.pos.x, player.pos.y):
+            player.room_heal_cooldown = 0  # next heal fires immediately on re-entry
+            return
+
+        max_hp = player.get_total_max_hp()
+        if player.hp >= max_hp:
+            return
+
+        player.room_heal_cooldown -= 1
+        if player.room_heal_cooldown > 0:
+            return
+
+        amt = min(ROOM_HEAL_AMOUNT, max_hp - player.hp)
+        player.hp += amt
+        player.room_heal_cooldown = HEAL_TICK_INTERVAL
+
+        self.add_event(
+            "HEAL",
+            {"target": player.id, "amount": int(amt), "x": player.pos.x, "y": player.pos.y},
+            floor_id=player.floor_id,
+        )
 
     def _find_nearest_player(self, pos: Position, floor_id: int) -> Optional[Player]:
         candidates = [p for p in self._players_on_floor(floor_id) if p.is_alive and not p.is_downed]
