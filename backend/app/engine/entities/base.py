@@ -21,6 +21,12 @@ class Position(BaseModel):
     x: int
     y: int
 
+class Shield(BaseModel):
+    priority: int = 0
+    amount: int = 0
+    decay: int = 1  # min(1, amount/decay) removed per tick
+
+
 class Entity(BaseModel):
     id: str
     type: str
@@ -28,26 +34,85 @@ class Entity(BaseModel):
     pos: Position
     hp: int
     max_hp: int
-    attack: int
-    defense: int
+    attack: int = 0
+    defense: int = 0
     speed: float = 1.0
     is_alive: bool = True
     faction: str
     last_attack_time: float = 0.0
-    attack_cooldown: float = 1.0 # Default cooldown
+    attack_cooldown: float = 1.0
 
+    # SPD combat stats
+    attack_skill: int = 10
+    defense_skill: int = 5
+    damage_min: int = 1
+    damage_max: int = 4
+    dr_min: int = 0
+    dr_max: int = 0
+    max_lvl: int = 5
+
+    # Status effect fields (mutated by attack_proc/defense_proc)
+    bleed_amount: int = 0
+    bleed_turns: int = 0
+    ooze_amount: int = 0
+
+    # Shields (absorption layers)
+    shields: List[Shield] = Field(default_factory=list)
+
+
+    def get_dr_min(self) -> int:
+        return self.dr_min
+
+    def get_dr_max(self) -> int:
+        return self.dr_max
+
+    def get_damage_min(self) -> int:
+        return self.damage_min
+
+    def get_damage_max(self) -> int:
+        return self.damage_max
+
+    def get_effective_defense_skill(self) -> int:
+        return self.defense_skill
 
     def move(self, dx: int, dy: int):
         self.pos.x += dx
         self.pos.y += dy
 
+    def process_shields(self, amount: int) -> int:
+        if not self.shields:
+            return amount
+        sorted_shields = sorted(self.shields, key=lambda s: s.priority, reverse=True)
+        remaining = amount
+        active = []
+        for s in sorted_shields:
+            if remaining <= 0:
+                active.append(s)
+            elif s.amount >= remaining:
+                s.amount -= remaining
+                remaining = 0
+                if s.amount > 0:
+                    active.append(s)
+            else:
+                remaining -= s.amount
+        self.shields = active
+        return remaining
+
+    def decay_shields(self):
+        active = []
+        for s in self.shields:
+            s.amount -= max(1, s.amount // max(1, s.decay))
+            if s.amount > 0:
+                active.append(s)
+        self.shields = active
+
     def take_damage(self, amount: int):
-        dmg = max(0, amount - self.defense)
-        self.hp -= dmg
+        amount = self.process_shields(amount)
+        self.hp -= amount
         if self.hp <= 0:
             self.hp = 0
             self.is_alive = False
-        return dmg
+        return max(0, amount)
 
 
 # ---------------------------------------------------------------------------
@@ -130,6 +195,8 @@ class ItemBase(BaseModel):
     # Type-intrinsic, so kept off the wire as ClassVars.
     stackable: ClassVar[bool] = False
     category: ClassVar[str] = ItemCategory.MISC
+    # Flavour text shown in the item info window (SPD's Item.desc()).
+    DESC: ClassVar[str] = ""
 
     # --- behaviour ---------------------------------------------------------
     def actions(self, player: Optional["Player"] = None) -> List[str]:
@@ -138,6 +205,16 @@ class ItemBase(BaseModel):
 
     def default_action(self) -> Optional[str]:
         return None
+
+    def description(self, player: Optional["Player"] = None) -> str:
+        # SPD's Item.info(): flavour text plus any dynamic lines. Subclasses add
+        # context (strength requirement, upgrade level, curse) via _info_lines.
+        lines = [self.DESC] if self.DESC else []
+        lines += self._info_lines(player)
+        return "\n\n".join(l for l in lines if l)
+
+    def _info_lines(self, player: Optional["Player"] = None) -> List[str]:
+        return []
 
     def uses_targeting(self, action: str) -> bool:
         return action in TARGETED_ACTIONS
@@ -179,6 +256,19 @@ class EquipableItem(ItemBase):
     def default_action(self) -> Optional[str]:
         return Action.EQUIP
 
+    def _info_lines(self, player: Optional["Player"] = None) -> List[str]:
+        lines: List[str] = []
+        req = f"It requires {self.strength_requirement} points of strength."
+        if player is not None and player.strength < self.strength_requirement:
+            req += f" Which is more than your {player.strength} points."
+        lines.append(req)
+        if self.level_known and self.level != 0:
+            sign = "+" if self.level > 0 else ""
+            lines.append(f"It is currently upgraded to {sign}{self.level}.")
+        if self.cursed_known and self.cursed:
+            lines.append("It is cursed, and you can't remove it.")
+        return lines
+
 
 class KindOfWeapon(EquipableItem):
     type: str = "weapon"
@@ -192,6 +282,7 @@ class KindOfWeapon(EquipableItem):
 
 class MeleeWeapon(KindOfWeapon):
     kind: Literal["melee_weapon"] = "melee_weapon"
+    DESC: ClassVar[str] = "A reliable melee weapon. Equip it to strike enemies in close combat."
 
 
 class Bow(KindOfWeapon):
@@ -199,6 +290,7 @@ class Bow(KindOfWeapon):
     name: str = "Bow"
     range: int = 6
     projectile_type: str = "arrow"
+    DESC: ClassVar[str] = "A ranged weapon that fires arrows at distant foes. Equip it, then target an enemy to shoot."
 
 
 class Staff(KindOfWeapon):
@@ -208,11 +300,13 @@ class Staff(KindOfWeapon):
     magic_damage: int = 0
     charges: int = 4
     projectile_type: str = "magic_bolt"
+    DESC: ClassVar[str] = "A magical staff that hurls bolts of energy at a distance."
 
 
 class MissileWeapon(KindOfWeapon):
     kind: Literal["missile_weapon"] = "missile_weapon"
     stackable: ClassVar[bool] = True
+    DESC: ClassVar[str] = "A thrown weapon. Hurl it at an enemy from afar."
 
     def default_action(self) -> Optional[str]:
         return Action.THROW
@@ -222,8 +316,14 @@ class Armor(EquipableItem):
     kind: Literal["armor"] = "armor"
     type: str = "wearable"
     category: ClassVar[str] = ItemCategory.ARMOR
-    health_boost: int = 0
-    defense_bonus: int = 0
+    tier: int = 1
+    DESC: ClassVar[str] = "Worn armor that absorbs a portion of incoming damage. Equip it for protection."
+
+    def dr_min(self, upgrade_level: int = 0) -> int:
+        return upgrade_level
+
+    def dr_max(self, upgrade_level: int = 0) -> int:
+        return self.tier * (2 + upgrade_level)
 
 
 class KindofMisc(EquipableItem):
@@ -234,6 +334,7 @@ class Ring(KindofMisc):
     kind: Literal["ring"] = "ring"
     type: str = "ring"
     category: ClassVar[str] = ItemCategory.RING
+    DESC: ClassVar[str] = "A magical ring that grants a passive bonus while worn."
 
 
 class Artifact(KindofMisc):
@@ -242,6 +343,7 @@ class Artifact(KindofMisc):
     category: ClassVar[str] = ItemCategory.ARTIFACT
     charge: int = 0
     charge_cap: int = 100
+    DESC: ClassVar[str] = "A unique artifact with a special power that grows as you use it."
 
 
 class Wand(ItemBase):
@@ -253,12 +355,16 @@ class Wand(ItemBase):
     max_charges: int = 2
     range: int = 4
     projectile_type: str = "magic_bolt"
+    DESC: ClassVar[str] = "A wand of magical power. Zap an enemy to spend a charge; charges recover over time."
 
     def actions(self, player: Optional["Player"] = None) -> List[str]:
         return [Action.ZAP] + super().actions(player)
 
     def default_action(self) -> Optional[str]:
         return Action.ZAP
+
+    def _info_lines(self, player: Optional["Player"] = None) -> List[str]:
+        return [f"It currently holds {self.charges} of {self.max_charges} charges."]
 
 
 class Potion(ItemBase):
@@ -267,6 +373,9 @@ class Potion(ItemBase):
     category: ClassVar[str] = ItemCategory.POTION
     stackable: ClassVar[bool] = True
     effect: str = ""
+    # Shown only once the potion's type is identified; the masked generic text is
+    # substituted server-side for unidentified potions.
+    DESC: ClassVar[str] = "A magical potion. Drink it to release its effect."
 
     def actions(self, player: Optional["Player"] = None) -> List[str]:
         return [Action.DRINK] + super().actions(player)
@@ -279,12 +388,14 @@ class HealthPotion(Potion):
     kind: Literal["health_potion"] = "health_potion"
     name: str = "Health Potion"
     effect: str = "regen"
+    DESC: ClassVar[str] = "Drinking this potion restores a good portion of your health over a short time."
 
 
 class RevivingPotion(Potion):
     kind: Literal["reviving_potion"] = "reviving_potion"
     name: str = "Reviving Potion"
     effect: str = "revive"
+    DESC: ClassVar[str] = "A potent elixir that can bring a fallen hero back from the brink."
 
 
 class Scroll(ItemBase):
@@ -292,6 +403,7 @@ class Scroll(ItemBase):
     type: str = "scroll"
     category: ClassVar[str] = ItemCategory.SCROLL
     stackable: ClassVar[bool] = True
+    DESC: ClassVar[str] = "A magical scroll inscribed with arcane runes. Read it to invoke its power."
 
     def actions(self, player: Optional["Player"] = None) -> List[str]:
         return [Action.READ] + super().actions(player)
@@ -305,6 +417,7 @@ class Gold(ItemBase):
     type: str = "gold"
     category: ClassVar[str] = ItemCategory.GOLD
     stackable: ClassVar[bool] = True
+    DESC: ClassVar[str] = "A pile of gold coins. Spend it at shops scattered through the dungeon."
 
 
 class Food(ItemBase):
@@ -312,6 +425,7 @@ class Food(ItemBase):
     type: str = "food"
     category: ClassVar[str] = ItemCategory.FOOD
     stackable: ClassVar[bool] = True
+    DESC: ClassVar[str] = "Edible provisions. Eat it to stave off hunger."
 
     def default_action(self) -> Optional[str]:
         return Action.EAT
@@ -322,6 +436,7 @@ class Key(ItemBase):
     type: str = "key"
     category: ClassVar[str] = ItemCategory.KEY
     key_id: str = ""
+    DESC: ClassVar[str] = "A key that unlocks a matching door or chest somewhere on this floor."
 
 
 class Throwable(ItemBase):
@@ -332,6 +447,7 @@ class Throwable(ItemBase):
     range: int = 5
     consumable: bool = True
     projectile_type: str = "users_projectile"
+    DESC: ClassVar[str] = "A thrown item. Hurl it at a target to deal damage."
 
     def actions(self, player: Optional["Player"] = None) -> List[str]:
         return [Action.THROW, Action.DROP]
@@ -367,6 +483,20 @@ class ThrowableDagger(Throwable):
     projectile_type: str = "dagger"
 
 
+class Seed(ItemBase):
+    kind: Literal["seed"] = "seed"
+    type: str = "seed"
+    category: ClassVar[str] = ItemCategory.SEED
+    stackable: ClassVar[bool] = True
+    DESC: ClassVar[str] = "A magical seed. Plant it to release its effect."
+
+
+class MysteryMeat(Food):
+    kind: Literal["mystery_meat"] = "mystery_meat"
+    name: str = "Mystery Meat"
+    DESC: ClassVar[str] = "Raw meat from a defeated creature. Eat it to restore some health — if you dare."
+
+
 class Scenery(ItemBase):
     # Non-pickable floor decoration (e.g. graves). Mirrors SPD heaps that aren't
     # collectable. Kept out of AnyItem since it only ever lives on the ground.
@@ -382,6 +512,7 @@ class Bag(ItemBase):
     unique: bool = True
     capacity: int = 20
     items: List["AnyItem"] = Field(default_factory=list)
+    DESC: ClassVar[str] = "A container that expands how much you can carry. Open it to view its contents."
 
     # None => general backpack (accepts everything). A set => a specialised
     # sub-bag that only accepts those item categories (SPD's pouches/holders).
@@ -516,8 +647,8 @@ AnyItem = Annotated[
     Union[
         MeleeWeapon, Bow, Staff, MissileWeapon,
         Armor, Ring, Artifact, Wand,
-        HealthPotion, RevivingPotion, Potion, Scroll, Gold, Food, Key,
-        Stone, Boomerang, ThrowableDagger, Throwable,
+        HealthPotion, RevivingPotion, Potion, Scroll, Gold, Food, MysteryMeat, Key,
+        Seed, Stone, Boomerang, ThrowableDagger, Throwable,
         VelvetPouch, ScrollHolder, MagicalHolster, PotionBandolier, Bag,
     ],
     Field(discriminator="kind"),
@@ -645,14 +776,22 @@ class Effect(BaseModel):
     remaining: float = 0.0
     duration: float = 0.0
 
+class DropEntry(BaseModel):
+    item_kind: str
+    chance: float
+    max_global: int = 0
+
 class Mob(Entity):
     type: str = EntityType.MOB
     faction: str = Faction.DUNGEON
     ai_state: str = "idle"
     target_id: Optional[str] = None
     difficulty: str = Difficulty.NORMAL
-    # Experience awarded to the killer, mirroring Mob.EXP in the original game.
     exp: int = 1
+    loot_table: List[DropEntry] = Field(default_factory=list)
+    flying: bool = False
+    properties: List[str] = Field(default_factory=list)
+    attack_range: int = 1
 
 class Player(Entity):
     type: str = EntityType.PLAYER
@@ -709,25 +848,53 @@ class Player(Entity):
         if self.is_downed:
             return 0
 
-        dmg = max(0, amount - self.get_total_defense())
-        self.hp -= dmg
+        self.hp -= amount
         if self.hp <= 0:
             self.hp = 0
             self.is_downed = True
-            # Death is permanent: HP reaching 0 is a real death. The full death
-            # sequence (inventory scatter + grave) is run once in update_tick.
             self.is_alive = False
-        return dmg
+        return max(0, amount)
 
     def get_total_attack(self) -> int:
         w = self.belongings.weapon
         bonus = w.damage if isinstance(w, KindOfWeapon) else 0
         return self.attack + bonus
 
-    def get_total_defense(self) -> int:
+    def get_damage_min(self) -> int:
+        w = self.belongings.weapon
+        if isinstance(w, KindOfWeapon):
+            return w.damage
+        return self.damage_min
+
+    def get_damage_max(self) -> int:
+        w = self.belongings.weapon
+        if isinstance(w, KindOfWeapon):
+            return w.damage
+        return self.damage_max
+
+    def get_dr_min(self) -> int:
         a = self.belongings.armor
-        bonus = getattr(a, "defense_bonus", 0) if a is not None else 0
-        return self.defense + bonus
+        if a is not None and isinstance(a, Armor):
+            base = a.dr_min(a.level)
+            deficit = max(0, a.strength_requirement - self.strength)
+            return max(0, base - 2 * deficit)
+        return 0
+
+    def get_dr_max(self) -> int:
+        a = self.belongings.armor
+        if a is not None and isinstance(a, Armor):
+            base = a.dr_max(a.level)
+            deficit = max(0, a.strength_requirement - self.strength)
+            return max(0, base - 2 * deficit)
+        return 0
+
+    def get_effective_defense_skill(self) -> int:
+        a = self.belongings.armor
+        if a is not None:
+            deficit = max(0, a.strength_requirement - self.strength)
+            if deficit > 0:
+                return int(self.defense_skill / (1.5 ** deficit))
+        return self.defense_skill
 
     def set_heal(self, amount: float, percent_per_tick: float, flat_per_tick: float):
         # Multiple healing sources don't stack; they combine the best of each
@@ -738,9 +905,7 @@ class Player(Entity):
         self.heal_cooldown = 0  # first tick applies immediately
 
     def get_total_max_hp(self) -> int:
-        a = self.belongings.armor
-        bonus = getattr(a, "health_boost", 0) if a is not None else 0
-        return self.max_hp + bonus
+        return self.max_hp
 
     def add_to_inventory(self, item: ItemBase) -> bool:
         ok = self.belongings.backpack.collect(item)
@@ -752,8 +917,6 @@ class Player(Entity):
         item = self.belongings.backpack.find(item_id)
         if item is None or not isinstance(item, EquipableItem):
             return False
-        if self.strength < item.strength_requirement:
-            return False
         slot = self.belongings.slot_name_for(item)
         if slot is None:
             return False
@@ -762,8 +925,6 @@ class Player(Entity):
         setattr(self.belongings, slot, item)
         if prev is not None:
             self.belongings.backpack.collect(prev)
-        if slot == "armor" and self.hp > self.get_total_max_hp():
-            self.hp = self.get_total_max_hp()
         return True
 
     def unequip_item(self, item_id: str) -> bool:
@@ -776,8 +937,6 @@ class Player(Entity):
                     return False
                 setattr(self.belongings, slot, None)
                 self.belongings.backpack.collect(cur)
-                if slot == "armor" and self.hp > self.get_total_max_hp():
-                    self.hp = self.get_total_max_hp()
                 return True
         return False
 
@@ -800,6 +959,8 @@ class Player(Entity):
             self.level += 1
             self.max_hp += 5
             self.hp += 5
+            self.attack_skill += 1
+            self.defense_skill += 1
             leveled_up = True
         if self.level >= self.MAX_LEVEL:
             self.experience = 0

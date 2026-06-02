@@ -1,9 +1,10 @@
+import math
 import random
 import time
 import uuid
 import zlib
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Type
 
 from app.engine.dungeon.generator import (
     DungeonGenerator,
@@ -13,6 +14,7 @@ from app.engine.dungeon.generator import (
 )
 from app.engine.dungeon.terrain_flags import FloorFlagMaps, build_flag_maps
 from app.engine.entities.base import (
+    Armor,
     Bag,
     Belongings,
     Boomerang,
@@ -36,9 +38,16 @@ from app.engine.entities.base import (
     ThrowableDagger,
     Wand,
     Weapon,
-    Wearable,
+    DropEntry,
 )
 from app.engine.entities import item_actions
+from app.engine.entities.mobs import (
+    Rat, Snake, Gnoll, Swarm, Crab, Slime,
+    AlbinoRat, GnollExile, HermitCrab, CausticSlime,
+    Goo,
+)
+from app.engine.systems.combat import resolve_melee_attack, resolve_ranged_attack
+from app.engine.systems.loot import roll_drops
 
 
 MAX_FLOOR_ID = 50
@@ -46,12 +55,16 @@ SEWERS_MAX_FLOOR = 4
 
 AUTO_MOVE_INTERVAL = 0.15
 
-# The tick loop runs at 20Hz; heal once per ~second so floating numbers stay
-# readable and the cadence matches the original game's per-turn healing.
 HEAL_TICK_INTERVAL = 20
-
-# HP restored per second while a player stands in a floor's entrance (up-stairs) room.
 ROOM_HEAL_AMOUNT = 10
+PASSIVE_REGEN_INTERVAL = 10
+
+# SPD base cooldown for speed=1.0 enemies
+MOB_BASE_COOLDOWN = 1.0
+# Respawn timer: 50 turns (ticks) base
+RESPAWN_TURNS = 50
+# No respawns on floor 1
+NO_RESPAWN_FLOORS = {1}
 
 @dataclass
 class FloorState:
@@ -66,16 +79,11 @@ class FloorState:
     traps: Dict[Tuple[int, int], TrapInfo] = field(default_factory=dict)
     key_spawns: Dict[str, Tuple[int, int]] = field(default_factory=dict)
     generation_meta: Dict[str, object] = field(default_factory=dict)
-    # Derived bool-array flag maps. Populated by build_flag_maps() after the
-    # grid is finalised. See terrain_flags.py.
     flags: Optional[FloorFlagMaps] = None
+    respawn_counter: int = 0
+    mob_limit: int = 0
 
     def rebuild_flags(self) -> None:
-        """Regenerate all bool-array flag maps from the current grid.
-
-        Call after any tile-ID mutation (e.g. secret door revealed, trap
-        triggered) so downstream LOS/pathfinding stays consistent.
-        """
         self.flags = build_flag_maps(self.grid)
 
 
@@ -99,6 +107,11 @@ class GameInstance:
         # for still-unidentified kinds.
         self.identified_kinds: set = set()
         self.kind_labels: Dict[str, str] = {}
+        self.kind_appearance: Dict[str, int] = {}
+        self._appearance_used: Dict[str, set] = {"potion": set(), "scroll": set()}
+
+        # Global drop limiters
+        self.drop_counters: Dict[str, int] = {}
 
         self.generate_floor(1)
 
@@ -297,6 +310,28 @@ class GameInstance:
             and room.y <= y < room.y + room.height
         )
 
+    def _get_sewers_rotation(self, floor_id: int) -> List[Type[MobEntity]]:
+        rotations = {
+            1: [Rat, Rat, Rat, Snake],
+            2: [Rat, Rat, Snake, Gnoll, Gnoll],
+            3: [Rat, Snake, Gnoll, Gnoll, Gnoll, Swarm, Crab],
+            4: [Gnoll, Swarm, Crab, Crab, Slime, Slime],
+        }
+        return rotations.get(floor_id, [Rat])
+
+    def _get_mob_limit(self, floor_id: int) -> int:
+        if floor_id == 1:
+            return 8
+        if floor_id <= 4:
+            return 3 + floor_id % 5 + random.randint(0, 2)
+        return 5 + floor_id
+
+    def _spawn_mob_at(self, cls: Type[MobEntity], x: int, y: int) -> MobEntity:
+        mob_id = str(uuid.uuid4())
+        mob = cls(id=mob_id, pos=Position(x=x, y=y), faction=Faction.DUNGEON)
+        mob.attack_cooldown = MOB_BASE_COOLDOWN / mob.speed
+        return mob
+
     def _spawn_content(self, floor: FloorState):
         floor_tiles = [
             (x, y)
@@ -327,53 +362,28 @@ class GameInstance:
             self._spawn_boss(floor, unsafe_floor_tiles)
 
         if floor.floor_id != 5:
-            num_mobs = 5 + (floor.floor_id * 2)
-            is_gnoll_floor = floor.floor_id == 2
-            is_scorpio_floor = floor.floor_id == 4
-            for _ in range(num_mobs):
+            rotation = self._get_sewers_rotation(floor.floor_id)
+            mob_limit = self._get_mob_limit(floor.floor_id)
+            floor.mob_limit = mob_limit
+            rare_chance = 0.02
+            rare_alts = {
+                Rat: AlbinoRat,
+                Gnoll: GnollExile,
+                Crab: HermitCrab,
+                Slime: CausticSlime,
+            }
+
+            spawn_count = mob_limit if floor.floor_id != 1 else min(mob_limit, len(rotation) * 2)
+            for i in range(spawn_count):
                 if not unsafe_floor_tiles:
                     break
                 x, y = unsafe_floor_tiles.pop(random.randint(0, len(unsafe_floor_tiles) - 1))
-                mob_id = str(uuid.uuid4())
-                if is_gnoll_floor:
-                    floor.mobs[mob_id] = MobEntity(
-                        id=mob_id,
-                        name="Gnoll",
-                        pos=Position(x=x, y=y),
-                        hp=15,
-                        max_hp=15,
-                        attack=3,
-                        defense=1,
-                        attack_cooldown=4.0,
-                        faction=Faction.DUNGEON,
-                        exp=2 + floor.floor_id,
-                    )
-                elif is_scorpio_floor:
-                    floor.mobs[mob_id] = MobEntity(
-                        id=mob_id,
-                        name="Scorpio",
-                        pos=Position(x=x, y=y),
-                        hp=20,
-                        max_hp=20,
-                        attack=4,
-                        defense=1,
-                        attack_cooldown=3.5,
-                        faction=Faction.DUNGEON,
-                        exp=2 + floor.floor_id,
-                    )
-                else:
-                    floor.mobs[mob_id] = MobEntity(
-                        id=mob_id,
-                        name="Rat",
-                        pos=Position(x=x, y=y),
-                        hp=10,
-                        max_hp=10,
-                        attack=2,
-                        defense=0,
-                        attack_cooldown=5.0,
-                        faction=Faction.DUNGEON,
-                        exp=2 + floor.floor_id,
-                    )
+                cls = rotation[i % len(rotation)]
+                rare_cls = rare_alts.get(cls)
+                if rare_cls and random.random() < rare_chance:
+                    cls = rare_cls
+                mob = self._spawn_mob_at(cls, x, y)
+                floor.mobs[mob.id] = mob
 
         num_items = 4 + random.randint(0, 3)
         for _ in range(num_items):
@@ -412,12 +422,20 @@ class GameInstance:
                     strength_requirement=10,
                 )
             elif rand < 0.7:
-                floor.items[item_id] = Wearable(
+                armor_tiers = [
+                    ("Cloth Armor", 1, 10),
+                    ("Leather Armor", 2, 12),
+                    ("Mail Armor", 3, 14),
+                    ("Scale Armor", 4, 16),
+                ]
+                tier_idx = min(len(armor_tiers) - 1, (floor.floor_id - 1) // 4)
+                name, tier, str_req = random.choice(armor_tiers[:tier_idx + 1])
+                floor.items[item_id] = Armor(
                     id=item_id,
-                    name=random.choice(["Cloth Armor", "Leather Vest", "Broken Shield"]),
+                    name=name,
+                    tier=tier,
                     pos=Position(x=x, y=y),
-                    strength_requirement=10 + random.randint(-2, 2),
-                    health_boost=5 + random.randint(0, 5),
+                    strength_requirement=str_req,
                 )
             elif rand < 0.8:
                 t_rand = random.random()
@@ -445,26 +463,26 @@ class GameInstance:
     def _spawn_boss(self, floor: FloorState, floor_tiles: List[Tuple[int, int]]):
         if floor.floor_id == 5:
             x, y = floor.rooms[1].center
+            mob = Goo(id=str(uuid.uuid4()), pos=Position(x=x, y=y))
+            floor.mobs[mob.id] = mob
         else:
             if not floor_tiles:
                 return
             x, y = floor_tiles.pop(random.randint(0, len(floor_tiles) - 1))
-
-        is_goo = floor.floor_id == 5
-        boss_id = str(uuid.uuid4())
-        floor.mobs[boss_id] = MobEntity(
-            id=boss_id,
-            type=EntityType.BOSS,
-            name="Goo" if is_goo else f"Floor {floor.floor_id} Boss",
-            pos=Position(x=x, y=y),
-            hp=300 if is_goo else 100 + (floor.floor_id * 20),
-            max_hp=300 if is_goo else 100 + (floor.floor_id * 20),
-            attack=12 if is_goo else 10 + floor.floor_id,
-            defense=3 if is_goo else 5 + floor.floor_id,
-            attack_cooldown=2.5 if is_goo else 3.0,
-            faction=Faction.DUNGEON,
-            exp=10 + floor.floor_id,
-        )
+            boss_id = str(uuid.uuid4())
+            floor.mobs[boss_id] = MobEntity(
+                id=boss_id,
+                type=EntityType.BOSS,
+                name=f"Floor {floor.floor_id} Boss",
+                pos=Position(x=x, y=y),
+                hp=100 + (floor.floor_id * 20),
+                max_hp=100 + (floor.floor_id * 20),
+                attack=10 + floor.floor_id,
+                defense=5 + floor.floor_id,
+                attack_cooldown=3.0,
+                faction=Faction.DUNGEON,
+                exp=10 + floor.floor_id,
+            )
 
     def add_player(self, player_id: str, name: str, class_type: str = CharacterClass.WARRIOR, is_admin: bool = False) -> Player:
         floor = self._get_or_create_floor(1)
@@ -485,7 +503,12 @@ class GameInstance:
                 strength_requirement=10,
                 attack_cooldown=3.0,
             )
-            belongings.armor = Wearable(id=str(uuid.uuid4()), name="Cloth Armor", strength_requirement=10, health_boost=5)
+            belongings.armor = Armor(
+                id=str(uuid.uuid4()),
+                name="Cloth Armor",
+                tier=1,
+                strength_requirement=10,
+            )
 
         elif class_type == CharacterClass.MAGE:
             belongings.weapon = Staff(
@@ -507,7 +530,12 @@ class GameInstance:
                 strength_requirement=9,
                 attack_cooldown=1.5,
             )
-            belongings.armor = Wearable(id=str(uuid.uuid4()), name="Rogue's Cloak", strength_requirement=9, health_boost=2)
+            belongings.armor = Armor(
+                id=str(uuid.uuid4()),
+                name="Rogue's Cloak",
+                tier=1,
+                strength_requirement=9,
+            )
 
         elif class_type == CharacterClass.HUNTRESS:
             belongings.weapon = Bow(
@@ -522,8 +550,8 @@ class GameInstance:
             id=player_id,
             name=name,
             pos=spawn_pos,
-            hp=10,
-            max_hp=10,
+            hp=20,
+            max_hp=20,
             attack=3,
             defense=1,
             faction=Faction.PLAYER,
@@ -532,8 +560,6 @@ class GameInstance:
             floor_id=1,
             is_admin=is_admin,
         )
-
-        player.hp = player.get_total_max_hp()
 
         self.players[player_id] = player
         self.depth = 1
@@ -676,15 +702,16 @@ class GameInstance:
         if not (0 <= new_x < self.width and 0 <= new_y < self.height):
             return
 
+        attack_range = getattr(entity, "attack_range", 1)
         target_entity = None
         for p in self._players_on_floor(floor_id):
-            if p.id != entity_id and p.pos.x == new_x and p.pos.y == new_y:
+            if p.id != entity_id and abs(p.pos.x - entity.pos.x) <= attack_range and abs(p.pos.y - entity.pos.y) <= attack_range:
                 target_entity = p
                 break
 
         if not target_entity:
             for m in floor.mobs.values():
-                if m.id != entity_id and m.pos.x == new_x and m.pos.y == new_y and m.is_alive:
+                if m.id != entity_id and m.is_alive and abs(m.pos.x - entity.pos.x) <= attack_range and abs(m.pos.y - entity.pos.y) <= attack_range:
                     target_entity = m
                     break
 
@@ -693,7 +720,7 @@ class GameInstance:
                 isinstance(entity, Player)
                 and isinstance(target_entity, Player)
                 and target_entity.is_downed
-                and target_entity.is_alive  # death is permanent: cannot revive a dead player
+                and target_entity.is_alive
                 and entity.faction == target_entity.faction
             ):
                 revive_potion_idx = next(
@@ -721,32 +748,33 @@ class GameInstance:
 
                 entity.last_attack_time = current_time
 
-                attack_power = entity.attack
-                if isinstance(entity, Player):
-                    attack_power = entity.get_total_attack()
-
-                dmg = target_entity.take_damage(attack_power)
-                self.add_event(
-                    "ATTACK",
-                    {"source": entity.id, "target": target_entity.id, "damage": dmg},
-                    floor_id=floor_id,
+                result = resolve_melee_attack(
+                    entity, target_entity,
+                    floor.mobs, entity.pos.x, entity.pos.y,
+                    is_in_los=lambda a, b: self._is_in_los(a, b, floor_id=floor_id),
                 )
+                if result["missed"]:
+                    self.add_event("MISS", {"source": entity.id, "target": target_entity.id}, floor_id=floor_id)
+                    return
+                dmg = result["damage"]
+                self.add_event("ATTACK", {"source": entity.id, "target": target_entity.id, "damage": dmg, "surprise": result["surprise"]}, floor_id=floor_id)
                 if isinstance(entity, Player):
                     self.add_event("PLAY_SOUND", {"sound": "HIT_SLASH"}, floor_id=floor_id)
-
                 if dmg > 0:
                     self.add_event("DAMAGE", {"target": target_entity.id, "amount": dmg}, floor_id=floor_id)
-
                     if isinstance(target_entity, Player):
                         self.add_event("PLAY_SOUND", {"sound": "HIT_BODY"}, floor_id=floor_id)
                         if target_entity.hp / target_entity.get_total_max_hp() <= 0.3:
                             self.add_event("PLAY_SOUND", {"sound": "HEALTH_WARN"}, floor_id=floor_id)
 
-                    if not target_entity.is_alive:
-                        self.add_event("DEATH", {"target": target_entity.id}, floor_id=floor_id)
-                        if isinstance(entity, Player) and isinstance(target_entity, MobEntity):
-                            if entity.earn_exp(target_entity.exp):
-                                self.add_event("LEVEL_UP", {"player": entity.id}, floor_id=floor_id)
+                if not target_entity.is_alive:
+                    self.add_event("DEATH", {"target": target_entity.id}, floor_id=floor_id)
+                    if isinstance(entity, Player) and isinstance(target_entity, MobEntity):
+                        if entity.earn_exp(target_entity.exp):
+                            self.add_event("LEVEL_UP", {"player": entity.id}, floor_id=floor_id)
+                        drops = roll_drops(target_entity, self.drop_counters, target_entity.pos.x, target_entity.pos.y)
+                        for item in drops:
+                            floor.items[item.id] = item
             return
 
         tile = floor.grid[new_y][new_x]
@@ -859,20 +887,44 @@ class GameInstance:
 
         damage_dealt = 0
         if target_entity and player.faction != target_entity.faction:
-            if is_wand:
-                attack_power = item.damage  # wands don't scale with strength
-            elif is_weapon:
-                if player.belongings.weapon and item.id == player.belongings.weapon.id:
-                    attack_power = player.get_total_attack()
-                else:
-                    attack_power = item.damage + (player.strength // 2)
+            if isinstance(target_entity, MobEntity):
+                result = resolve_ranged_attack(
+                    player, target_entity, item,
+                    floor.mobs, target_x, target_y,
+                    is_in_los=lambda a, b: self._is_in_los(a, b, floor_id=floor_id),
+                )
+                if result["missed"]:
+                    self.add_event("MISS", {"source": player.id, "target": target_entity.id}, floor_id=floor_id)
+                damage_dealt = result["damage"]
+                if result["surprise"]:
+                    pass
             else:
-                attack_power = item.damage + (player.strength // 2)
-
-            damage_dealt = target_entity.take_damage(attack_power)
-            self.add_event("DAMAGE", {"target": target_entity.id, "amount": damage_dealt}, floor_id=floor_id)
+                if is_wand:
+                    atk_min = atk_max = item.damage
+                elif is_weapon:
+                    if player.belongings.weapon and item.id == player.belongings.weapon.id:
+                        atk_min = player.get_damage_min()
+                        atk_max = player.get_damage_max()
+                    else:
+                        dmg = item.damage + (player.strength // 2)
+                        atk_min = atk_max = dmg
+                else:
+                    dmg = item.damage + (player.strength // 2)
+                    atk_min = atk_max = dmg
+                old_min, old_max = player.damage_min, player.damage_max
+                player.damage_min, player.damage_max = atk_min, atk_max
+                result = resolve_ranged_attack(
+                    player, target_entity, item,
+                    floor.mobs, target_x, target_y,
+                    is_in_los=lambda a, b: self._is_in_los(a, b, floor_id=floor_id),
+                )
+                player.damage_min, player.damage_max = old_min, old_max
+                if result["missed"]:
+                    self.add_event("MISS", {"source": player.id, "target": target_entity.id}, floor_id=floor_id)
+                damage_dealt = result["damage"]
 
             if damage_dealt > 0:
+                self.add_event("DAMAGE", {"target": target_entity.id, "amount": damage_dealt}, floor_id=floor_id)
                 if projectile_type == "magic_bolt":
                     self.add_event("PLAY_SOUND", {"sound": "HIT_MAGIC"}, floor_id=floor_id)
                 else:
@@ -888,6 +940,9 @@ class GameInstance:
                 if isinstance(target_entity, MobEntity):
                     if player.earn_exp(target_entity.exp):
                         self.add_event("LEVEL_UP", {"player": player.id}, floor_id=floor_id)
+                    drops = roll_drops(target_entity, self.drop_counters, target_entity.pos.x, target_entity.pos.y)
+                    for d in drops:
+                        floor.items[d.id] = d
 
         if is_wand:
             item.charges -= 1
@@ -1054,11 +1109,16 @@ class GameInstance:
 
             self._apply_heal_tick(player)
             self._apply_room_heal_tick(player)
+            self._apply_passive_regen(player)
+            player.decay_shields()
 
         for floor_id, floor in self.floors.items():
             active_players = [p for p in self._players_on_floor(floor_id) if p.is_alive and not p.is_downed]
             if not active_players:
                 continue
+
+            self._process_bleed_ooze(floor_id, active_players)
+            self._process_respawns(floor_id, floor, active_players)
 
             for mob in list(floor.mobs.values()):
                 if not mob.is_alive:
@@ -1066,38 +1126,98 @@ class GameInstance:
 
                 target_player = self._find_nearest_player(mob.pos, floor_id)
                 dist = self._get_distance(mob.pos, target_player.pos) if target_player else float("inf")
+                atk_range = getattr(mob, "attack_range", 1)
+                is_passive = getattr(mob, "ai_state", "") == "passive"
+
+                if is_passive and mob.hp >= mob.max_hp:
+                    if random.random() < 0.02:
+                        dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0)])
+                        self.move_entity(mob.id, dx, dy)
+                    continue
 
                 if self.difficulty == Difficulty.EASY:
-                    if target_player and dist <= 1:
+                    if target_player and dist <= atk_range:
                         dx, dy = target_player.pos.x - mob.pos.x, target_player.pos.y - mob.pos.y
                         self.move_entity(mob.id, dx, dy)
-                    elif random.random() < 0.05:
+                    elif random.random() < 0.1 * max(1.0, mob.speed):
                         dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0)])
                         self.move_entity(mob.id, dx, dy)
 
                 elif self.difficulty == Difficulty.NORMAL:
-                    if target_player and dist <= 1:
+                    if target_player and dist <= atk_range:
                         dx, dy = target_player.pos.x - mob.pos.x, target_player.pos.y - mob.pos.y
                         self.move_entity(mob.id, dx, dy)
                     elif target_player and self._is_in_los(mob.pos, target_player.pos, floor_id=floor_id):
                         step = self._get_next_step_to(mob.pos, target_player.pos, floor_id=floor_id)
-                        if step:
+                        if step and (dist > atk_range or not any(
+                            m.is_alive and m.pos.x == mob.pos.x + step[0] and m.pos.y == mob.pos.y + step[1]
+                            for m in floor.mobs.values() if m.id != mob.id
+                        )):
                             self.move_entity(mob.id, step[0], step[1])
-                    elif random.random() < 0.05:
+                    elif random.random() < 0.1 * max(1.0, mob.speed):
                         dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0)])
                         self.move_entity(mob.id, dx, dy)
 
                 elif self.difficulty == Difficulty.HARD:
-                    if target_player and dist <= 1:
+                    if target_player and dist <= atk_range:
                         dx, dy = target_player.pos.x - mob.pos.x, target_player.pos.y - mob.pos.y
                         self.move_entity(mob.id, dx, dy)
                     elif target_player and dist < 20:
                         step = self._get_next_step_to(mob.pos, target_player.pos, floor_id=floor_id)
                         if step:
                             self.move_entity(mob.id, step[0], step[1])
-                    elif random.random() < 0.05:
+                    elif random.random() < 0.1 * max(1.0, mob.speed):
                         dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0)])
                         self.move_entity(mob.id, dx, dy)
+
+    def _process_bleed_ooze(self, floor_id: int, active_players: List[Player]):
+        for player in active_players:
+            if player.bleed_turns > 0 and player.bleed_amount > 0:
+                dmg = player.bleed_amount
+                player.take_damage(dmg)
+                self.add_event("DAMAGE", {"target": player.id, "amount": dmg, "bleed": True}, floor_id=floor_id)
+                player.bleed_turns -= 1
+                if player.bleed_turns <= 0:
+                    player.bleed_amount = 0
+
+        for floor in [self._get_or_create_floor(floor_id)]:
+            for mob in floor.mobs.values():
+                if mob.is_alive and mob.bleed_turns > 0 and mob.bleed_amount > 0:
+                    dmg = mob.bleed_amount
+                    mob.hp -= dmg
+                    self.add_event("DAMAGE", {"target": mob.id, "amount": dmg, "bleed": True}, floor_id=floor_id)
+                    mob.bleed_turns -= 1
+                    if mob.hp <= 0:
+                        mob.hp = 0
+                        mob.is_alive = False
+                        self.add_event("DEATH", {"target": mob.id}, floor_id=floor_id)
+                    if mob.bleed_turns <= 0:
+                        mob.bleed_amount = 0
+
+    def _process_respawns(self, floor_id: int, floor: FloorState, active_players: List[Player]):
+        if floor_id in NO_RESPAWN_FLOORS:
+            return
+        live_mobs = sum(1 for m in floor.mobs.values() if m.is_alive)
+        if live_mobs >= floor.mob_limit:
+            floor.respawn_counter = 0
+            return
+        floor.respawn_counter += 1
+        if floor.respawn_counter < RESPAWN_TURNS:
+            return
+        floor.respawn_counter = 0
+        rotation = self._get_sewers_rotation(floor_id)
+        cls = random.choice(rotation) if rotation else Rat
+        floor_tiles = [
+            (x, y) for y in range(self.height) for x in range(self.width)
+            if floor.grid[y][x] in [TileType.FLOOR, TileType.FLOOR_WOOD, TileType.FLOOR_WATER, TileType.FLOOR_COBBLE, TileType.FLOOR_GRASS]
+            and not self._is_in_safe_room(floor, x, y)
+            and not any(m.pos.x == x and m.pos.y == y for m in floor.mobs.values() if m.is_alive)
+        ]
+        if not floor_tiles:
+            return
+        x, y = random.choice(floor_tiles)
+        mob = self._spawn_mob_at(cls, x, y)
+        floor.mobs[mob.id] = mob
 
     def _sync_effects(self, player: Player):
         # Derive the generic active_effects list from current state. Currently the
@@ -1174,6 +1294,20 @@ class GameInstance:
             {"target": player.id, "amount": int(amt), "x": player.pos.x, "y": player.pos.y},
             floor_id=player.floor_id,
         )
+
+    def _apply_passive_regen(self, player: Player):
+        # Passive HP regeneration: 1 HP every PASSIVE_REGEN_INTERVAL ticks.
+        # Mirrors SPD's base regen of 1 HP per 10 turns.
+        if player.hp <= 0 or player.hp >= player.get_total_max_hp():
+            player._regen_cooldown = 0
+            return
+        cooldown = getattr(player, "_regen_cooldown", 0)
+        cooldown -= 1
+        if cooldown > 0:
+            player._regen_cooldown = cooldown
+            return
+        player.hp = min(player.get_total_max_hp(), player.hp + 1)
+        player._regen_cooldown = PASSIVE_REGEN_INTERVAL
 
     def _find_nearest_player(self, pos: Position, floor_id: int) -> Optional[Player]:
         candidates = [p for p in self._players_on_floor(floor_id) if p.is_alive and not p.is_downed]
@@ -1336,21 +1470,40 @@ class GameInstance:
     # --- identification masking -------------------------------------------
     # Per-run scrambled display names for still-unidentified consumable kinds
     # (mirrors SPD's randomised potion colours / scroll runes).
-    _POTION_LABELS = ["Crimson", "Azure", "Charcoal", "Ivory", "Golden", "Magenta",
-                      "Turquoise", "Jade", "Indigo", "Amber", "Bistre", "Rose"]
+    # Ordered to match the sprite columns in items.png (POTIONS row 22 / SCROLLS
+    # row 19, ItemSpriteSheet.java), so a kind's appearance index doubles as its
+    # sprite column.
+    _POTION_LABELS = ["Crimson", "Amber", "Golden", "Jade", "Turquoise", "Azure",
+                      "Indigo", "Magenta", "Bistre", "Charcoal", "Silver", "Ivory"]
     _SCROLL_LABELS = ["Kaunan", "Sowilo", "Laguz", "Yngvi", "Gyfu", "Raido",
                       "Isaz", "Mannaz", "Naudiz", "Berkanan", "Odal", "Tiwaz"]
+    _APPEARANCE_ROW = {"potion": 22, "scroll": 19}
+
+    def _kind_index(self, kind: str, typ: str) -> int:
+        # Stable per-run colour/rune index for a potion/scroll kind. Assigns the
+        # next free index of that type on first sight.
+        if kind not in self.kind_appearance:
+            used = self._appearance_used.get(typ)
+            if used is None:
+                used = self._appearance_used[typ] = set()
+            idx = next((i for i in range(12) if i not in used), len(used))
+            used.add(idx)
+            self.kind_appearance[kind] = idx
+        return self.kind_appearance[kind]
 
     def _label_for(self, kind: str, typ: str) -> str:
         if kind not in self.kind_labels:
             pool = self._POTION_LABELS if typ == "potion" else self._SCROLL_LABELS
-            used = set(self.kind_labels.values())
-            nxt = next((f"{w} Potion" if typ == "potion" else f"Scroll of {w}"
-                        for w in pool
-                        if (f"{w} Potion" if typ == "potion" else f"Scroll of {w}") not in used),
-                       kind)
-            self.kind_labels[kind] = nxt
+            idx = self._kind_index(kind, typ)
+            word = pool[idx] if idx < len(pool) else kind
+            self.kind_labels[kind] = (f"{word} Potion" if typ == "potion"
+                                      else f"Scroll of {word}")
         return self.kind_labels[kind]
+
+    def _appearance_for(self, kind: str, typ: str) -> dict:
+        # Sprite cell [col, row] for a potion/scroll's per-run colour/rune. Sent
+        # for every potion/scroll regardless of identification.
+        return {"col": self._kind_index(kind, typ), "row": self._APPEARANCE_ROW[typ]}
 
     def _mask_item_dict(self, d: Optional[dict]) -> Optional[dict]:
         # Recursively obscure unidentified potion/scroll types in a serialized
@@ -1362,11 +1515,22 @@ class GameInstance:
         if isinstance(items, list):
             for it in items:
                 self._mask_item_dict(it)
+        typ = d.get("type")
+        if typ in ("potion", "scroll"):
+            # Attach the per-run colour/rune sprite from the TRUE kind before any
+            # masking collapses it. The bottle keeps its colour after ID (SPD).
+            d["appearance"] = self._appearance_for(d["kind"], typ)
         if d.get("type") in ("potion", "scroll") and d.get("kind") not in self.identified_kinds:
             d["name"] = self._label_for(d["kind"], d["type"])
             d["kind"] = d["type"]
             d.pop("effect", None)
             d["level_known"] = False
+            if "description" in d:
+                d["description"] = (
+                    "You'll have to drink it to find out what it does."
+                    if d["type"] == "potion"
+                    else "You'll have to read it to find out what it does."
+                )
         return d
 
     def _serialize_player(self, p: Player) -> dict:
@@ -1397,6 +1561,7 @@ class GameInstance:
             if live is not None:
                 node["actions"] = live.actions(p)
                 node["default_action"] = live.default_action()
+                node["description"] = live.description(p)
             self._mask_item_dict(node)
 
         belongings = d.get("belongings", {})

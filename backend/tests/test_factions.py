@@ -31,31 +31,43 @@ def test_faction_combat_restrictions():
     # They are in the same faction, so p2 should NOT take damage
     assert p2.hp == initial_p2_hp, "Players should not damage each other"
     
-    # Add a mob (different faction)
+    # Move p2 away so it doesn't interfere with mob targeting
+    p2.pos = Position(x=5, y=5)
+    # Manually move p1 so we know exact position
+    p1.pos = Position(x=2, y=1)
+    game.grid[1][3] = 1 # Floor at x=3, y=1
+    
+    # Add a mob (different faction) — orthogonally adjacent to p1 at (2,1)
     mob_id = "mob1"
     from app.engine.entities.base import Mob as MobEntity
     game.mobs[mob_id] = MobEntity(
         id=mob_id,
         name="Rat",
-        pos=Position(x=1, y=2),
+        pos=Position(x=3, y=1),
         hp=10,
         max_hp=10,
         attack=2,
         defense=0,
+        attack_skill=100,
+        defense_skill=0,
+        dr_min=0,
+        dr_max=0,
+        damage_min=20,
+        damage_max=20,
         faction=Faction.DUNGEON
     )
-    game.grid[2][1] = 1 # Floor
     mob = game.mobs[mob_id]
+    p1.attack_skill = 100  # guarantee hits
     
-    # p1 attacks mob
-    game.move_entity(p1_id, 0, 1)
+    # p1 attacks mob (p1 at (2,1), mob at (3,1) — adjacent)
+    game.move_entity(p1_id, 1, 0)
     
     # Different factions, mob SHOULD take damage
     assert mob.hp < 10, "Player should be able to attack mob"
     
     # Mob attacks player
     initial_p1_hp = p1.hp
-    game.move_entity(mob_id, 0, -1)
+    game.move_entity(mob_id, -1, 0)
     assert p1.hp < initial_p1_hp, "Mob should be able to attack player"
 
 def test_mob_vs_mob_no_damage():
