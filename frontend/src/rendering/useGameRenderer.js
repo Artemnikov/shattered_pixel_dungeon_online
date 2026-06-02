@@ -8,6 +8,7 @@ import { drawMobs } from './draw/mobs';
 import { drawPlayers } from './draw/players';
 import { advanceAndDrawProjectiles } from './draw/projectiles';
 import { advanceAndDrawParticles } from './draw/particles';
+import { advanceAndDrawCheckedCells } from './draw/searchEffects';
 import { advanceAndDrawFloatingText } from './draw/floatingText';
 
 export default function useGameRenderer({
@@ -24,6 +25,7 @@ export default function useGameRenderer({
   dyingMobsRef,
   playerAnimRef,
   particlesRef,
+  searchEffectsRef,
   floatingTextRef,
   myPlayerIdRef,
   panOffsetRef,
@@ -122,6 +124,7 @@ export default function useGameRenderer({
       drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef, dyingMobsRef });
       drawPlayers(ctx, { entitiesRef, visionRef, assetImages, playerAnimRef, myPlayerId });
       drawGridCaps(ctx, { grid, depth, assetImages, visionRef });
+      advanceAndDrawCheckedCells(ctx, { ref: searchEffectsRef });
       advanceAndDrawParticles(ctx, { particlesRef });
       advanceAndDrawFloatingText(ctx, { floatingTextRef });
       advanceAndDrawProjectiles(ctx, { projectilesRef });

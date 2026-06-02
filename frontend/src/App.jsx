@@ -83,6 +83,7 @@ function App() {
   const dyingMobsRef = useRef({});
   const playerAnimRef = useRef({});
   const particlesRef = useRef([]);
+  const searchEffectsRef = useRef([]);
   const floatingTextRef = useRef([]);
   const depthRef = useRef(1);
 
@@ -141,7 +142,7 @@ function App() {
     gameId, selectedClass, difficulty, playerName,
     socketRef, gridRef, myPlayerIdRef, entitiesRef,
     visionRef, openDoorsRef, projectilesRef,
-    mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef, floatingTextRef, wasDownedRef,
+    mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef, searchEffectsRef, floatingTextRef, wasDownedRef,
     setGrid, setDepth, setMyPlayerId, setInventory,
     setEquippedItems, setMyStats, setDifficulty,
     setGold, setEnergy, setBelongings, setQuickslot,
@@ -159,7 +160,7 @@ function App() {
   useGameRenderer({
     canvasRef, grid, myPlayerId, depth, assetImages,
     entitiesRef, visionRef, openDoorsRef, projectilesRef,
-    mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef, floatingTextRef, myPlayerIdRef,
+    mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef, searchEffectsRef, floatingTextRef, myPlayerIdRef,
     panOffsetRef, cameraLerpRef, zoomRef,
     isRefocusingRef, isDraggingRef,
     setCamera,

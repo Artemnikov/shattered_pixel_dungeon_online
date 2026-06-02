@@ -23,7 +23,17 @@ export default function useKeyboardControls({
         return;
       }
       if (e.key === 'e') {
-        triggerSearch();
+        // Mirror the original: search is the second of a double-press (1st E enters
+        // examine mode, 2nd searches). The remake has no examine mode, so a single
+        // press is inert and only a double-tap within 300ms triggers the search.
+        const now = Date.now();
+        const isDoubleTap = lastKeyRef.current.key === 'e' && (now - lastKeyRef.current.time) < 300;
+        if (isDoubleTap) {
+          triggerSearch();
+          lastKeyRef.current = { key: null, time: 0 };
+        } else {
+          lastKeyRef.current = { key: 'e', time: now };
+        }
         return;
       }
       if (e.key === ' ' || e.key === 'Spacebar') {

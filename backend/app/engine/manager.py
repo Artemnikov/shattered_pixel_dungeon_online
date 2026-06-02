@@ -607,7 +607,11 @@ class GameInstance:
 
         floor = self._get_or_create_floor(player.floor_id)
         patches: List[dict] = []
-        found_secret_door = False
+        # Every in-bounds cell scanned this search, so the client can sweep a
+        # CheckedCell ring over the whole radius (mirrors the original drawing a
+        # CheckedCell on each cell in range, not only the ones that revealed something).
+        checked: List[List[int]] = []
+        found_secret = False
 
         for dy in (-1, 0, 1):
             for dx in (-1, 0, 1):
@@ -618,16 +622,18 @@ class GameInstance:
                 if not (0 <= tx < self.width and 0 <= ty < self.height):
                     continue
 
+                checked.append([tx, ty])
                 pos = (tx, ty)
                 if pos in floor.hidden_doors:
                     actual_tile = floor.hidden_doors.pop(pos)
                     floor.grid[ty][tx] = actual_tile
                     patches.append({"x": tx, "y": ty, "tile": actual_tile})
-                    found_secret_door = True
+                    found_secret = True
 
                 trap = floor.traps.get(pos)
                 if trap and trap.hidden:
                     trap.hidden = False
+                    found_secret = True
                     if floor.grid[ty][tx] == TileType.FLOOR:
                         floor.grid[ty][tx] = TileType.FLOOR_COBBLE
                         patches.append({"x": tx, "y": ty, "tile": TileType.FLOOR_COBBLE})
@@ -639,10 +645,23 @@ class GameInstance:
             floor.rebuild_flags()
             self.add_event("MAP_PATCH", {"tiles": patches}, floor_id=player.floor_id)
 
-        if found_secret_door:
+        # Original plays the SECRET sound whenever a door OR a trap is revealed.
+        if found_secret:
             self.add_event("PLAY_SOUND", {"sound": "SECRET"}, player_id=player_id)
 
-        self.add_event("SEARCH", {"player": player_id, "revealed_tiles": len(patches)}, player_id=player_id)
+        # Searcher-only: drives the operate (hand-raise) animation + the cyan ring
+        # sweep on the searching client. x/y is the hero position the rings emanate from.
+        self.add_event(
+            "SEARCH",
+            {
+                "player": player_id,
+                "x": player.pos.x,
+                "y": player.pos.y,
+                "cells": checked,
+                "revealed_tiles": len(patches),
+            },
+            player_id=player_id,
+        )
 
     def _try_unlock_locked_door(self, player: Player, floor: FloorState, x: int, y: int) -> bool:
         key_id = floor.locked_doors.get((x, y))
@@ -857,9 +876,6 @@ class GameInstance:
         is_wand = isinstance(item, Wand)
         print(f"[perform_ranged_attack] is_throwable={is_throwable} is_weapon={is_weapon} is_wand={is_wand}")
 
-        if not (is_throwable or is_wand or (is_weapon and getattr(item, "projectile_type", None))):
-            print(f"[perform_ranged_attack] BAIL: not a ranged weapon")
-            return None
 
         if is_wand and item.charges <= 0:
             print(f"[perform_ranged_attack] BAIL: wand out of charges")
@@ -875,7 +891,7 @@ class GameInstance:
             return None
 
         dist = abs(player.pos.x - target_x) + abs(player.pos.y - target_y)
-        max_range = item.range if hasattr(item, "range") else 1
+        max_range = item.range if hasattr(item, "range") else 5
         print(f"[perform_ranged_attack] dist={dist}, max_range={max_range}")
         if dist > max_range:
             print(f"[perform_ranged_attack] BAIL: out of range")
@@ -974,7 +990,7 @@ class GameInstance:
 
         if is_wand:
             item.charges -= 1
-        elif is_throwable and item.consumable:
+        else:
             removed = player.belongings.backpack.detach(item.id)
             if removed is not None and player.belongings.get_item(item.id) is None:
                 player.quickslot.convert_to_placeholder(removed)

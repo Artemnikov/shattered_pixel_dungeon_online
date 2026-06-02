@@ -3,6 +3,7 @@ import { TILE_SIZE, PLAYER_ATTACK_DURATION, PLAYER_OPERATE_DURATION, HIT_CONNECT
 import { getWsBaseUrl } from '../config/urls';
 import AudioManager from '../audio/AudioManager';
 import { spawnBlood, spawnHeal } from '../rendering/draw/particles';
+import { spawnCheckedCells } from '../rendering/draw/searchEffects';
 import { spawnFloatingText } from '../rendering/draw/floatingText';
 
 // Blood color per mob (default red; Goo bleeds green like its acidic body).
@@ -25,6 +26,7 @@ export default function useGameSocket({
   dyingMobsRef,
   playerAnimRef,
   particlesRef,
+  searchEffectsRef,
   floatingTextRef,
   wasDownedRef,
   setGrid,
@@ -254,7 +256,7 @@ export default function useGameSocket({
           handleEvent(event, {
             myPlayerIdRef, gridRef, setGrid, entitiesRef, visionRef,
             projectilesRef, mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef,
-            floatingTextRef,
+            searchEffectsRef, floatingTextRef,
           });
         });
       }
@@ -272,10 +274,25 @@ export default function useGameSocket({
 function handleEvent(event, {
   myPlayerIdRef, gridRef, setGrid, entitiesRef, visionRef,
   projectilesRef, mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef,
-  floatingTextRef,
+  searchEffectsRef, floatingTextRef,
 }) {
   if (event.type === 'PLAY_SOUND') {
     AudioManager.play(event.data.sound);
+    return;
+  }
+
+  if (event.type === 'SEARCH') {
+    // Reveal/search feedback (searcher-only event): the hero plays the operate
+    // hand-raise pose and a cyan CheckedCell ring sweeps outward over the searched
+    // cells, mirroring Hero.search() -> sprite.operate() + GameScene.effectOverFog().
+    const pid = event.data.player;
+    if (playerAnimRef && entitiesRef.current.players[pid]) {
+      if (!playerAnimRef.current[pid]) playerAnimRef.current[pid] = {};
+      playerAnimRef.current[pid].operateUntil = performance.now() + PLAYER_OPERATE_DURATION;
+    }
+    if (searchEffectsRef) {
+      spawnCheckedCells(searchEffectsRef, event.data.cells, event.data.x, event.data.y);
+    }
     return;
   }
 
