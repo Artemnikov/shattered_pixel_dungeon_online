@@ -86,6 +86,25 @@ def test_player_takes_damage():
     
     # Mob attacks player by moving into them
     game.move_entity(mob_id, -1, 0)
-    
+
     # Mob deals 2 damage, no DR
     assert player.hp == 18
+
+
+def test_mob_attack_cooldown_decoupled_from_speed():
+    """A fast-moving mob must not attack faster than a slow one — attack speed is
+    independent of movement `speed`, and is raised to the player's weapon cadence
+    so enemies can't land several hits between player swings (regression)."""
+    from app.engine.entities.mobs import Rat, Crab
+
+    game = GameInstance("test-game")
+    rat = game._spawn_mob_at(Rat, 1, 1)
+    crab = game._spawn_mob_at(Crab, 1, 1)
+
+    # Crab moves at speed 2.0, Rat at 1.0 — but they attack at the same rate.
+    assert crab.speed > rat.speed
+    assert crab.attack_cooldown == rat.attack_cooldown
+
+    # Baseline matches the standard player weapon cadence (3.0s), so a basic mob
+    # trades blow-for-blow instead of attacking 3-4× per player swing.
+    assert rat.attack_cooldown == 3.0

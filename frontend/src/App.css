@@ -327,7 +327,21 @@
 }
 /* Targeting Mode */
 .cursor-crosshair {
-  cursor: crosshair !important;
+  cursor: crosshair;
+}
+
+/* Desktop mode: custom cursor (cursor_mouse.png) for interactive UI elements */
+.desktop-mode .inv-slot,
+.desktop-mode .inv-bag-tab,
+.desktop-mode .toolbar-slot,
+.desktop-mode .quickslot,
+.desktop-mode .inventory-toggle-btn-bottom,
+.desktop-mode .fullscreen-btn,
+.desktop-mode .search-btn,
+.desktop-mode .close-btn,
+.desktop-mode .wnd-item-actions button,
+.desktop-mode .rc-menu button {
+  cursor: var(--cursor-mouse, pointer);
 }
 
 .targeting-active {

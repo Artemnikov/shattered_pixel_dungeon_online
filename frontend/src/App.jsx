@@ -3,6 +3,8 @@ import './App.css';
 
 import CharacterSelection from './CharacterSelection';
 import MainMenu from './menu/MainMenu';
+import cursorMouseUrl from './assets/cursors/cursor_mouse.png';
+import cursorControllerUrl from './assets/cursors/cursor_controller.png';
 
 import { TILE_SIZE } from './constants';
 import useAudioUnlock from './audio/useAudioUnlock';
@@ -389,6 +391,15 @@ function App() {
     }} />;
   }
 
+  const isDesktop = interfaceSize > 0;
+  const cursorStyle = targetingMode
+    ? isDesktop
+      ? `url(${cursorControllerUrl}) 8 8, crosshair`
+      : 'crosshair'
+    : isDesktop
+      ? `url(${cursorMouseUrl}) 1 1, auto`
+      : 'default';
+
   // Toolbar quickslots mirror the real quickslot state (as in the original game),
   // resolving each slot's item id against the flattened belongings.
   const toolbarItems = Array.from({ length: 6 }).map((_, i) => {
@@ -397,7 +408,8 @@ function App() {
   });
 
   return (
-    <div className="game-container">
+    <div className={`game-container ${isDesktop ? 'desktop-mode' : ''}`}
+         style={isDesktop ? { '--cursor-mouse': `url(${cursorMouseUrl}) 1 1, pointer` } : {}}>
       <LoadingOverlay visible={grid.length === 0} />
 
       <StatusPane myStats={myStats} depth={depth} onSearch={triggerSearch} />
@@ -408,6 +420,7 @@ function App() {
           width={viewport.width}
           height={viewport.height}
           className={`game-canvas ${targetingMode ? 'cursor-crosshair' : ''}`}
+          style={{ cursor: cursorStyle }}
           onClick={handleCanvasClick}
         />
       </div>

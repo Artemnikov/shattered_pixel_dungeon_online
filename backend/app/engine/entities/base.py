@@ -792,6 +792,12 @@ class Mob(Entity):
     flying: bool = False
     properties: List[str] = Field(default_factory=list)
     attack_range: int = 1
+    # Attack speed is an independent property from movement `speed` (mirrors SPD,
+    # where a mob's attackDelay and moveSpeed are separate). Baselined to the
+    # player's standard weapon cadence so a basic mob trades blow-for-blow rather
+    # than landing several hits between player swings. Faster movers (e.g. Crab,
+    # speed=2.0) still chase quicker but attack at this normal rate.
+    attack_cooldown: float = 3.0
 
 class Player(Entity):
     type: str = EntityType.PLAYER

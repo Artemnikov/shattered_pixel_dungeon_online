@@ -59,8 +59,6 @@ HEAL_TICK_INTERVAL = 20
 ROOM_HEAL_AMOUNT = 10
 PASSIVE_REGEN_INTERVAL = 10
 
-# SPD base cooldown for speed=1.0 enemies
-MOB_BASE_COOLDOWN = 1.0
 # Respawn timer: 50 turns (ticks) base
 RESPAWN_TURNS = 50
 # No respawns on floor 1
@@ -328,8 +326,9 @@ class GameInstance:
 
     def _spawn_mob_at(self, cls: Type[MobEntity], x: int, y: int) -> MobEntity:
         mob_id = str(uuid.uuid4())
+        # attack_cooldown comes from the mob class, decoupled from movement
+        # `speed` (a fast mover chases quicker but does not attack quicker).
         mob = cls(id=mob_id, pos=Position(x=x, y=y), faction=Faction.DUNGEON)
-        mob.attack_cooldown = MOB_BASE_COOLDOWN / mob.speed
         return mob
 
     def _spawn_content(self, floor: FloorState):
