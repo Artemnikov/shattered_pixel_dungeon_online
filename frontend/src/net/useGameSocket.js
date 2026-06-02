@@ -109,13 +109,12 @@ export default function useGameSocket({
           });
           if (setBelongings) setBelongings(p.belongings || null);
           if (setQuickslot) setQuickslot(p.quickslot || null);
-          const healthBoost = p.equipped_wearable ? p.equipped_wearable.health_boost : 0;
           // Death sound is played for all players (incl. local) by the entity-sync
           // transition below, so it is not duplicated here.
           wasDownedRef.current = p.is_downed;
           setMyStats({
             hp: p.hp,
-            maxHp: p.max_hp + healthBoost,
+            maxHp: p.max_hp,
             name: p.name,
             isDowned: p.is_downed,
             isRegen: (p.heal_left || 0) > 0,

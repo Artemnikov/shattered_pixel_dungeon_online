@@ -74,8 +74,7 @@ export function drawPlayers(ctx, { entitiesRef, visionRef, assetImages, playerAn
 
     if (player.id !== myPlayerId && !player.is_downed) {
       const hpBarWidth = TILE_SIZE - 4;
-      const healthBoost = player.equipped_wearable ? player.equipped_wearable.health_boost : 0;
-      const playerHpPercent = player.hp / (player.max_hp + healthBoost);
+      const playerHpPercent = player.hp / player.max_hp;
       ctx.fillStyle = '#111';
       ctx.fillRect(x + 2, y - 12, hpBarWidth, 4);
       ctx.fillStyle = player.heal_left > 0 ? '#f1c40f' : '#2ecc71';

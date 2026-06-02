@@ -1296,8 +1296,11 @@ class GameInstance:
         )
 
     def _apply_passive_regen(self, player: Player):
-        # Passive HP regeneration: 1 HP every PASSIVE_REGEN_INTERVAL ticks.
-        # Mirrors SPD's base regen of 1 HP per 10 turns.
+        floor = self.floors.get(player.floor_id)
+        if floor is None or not floor.rooms:
+            return
+        if not self._is_in_entrance_room(floor, player.pos.x, player.pos.y):
+            return
         if player.hp <= 0 or player.hp >= player.get_total_max_hp():
             player._regen_cooldown = 0
             return
