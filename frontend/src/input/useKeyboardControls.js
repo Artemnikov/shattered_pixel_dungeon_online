@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 const DIRECTION_KEYS = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd']);
+const DEBOUNCE_MS = 100;
 
 function isUp(key) { return key === 'ArrowUp' || key === 'w'; }
 function isDown(key) { return key === 'ArrowDown' || key === 's'; }
@@ -45,6 +46,8 @@ export default function useKeyboardControls({
   const lastKeyRef = useRef({ key: null, time: 0 });
   const holdSkipRef = useRef(false);
   const pressedKeysRef = useRef(new Set());
+  const moveTimerRef = useRef(null);
+  const pendingDirectionRef = useRef(null);
 
   const sendMove = (direction) => {
     if (direction && socketRef.current?.readyState === WebSocket.OPEN) {
@@ -52,6 +55,25 @@ export default function useKeyboardControls({
       isDraggingRef.current = false;
       socketRef.current.send(JSON.stringify({ type: 'MOVE', direction }));
     }
+  };
+
+  const flushMove = () => {
+    if (pendingDirectionRef.current) {
+      sendMove(pendingDirectionRef.current);
+      pendingDirectionRef.current = null;
+    }
+    if (moveTimerRef.current) {
+      clearTimeout(moveTimerRef.current);
+      moveTimerRef.current = null;
+    }
+  };
+
+  const scheduleMove = (direction) => {
+    pendingDirectionRef.current = direction;
+    if (moveTimerRef.current) {
+      clearTimeout(moveTimerRef.current);
+    }
+    moveTimerRef.current = setTimeout(flushMove, DEBOUNCE_MS);
   };
 
   useEffect(() => {
@@ -100,13 +122,26 @@ export default function useKeyboardControls({
 
       const currentPressed = pressedKeysRef.current;
       if (DIRECTION_KEYS.has(e.key) && socketRef.current?.readyState === WebSocket.OPEN) {
-        if (e.repeat) {
+        const direction = getDirectionFromKeys(currentPressed);
+        if (!direction) return;
+
+        if (direction.includes('_')) {
+          flushMove();
+          if (e.repeat) {
+            holdSkipRef.current = !holdSkipRef.current;
+            if (holdSkipRef.current) return;
+          }
+          sendMove(direction);
+        } else if (e.repeat) {
           holdSkipRef.current = !holdSkipRef.current;
-          if (holdSkipRef.current) return;
+          if (!holdSkipRef.current) {
+            flushMove();
+            sendMove(direction);
+          }
         } else {
           holdSkipRef.current = false;
+          scheduleMove(direction);
         }
-        sendMove(getDirectionFromKeys(currentPressed));
       }
     };
 
@@ -114,12 +149,15 @@ export default function useKeyboardControls({
       pressedKeysRef.current.delete(e.key);
       const direction = getDirectionFromKeys(pressedKeysRef.current);
       if (direction) {
-        sendMove(direction);
+        holdSkipRef.current = false;
+      } else {
+        flushMove();
       }
     };
 
     const handleBlur = () => {
       pressedKeysRef.current.clear();
+      flushMove();
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -129,6 +167,9 @@ export default function useKeyboardControls({
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('blur', handleBlur);
+      if (moveTimerRef.current) {
+        clearTimeout(moveTimerRef.current);
+      }
     };
   }, [inventory, handleToolbarClick, handleToolbarDoubleClick, socketRef, setShowInventory, onExamineOrReveal, onCancelModes, triggerWait, isRefocusingRef, isDraggingRef, quickslot, itemsById, onRadialSelect]);
 }
