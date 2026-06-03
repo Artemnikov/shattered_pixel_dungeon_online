@@ -1,14 +1,15 @@
 import { useEffect, useRef } from 'react';
 
 const DIRECTION_KEYS = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd']);
-const DEBOUNCE_MS = 100;
 
 function isUp(key) { return key === 'ArrowUp' || key === 'w'; }
 function isDown(key) { return key === 'ArrowDown' || key === 's'; }
 function isLeft(key) { return key === 'ArrowLeft' || key === 'a'; }
 function isRight(key) { return key === 'ArrowRight' || key === 'd'; }
 
-function getDirectionFromKeys(pressed) {
+// Net movement vector from the set of currently held direction keys. Opposite keys
+// cancel out (e.g. holding left+right yields dx=0). Diagonals are just dx,dy = ±1 each.
+function getVector(pressed) {
   let dx = 0, dy = 0;
   for (const key of pressed) {
     if (isUp(key)) dy = -1;
@@ -16,16 +17,7 @@ function getDirectionFromKeys(pressed) {
     if (isLeft(key)) dx = -1;
     if (isRight(key)) dx = 1;
   }
-  if (dx === 0 && dy === 0) return null;
-  if (dx === 0 && dy === -1) return 'UP';
-  if (dx === 0 && dy === 1) return 'DOWN';
-  if (dx === -1 && dy === 0) return 'LEFT';
-  if (dx === 1 && dy === 0) return 'RIGHT';
-  if (dx === -1 && dy === -1) return 'UP_LEFT';
-  if (dx === 1 && dy === -1) return 'UP_RIGHT';
-  if (dx === -1 && dy === 1) return 'DOWN_LEFT';
-  if (dx === 1 && dy === 1) return 'DOWN_RIGHT';
-  return null;
+  return { dx, dy };
 }
 
 export default function useKeyboardControls({
@@ -44,39 +36,27 @@ export default function useKeyboardControls({
   onRadialSelect,
 }) {
   const lastKeyRef = useRef({ key: null, time: 0 });
-  const holdSkipRef = useRef(false);
   const pressedKeysRef = useRef(new Set());
-  const moveTimerRef = useRef(null);
-  const pendingDirectionRef = useRef(null);
-
-  const sendMove = (direction) => {
-    if (direction && socketRef.current?.readyState === WebSocket.OPEN) {
-      isRefocusingRef.current = true;
-      isDraggingRef.current = false;
-      socketRef.current.send(JSON.stringify({ type: 'MOVE', direction }));
-    }
-  };
-
-  const flushMove = () => {
-    if (pendingDirectionRef.current) {
-      sendMove(pendingDirectionRef.current);
-      pendingDirectionRef.current = null;
-    }
-    if (moveTimerRef.current) {
-      clearTimeout(moveTimerRef.current);
-      moveTimerRef.current = null;
-    }
-  };
-
-  const scheduleMove = (direction) => {
-    pendingDirectionRef.current = direction;
-    if (moveTimerRef.current) {
-      clearTimeout(moveTimerRef.current);
-    }
-    moveTimerRef.current = setTimeout(flushMove, DEBOUNCE_MS);
-  };
+  const lastSentVectorRef = useRef({ dx: 0, dy: 0 });
 
   useEffect(() => {
+    // Send the current held-direction intent to the server, which paces the actual
+    // stepping. Only sends on change so key auto-repeat is irrelevant. dx,dy = 0 stops.
+    const syncMoveIntent = () => {
+      if (socketRef.current?.readyState !== WebSocket.OPEN) return;
+      const { dx, dy } = getVector(pressedKeysRef.current);
+      const last = lastSentVectorRef.current;
+      if (dx === last.dx && dy === last.dy) return;
+      lastSentVectorRef.current = { dx, dy };
+      if (dx === 0 && dy === 0) {
+        socketRef.current.send(JSON.stringify({ type: 'MOVE_STOP' }));
+      } else {
+        isRefocusingRef.current = true;
+        isDraggingRef.current = false;
+        socketRef.current.send(JSON.stringify({ type: 'MOVE_INTENT', dx, dy }));
+      }
+    };
+
     const handleKeyDown = (e) => {
       pressedKeysRef.current.add(e.key);
 
@@ -120,44 +100,23 @@ export default function useKeyboardControls({
         }
       }
 
-      const currentPressed = pressedKeysRef.current;
-      if (DIRECTION_KEYS.has(e.key) && socketRef.current?.readyState === WebSocket.OPEN) {
-        const direction = getDirectionFromKeys(currentPressed);
-        if (!direction) return;
-
-        if (direction.includes('_')) {
-          flushMove();
-          if (e.repeat) {
-            holdSkipRef.current = !holdSkipRef.current;
-            if (holdSkipRef.current) return;
-          }
-          sendMove(direction);
-        } else if (e.repeat) {
-          holdSkipRef.current = !holdSkipRef.current;
-          if (!holdSkipRef.current) {
-            flushMove();
-            sendMove(direction);
-          }
-        } else {
-          holdSkipRef.current = false;
-          scheduleMove(direction);
-        }
+      if (DIRECTION_KEYS.has(e.key)) {
+        // Auto-repeat keydowns don't change the held set, so syncMoveIntent no-ops on
+        // them; the server paces repeated stepping while the key stays down.
+        syncMoveIntent();
       }
     };
 
     const handleKeyUp = (e) => {
       pressedKeysRef.current.delete(e.key);
-      const direction = getDirectionFromKeys(pressedKeysRef.current);
-      if (direction) {
-        holdSkipRef.current = false;
-      } else {
-        flushMove();
+      if (DIRECTION_KEYS.has(e.key)) {
+        syncMoveIntent();
       }
     };
 
     const handleBlur = () => {
       pressedKeysRef.current.clear();
-      flushMove();
+      syncMoveIntent();
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -167,9 +126,6 @@ export default function useKeyboardControls({
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('blur', handleBlur);
-      if (moveTimerRef.current) {
-        clearTimeout(moveTimerRef.current);
-      }
     };
   }, [inventory, handleToolbarClick, handleToolbarDoubleClick, socketRef, setShowInventory, onExamineOrReveal, onCancelModes, triggerWait, isRefocusingRef, isDraggingRef, quickslot, itemsById, onRadialSelect]);
 }

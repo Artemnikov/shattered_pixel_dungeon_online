@@ -867,6 +867,9 @@ class Player(Entity):
     # Throttles the passive +10/s healing while standing in a floor's entrance room.
     room_heal_cooldown: int = 0
     path_queue: List[Tuple[int, int]] = []
+    # Held keyboard direction; the update tick steps the player at AUTO_MOVE_INTERVAL
+    # while this is set, mirroring tap-to-path pacing. None when no key is held.
+    move_intent: Optional[Tuple[int, int]] = None
     last_auto_move_time: float = 0.0
     is_admin: bool = False
 

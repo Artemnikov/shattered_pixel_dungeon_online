@@ -141,13 +141,24 @@ async def game_websocket(websocket: WebSocket, game_id: str, class_type: str = "
                 elif direction == "DOWN_LEFT": dx = -1; dy = 1
                 elif direction == "DOWN_RIGHT": dx = 1; dy = 1
                 if player_id in game.players:
+                    # A single tap-step overrides any held keyboard intent / travel path.
                     game.players[player_id].path_queue = []
+                    game.players[player_id].move_intent = None
                 game.move_entity(player_id, dx, dy)
+
+            elif message["type"] == "MOVE_INTENT":
+                # Held keyboard direction. The update tick paces the actual stepping
+                # (see GameInstance.update_tick), so movement speed is server-authoritative.
+                game.set_move_intent(player_id, int(message.get("dx", 0)), int(message.get("dy", 0)))
+
+            elif message["type"] == "MOVE_STOP":
+                game.set_move_intent(player_id, 0, 0)
 
             elif message["type"] == "MOVE_TO":
                 tx, ty = message.get("x"), message.get("y")
                 if tx is not None and ty is not None and player_id in game.players:
                     player = game.players[player_id]
+                    player.move_intent = None
                     path = game._bfs_full_path(player.pos, Position(x=tx, y=ty), player.floor_id)
                     player.path_queue = list(path)
                     player.last_auto_move_time = 0.0

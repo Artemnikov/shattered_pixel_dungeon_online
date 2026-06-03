@@ -729,6 +729,25 @@ class GameInstance:
             if player.hp / max(1, player.get_total_max_hp()) <= 0.3:
                 self.add_event("PLAY_SOUND", {"sound": "HEALTH_WARN"}, player_id=player.id)
 
+    def set_move_intent(self, entity_id: str, dx: int, dy: int):
+        """Set/clear a player's held keyboard direction. The update tick paces the
+        actual stepping at AUTO_MOVE_INTERVAL."""
+        player = self.players.get(entity_id)
+        if player is None:
+            return
+        if dx == 0 and dy == 0:
+            player.move_intent = None
+            return
+        was_moving = player.move_intent is not None
+        player.move_intent = (dx, dy)
+        player.path_queue = []
+        # Grant an immediate first step only when starting from rest. Changing
+        # direction mid-walk keeps the existing cadence, so rapidly switching keys
+        # (e.g. the two keydowns that begin a diagonal) can't burst multiple steps
+        # inside one AUTO_MOVE_INTERVAL.
+        if not was_moving:
+            player.last_auto_move_time = 0.0
+
     def move_entity(self, entity_id: str, dx: int, dy: int):
         floor_id, entity = self._get_floor_for_entity(entity_id)
         if entity is None or floor_id is None:
@@ -745,11 +764,8 @@ class GameInstance:
         if not (0 <= new_x < self.width and 0 <= new_y < self.height):
             return
 
-        if dx != 0 and dy != 0:
-            if not floor.flags.passable[entity.pos.y][entity.pos.x + dx]:
-                return
-            if not floor.flags.passable[entity.pos.y + dy][entity.pos.x]:
-                return
+        # Diagonal moves past a wall corner are allowed, matching SPD's PathFinder
+        # (it only checks the destination cell's passability, not the orthogonal cells).
 
         target_entity = None
         for p in self._players_on_floor(floor_id):
@@ -1194,7 +1210,17 @@ class GameInstance:
             if player.is_downed or not player.is_alive:
                 continue
 
-            if player.path_queue:
+            if player.move_intent:
+                # Held keyboard direction: step at the same cadence as tap-to-path so
+                # movement speed is server-authoritative (not tied to OS key-repeat).
+                # move_entity no-ops on walls and bump-attacks mobs, so holding into an
+                # obstacle is safe.
+                now = time.time()
+                if now - player.last_auto_move_time >= AUTO_MOVE_INTERVAL:
+                    dx, dy = player.move_intent
+                    player.last_auto_move_time = now
+                    self.move_entity(player.id, dx, dy)
+            elif player.path_queue:
                 now = time.time()
                 if now - player.last_auto_move_time >= AUTO_MOVE_INTERVAL:
                     dx, dy = player.path_queue.pop(0)
@@ -1613,9 +1639,7 @@ class GameInstance:
                     and floor.flags.passable[ny][nx]
                     and (nx, ny) not in visited
                 ):
-                    if dx != 0 and dy != 0:
-                        if not floor.flags.passable[y][x + dx] or not floor.flags.passable[y + dy][x]:
-                            continue
+                    # Diagonal corner-cut allowed (SPD-faithful): no orthogonal check.
                     visited.add((nx, ny))
                     queue.append((nx, ny, path + [(dx, dy)]))
             if len(visited) > 500:
