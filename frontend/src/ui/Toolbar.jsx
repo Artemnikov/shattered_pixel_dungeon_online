@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import AudioManager from '../audio/AudioManager';
 import itemsSpriteSrc from '../assets/pixel-dungeon/sprites/items.png';
 import toolbarSpriteSrc from '../assets/pixel-dungeon/interfaces/toolbar.png';
+import iconsSpriteSrc from '../assets/pixel-dungeon/interfaces/icons.png';
 import { coordsForItem } from '../rendering/sprites';
 import { itemRects } from '../rendering/spriteRects';
 
@@ -30,30 +31,39 @@ export default function Toolbar({
   items = [],
   equippedItems = {},
   targetingMode = false,
+  swappedQuickslots = false,
   onWait,
   onSearch,
   onInventory,
+  onQuickBag,
   onSlotClick,
   onSlotDoubleClick,
+  onSwap,
 }) {
   const canvasRef = useRef(null);
   const areasRef = useRef(makeButtonAreas());
-  const imgsRef = useRef({ toolbar: null, items: null });
+  const imgsRef = useRef({ toolbar: null, items: null, icons: null });
   const imgsLoaded = useRef(false);
   const animFrame = useRef(null);
+  const touchTimerRef = useRef(null);
+  const longPressFiredRef = useRef(false);
 
   useEffect(() => {
     const toolbarImg = new Image();
     const itemsImg = new Image();
+    const iconsImg = new Image();
     let loaded = 0;
-    const check = () => { if (++loaded >= 2) imgsLoaded.current = true; };
+    const check = () => { if (++loaded >= 3) imgsLoaded.current = true; };
     toolbarImg.onload = check;
     itemsImg.onload = check;
+    iconsImg.onload = check;
     toolbarImg.src = toolbarSpriteSrc;
     itemsImg.src = itemsSpriteSrc;
+    iconsImg.src = iconsSpriteSrc;
     if (toolbarImg.complete && toolbarImg.naturalWidth > 0) check();
     if (itemsImg.complete && itemsImg.naturalWidth > 0) check();
-    imgsRef.current = { toolbar: toolbarImg, items: itemsImg };
+    if (iconsImg.complete && iconsImg.naturalWidth > 0) check();
+    imgsRef.current = { toolbar: toolbarImg, items: itemsImg, icons: iconsImg };
   }, []);
 
   useEffect(() => {
@@ -61,12 +71,13 @@ export default function Toolbar({
     if (!canvas) return;
 
     const quickslotsToShow = 4 +
-      (canvasWidth > 152 * (3 / S) ? 1 : 0) +
-      (canvasWidth > 170 * (3 / S) ? 1 : 0);
+      (canvasWidth > 152 * S ? 1 : 0) +
+      (canvasWidth > 170 * S ? 1 : 0);
 
-    const startingSlot = quickSwapper && quickslotsToShow < 6 ? 0 : 0;
+    const startingSlot = quickSwapper && quickslotsToShow < 6
+      ? (swappedQuickslots ? 3 : 0) : 0;
     const endingSlot = quickSwapper && quickslotsToShow < 6
-      ? 2 : Math.min(startingSlot + quickslotsToShow - 1, 5);
+      ? startingSlot + 2 : Math.min(startingSlot + quickslotsToShow - 1, 5);
     const finalQuickslots = endingSlot - startingSlot + 1;
     const showSwap = quickSwapper && quickslotsToShow < 6;
 
@@ -96,15 +107,18 @@ export default function Toolbar({
     canvas.width = Math.ceil(totalW) * S;
     canvas.height = height;
 
-    const timer = requestAnimationFrame(() => render());
-    animFrame.current = timer;
-    return () => cancelAnimationFrame(timer);
+    animFrame.current = requestAnimationFrame(render);
+    return () => cancelAnimationFrame(animFrame.current);
 
     function render() {
       const ctx = canvas.getContext('2d');
       const ti = imgsRef.current.toolbar;
       const ii = imgsRef.current.items;
-      if (!ti || !ii || !ti.complete || !ii.complete) return;
+      const ici = imgsRef.current.icons;
+      if (!ti || !ii || !ici || !ti.complete || !ii.complete || !ici.complete) {
+        animFrame.current = requestAnimationFrame(render);
+        return;
+      }
 
       ctx.imageSmoothingEnabled = false;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -132,6 +146,46 @@ export default function Toolbar({
         const spec = isEnd ? QS_END : isStart ? QS_START : QS_MID;
         drawTool(spec, dx, dy, dw, dh);
         return spec;
+      }
+
+      function drawSwapPreview(btnArea) {
+        if (!ii?.complete || !ici?.complete) return;
+        const tiny = 7;
+
+        // Determine preview slots matching SPD's SlotSwapTool slot order
+        let previewSlots;
+        if (flipToolbar) {
+          previewSlots = swappedQuickslots ? [0, 1, 2] : [3, 4, 5];
+        } else {
+          previewSlots = swappedQuickslots ? [2, 1, 0] : [5, 4, 3];
+        }
+
+        // Draw CHANGES arrow from icons.png at (85,0,15,15)
+        const cx = (btnArea.x + 2) * sc;
+        const cy = (btnArea.y + 3) * sc;
+        ctx.drawImage(ici, 85, 0, 15, 15, cx, cy, tiny * sc, tiny * sc);
+
+        // Draw 3 item previews (icons[1-3] in SPD)
+        const previewPos = [
+          { x: 11, y: 3 },
+          { x: 2, y: 13 },
+          { x: 11, y: 13 },
+        ];
+
+        for (let i = 0; i < 3; i++) {
+          const item = items[previewSlots[i]];
+          if (!item) continue;
+          const coords = coordsForItem(item);
+          if (!coords) continue;
+          const rect = itemRects.get(coords[0], coords[1]);
+          const rx = rect ? rect.rx : 0;
+          const ry = rect ? rect.ry : 0;
+          const sw = rect ? Math.min(rect.w, tiny) : tiny;
+          const sh = rect ? Math.min(rect.h, tiny) : tiny;
+          const px = (btnArea.x + previewPos[i].x) * sc;
+          const py = (btnArea.y + previewPos[i].y) * sc;
+          ctx.drawImage(ii, coords[0] * 16 + rx, coords[1] * 16 + ry, sw, sh, px, py, sw * sc, sh * sc);
+        }
       }
 
       function drawItemSprite(item, dx, dy, slotW, slotH, borderL, borderR) {
@@ -237,6 +291,7 @@ export default function Toolbar({
 
           if (showSwap && areas.swap) {
             drawTool(SWAP_BTN, areas.swap.x * sc, yOff + areas.swap.y * sc, areas.swap.w * sc, areas.swap.h * sc);
+            drawSwapPreview(areas.swap);
           }
         } else {
           const toolbarW = (BTN_WAIT.w + TOOL_PAD) + (BTN_SEARCH.w + TOOL_PAD) + (BTN_INVENTORY.w + TOOL_PAD) + totalQsW + (showSwap ? SWAP_BTN.w + TOOL_PAD : 0);
@@ -282,6 +337,7 @@ export default function Toolbar({
 
           if (showSwap && areas.swap) {
             drawTool(SWAP_BTN, areas.swap.x * sc, yOff + areas.swap.y * sc, areas.swap.w * sc, areas.swap.h * sc);
+            drawSwapPreview(areas.swap);
           }
         }
 
@@ -298,11 +354,37 @@ export default function Toolbar({
 
       areasRef.current = areas;
     }
-  }, [mode, interfaceSize, flipToolbar, quickSwapper, canvasWidth, items, equippedItems, targetingMode]);
+  }, [mode, interfaceSize, flipToolbar, quickSwapper, swappedQuickslots, canvasWidth, items, equippedItems, targetingMode]);
+
+  const handlePointerDown = (e) => {
+    if (e.pointerType !== 'touch' || !onQuickBag) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / S;
+    const my = (e.clientY - rect.top) / S;
+    const areas = areasRef.current;
+
+    function hit(a) { return a && mx >= a.x && mx <= a.x + a.w && my >= a.y && my <= a.y + a.h; }
+
+    if (hit(areas.inventory)) {
+      longPressFiredRef.current = false;
+      touchTimerRef.current = setTimeout(() => {
+        longPressFiredRef.current = true;
+        AudioManager.play('CLICK');
+        if (onQuickBag) onQuickBag();
+      }, 500);
+    }
+  };
+
+  const handlePointerUp = () => {
+    clearTimeout(touchTimerRef.current);
+  };
 
   const handleClick = (e) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    if (longPressFiredRef.current) { longPressFiredRef.current = false; return; }
     const rect = canvas.getBoundingClientRect();
     const mx = (e.clientX - rect.left) / S;
     const my = (e.clientY - rect.top) / S;
@@ -316,8 +398,6 @@ export default function Toolbar({
       return;
     }
     if (hit(areas.search)) {
-      // Single click drives the stateful examine→reveal flow (1st click arms examine
-      // mode, 2nd performs the reveal) — handled by onSearch in App.jsx.
       AudioManager.play('CLICK');
       if (onSearch) onSearch();
       return;
@@ -329,6 +409,7 @@ export default function Toolbar({
     }
     if (hit(areas.swap)) {
       AudioManager.play('CLICK');
+      if (onSwap) onSwap();
       return;
     }
     for (let i = 0; i < areas.quickslots.length; i++) {
@@ -367,6 +448,10 @@ export default function Toolbar({
       className="toolbar-canvas"
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       style={{ imageRendering: 'pixelated', display: 'block' }}
     />
   );
