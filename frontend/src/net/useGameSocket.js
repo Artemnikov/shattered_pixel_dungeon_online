@@ -5,6 +5,7 @@ import AudioManager from '../audio/AudioManager';
 import { spawnBlood, spawnDust, spawnHeal } from '../rendering/draw/particles';
 import { spawnCheckedCells } from '../rendering/draw/searchEffects';
 import { spawnFloatingText } from '../rendering/draw/floatingText';
+import { coordsForItem } from '../rendering/sprites';
 
 // Blood color per mob (default red; Goo bleeds green like its acidic body).
 const BLOOD_COLORS = { Goo: '#8eb300' };
@@ -395,6 +396,11 @@ function handleEvent(event, {
     const targetX = event.data.target_x * TILE_SIZE + TILE_SIZE / 2;
     const targetY = event.data.target_y * TILE_SIZE + TILE_SIZE / 2;
 
+    // Thrown inventory items carry their own item data so they fly as the real
+    // item sprite; wands/arrows fall back to the generic projectile sprite map.
+    const thrownItem = event.data.item;
+    const spriteCoords = thrownItem ? coordsForItem(thrownItem) : null;
+
     projectilesRef.current.push({
       x: startX,
       y: startY,
@@ -403,6 +409,7 @@ function handleEvent(event, {
       targetX,
       targetY,
       type: event.data.projectile || 'arrow',
+      spriteCoords,
       progress: 0,
       rotation: 0,
       finished: false,
@@ -412,7 +419,9 @@ function handleEvent(event, {
     const isLocal = src === myPlayerIdRef.current;
     const visible = visionRef?.current?.visible;
     if (isLocal || visible?.has(`${event.data.x},${event.data.y}`)) {
-      if (event.data.projectile === 'magic_bolt') {
+      if (thrownItem) {
+        AudioManager.play('THROW');
+      } else if (event.data.projectile === 'magic_bolt') {
         AudioManager.play('ATTACK_MAGIC');
       } else {
         AudioManager.play('ATTACK_BOW');

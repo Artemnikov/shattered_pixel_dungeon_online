@@ -14,6 +14,7 @@ import waterStepSound from '../assets/sounds/water.mp3';
 import grassStepSound from '../assets/sounds/grass.mp3';
 import descendSound from '../assets/pixel-dungeon/audio/descend.mp3';
 import drinkSound from '../assets/sounds/drink.mp3';
+import throwSound from '../assets/sounds/miss.mp3';
 import levelUpSound from '../assets/sounds/levelup.mp3';
 import trapSound from '../assets/sounds/trap.mp3';
 import { effectiveSfxVolume } from '../menu/menuSettings';
@@ -31,6 +32,7 @@ class AudioManager {
         this.masterGain.connect(this.audioCtx.destination);
 
         this.loadSound('ATTACK_BOW', atkBowSound);
+        this.loadSound('THROW', throwSound);
         this.loadSound('ATTACK_MAGIC', zapSound);
         this.loadSound('HIT_MAGIC', hitMagicSound);
         this.loadSound('STEP', stepSound);

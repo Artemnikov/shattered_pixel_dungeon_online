@@ -34,7 +34,7 @@ export function advanceAndDrawProjectiles(ctx, { projectilesRef, assetImages }) 
 
     if (itemsImg) {
       const spriteSize = TILE_SIZE / TILE_SCALE;
-      const coords = PROJECTILE_SPRITE_MAP[proj.type] || [3, 9];
+      const coords = proj.spriteCoords || PROJECTILE_SPRITE_MAP[proj.type] || [3, 9];
       const sx = coords[0] * spriteSize;
       const sy = coords[1] * spriteSize;
 

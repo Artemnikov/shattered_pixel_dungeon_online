@@ -916,16 +916,21 @@ class GameInstance:
                     target_entity = m
                     break
 
+        ranged_event_data = {
+            "source": player_id,
+            "x": player.pos.x,
+            "y": player.pos.y,
+            "target_x": target_x,
+            "target_y": target_y,
+            "projectile": projectile_type,
+        }
+        # Thrown inventory items fly as their own sprite (not a generic dart).
+        # Wands keep the magic_bolt projectile.
+        if not is_wand:
+            ranged_event_data["item"] = self._serialize_floor_item(item)
         self.add_event(
             "RANGED_ATTACK",
-            {
-                "source": player_id,
-                "x": player.pos.x,
-                "y": player.pos.y,
-                "target_x": target_x,
-                "target_y": target_y,
-                "projectile": projectile_type,
-            },
+            ranged_event_data,
             floor_id=floor_id,
         )
 
