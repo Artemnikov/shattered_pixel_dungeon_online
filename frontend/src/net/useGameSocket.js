@@ -10,12 +10,20 @@ import { coordsForItem } from '../rendering/sprites';
 // Blood color per mob (default red; Goo bleeds green like its acidic body).
 const BLOOD_COLORS = { Goo: '#8eb300' };
 
+// Reconnect/heartbeat tuning.
+const HEARTBEAT_INTERVAL_MS = 15000; // app-level PING cadence
+const WATCHDOG_TIMEOUT_MS = 30000;   // force-reconnect if silent this long
+const RECONNECT_BASE_MS = 500;       // first backoff delay
+const RECONNECT_MAX_MS = 10000;      // backoff cap
+
 export default function useGameSocket({
   enabled,
   gameId,
+  sessionId,
   selectedClass,
   difficulty,
   playerName,
+  setConnectionStatus,
   socketRef,
   gridRef,
   myPlayerIdRef,
@@ -46,28 +54,72 @@ export default function useGameSocket({
   useEffect(() => {
     if (!enabled) return;
 
-    const wsBaseUrl = getWsBaseUrl();
-    const nameParam = playerName ? `&name=${encodeURIComponent(playerName)}` : '';
-    const urlParams = new URLSearchParams(window.location.search);
-    const adminSecret = urlParams.get('admin_secret') || '';
-    const adminParam = adminSecret ? `&admin_secret=${encodeURIComponent(adminSecret)}` : '';
-    const ws = new WebSocket(`${wsBaseUrl}/ws/game/${gameId}?class_type=${selectedClass}&difficulty=${difficulty}${nameParam}${adminParam}`);
-    socketRef.current = ws;
-    let hasConnected = false;
+    // Per-mount reconnect state. Refs would survive remounts; locals are scoped
+    // to this effect run and torn down by the cleanup below.
+    let attempt = 0;
+    let intentionalClose = false;
+    let reconnectTimer = null;
+    let heartbeatTimer = null;
+    let watchdogTimer = null;
+    let lastMsgAt = Date.now();
+    const status = (s) => { if (setConnectionStatus) setConnectionStatus(s); };
 
-    ws.onopen = () => {
-      hasConnected = true;
-    };
-    ws.onerror = () => {
-      if (!hasConnected) console.warn('Failed to connect to channel');
-    };
-    ws.onclose = () => {
-      if (!hasConnected) console.warn('Failed to connect to channel');
+    const clearTimers = () => {
+      if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
+      if (watchdogTimer) { clearInterval(watchdogTimer); watchdogTimer = null; }
     };
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'INIT') {
+    const scheduleReconnect = () => {
+      if (intentionalClose || !enabled) return;
+      status('reconnecting');
+      // Exponential backoff with jitter, capped. Retries indefinitely.
+      const delay = Math.min(RECONNECT_BASE_MS * 2 ** attempt, RECONNECT_MAX_MS);
+      const jittered = delay / 2 + Math.random() * (delay / 2);
+      attempt += 1;
+      reconnectTimer = setTimeout(connect, jittered);
+    };
+
+    function connect() {
+      reconnectTimer = null;
+      const wsBaseUrl = getWsBaseUrl();
+      const nameParam = playerName ? `&name=${encodeURIComponent(playerName)}` : '';
+      const sessionParam = sessionId ? `&session=${encodeURIComponent(sessionId)}` : '';
+      const urlParams = new URLSearchParams(window.location.search);
+      const adminSecret = urlParams.get('admin_secret') || '';
+      const adminParam = adminSecret ? `&admin_secret=${encodeURIComponent(adminSecret)}` : '';
+      const ws = new WebSocket(`${wsBaseUrl}/ws/game/${gameId}?class_type=${selectedClass}&difficulty=${difficulty}${nameParam}${adminParam}${sessionParam}`);
+      socketRef.current = ws;
+
+      ws.onopen = () => {
+        attempt = 0;
+        lastMsgAt = Date.now();
+        status('connected');
+        clearTimers();
+        heartbeatTimer = setInterval(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'PING' }));
+          }
+        }, HEARTBEAT_INTERVAL_MS);
+        // Watchdog: a silent socket (no frames, incl. PONG) is treated as dead.
+        watchdogTimer = setInterval(() => {
+          if (Date.now() - lastMsgAt > WATCHDOG_TIMEOUT_MS) {
+            try { ws.close(); } catch { /* will fall through to onclose */ }
+          }
+        }, WATCHDOG_TIMEOUT_MS / 2);
+      };
+      ws.onerror = () => {
+        if (attempt === 0) console.warn('Failed to connect to channel');
+      };
+      ws.onclose = () => {
+        clearTimers();
+        scheduleReconnect();
+      };
+
+      ws.onmessage = (event) => {
+        lastMsgAt = Date.now();
+        const data = JSON.parse(event.data);
+        if (data.type === 'PONG') return;
+        if (data.type === 'INIT') {
         setGrid(data.grid);
         gridRef.current = data.grid;
         visionRef.current.discovered = new Set();
@@ -266,13 +318,22 @@ export default function useGameSocket({
       }
     };
 
+    }
+
+    connect();
+
     return () => {
-      if (ws.readyState === WebSocket.OPEN) {
+      intentionalClose = true;
+      clearTimers();
+      if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+      const ws = socketRef.current;
+      // Close on the way out even if still CONNECTING (avoids a leaked socket).
+      if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
         ws.close();
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, gameId]);
+  }, [enabled, gameId, sessionId]);
 }
 
 function handleEvent(event, {
