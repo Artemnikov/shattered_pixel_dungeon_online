@@ -344,6 +344,13 @@
   cursor: var(--cursor-mouse, pointer);
 }
 
+.desktop-mode .inv-pane {
+  cursor: var(--cursor-mouse, pointer);
+}
+.desktop-mode .inv-slot.empty {
+  cursor: var(--cursor-mouse, pointer);
+}
+
 .targeting-active {
   border-color: #e74c3c !important;
   box-shadow: 0 0 10px #e74c3c;
