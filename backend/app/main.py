@@ -40,7 +40,8 @@ class ConnectionManager:
             "depth": player_floor,
             "grid": state["grid"],
             "width": game.width,
-            "height": game.height
+            "height": game.height,
+            "traps": state.get("traps", []),
         })
         self.last_sent_floor.setdefault(game_id, {})[player_id] = player_floor
 
@@ -77,7 +78,8 @@ class ConnectionManager:
                             "depth": player_floor,
                             "grid": state["grid"],
                             "width": game.width,
-                            "height": game.height
+                            "height": game.height,
+                            "traps": state.get("traps", []),
                         })
                         self.last_sent_floor[game_id][player_id] = player_floor
                     
@@ -93,6 +95,7 @@ class ConnectionManager:
                         "mobs": state["mobs"],
                         "items": state.get("items", []),
                         "visible_tiles": state.get("visible_tiles", []),
+                        "traps": state.get("traps", []),
                         "gold": gold,
                         "energy": energy,
                         "events": game.filter_events_for_player(events, player_id)

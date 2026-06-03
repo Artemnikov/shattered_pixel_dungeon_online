@@ -145,7 +145,10 @@ class TerrainMixin:
         traps: Dict[Tuple[int, int], TrapInfo] = {}
 
         for x, y in candidates[:trap_count]:
-            traps[(x, y)] = TrapInfo(x=x, y=y, trap_type=TrapType.WORN_DART)
+            trap_type = profile.TRAP_TYPES[0] if profile.TRAP_TYPES else TrapType.WORN_DART
+            hidden = TrapType.CAN_BE_HIDDEN.get(trap_type, True)
+            traps[(x, y)] = TrapInfo(x=x, y=y, trap_type=trap_type, hidden=hidden)
+            self.grid[y][x] = TileType.SECRET_TRAP if hidden else TileType.TRAP
 
         return traps
 
@@ -172,6 +175,9 @@ class TerrainMixin:
             TileType.DOOR,
             TileType.STAIRS_UP,
             TileType.STAIRS_DOWN,
+            TileType.SECRET_TRAP,
+            TileType.TRAP,
+            TileType.INACTIVE_TRAP,
         }
 
         while q:
@@ -191,7 +197,8 @@ class TerrainMixin:
         for x, y in reachable:
             tile = self.grid[y][x]
             if tile not in (TileType.FLOOR, TileType.FLOOR_WATER, TileType.FLOOR_GRASS,
-                            TileType.HIGH_GRASS, TileType.EMPTY_DECO):
+                            TileType.HIGH_GRASS, TileType.EMPTY_DECO,
+                            TileType.SECRET_TRAP, TileType.TRAP, TileType.INACTIVE_TRAP):
                 continue
             if entrance_room.contains(x, y) or exit_room.contains(x, y):
                 continue

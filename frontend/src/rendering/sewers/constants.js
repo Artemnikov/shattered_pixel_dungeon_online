@@ -25,6 +25,9 @@ export const BACKEND_TILE = {
   FLOOR_COBBLE: { id: 8, atlasIndex: atlasIndex(12, 0), seethrough: true },
   FLOOR_GRASS: { id: 9, atlasIndex: null, seethrough: true },
   LOCKED_DOOR: { id: 10, atlasIndex: atlasIndex(8, 3), seethrough: false },
+  SECRET_TRAP: { id: 11, atlasIndex: null, seethrough: true },
+  TRAP: { id: 12, atlasIndex: null, seethrough: true },
+  INACTIVE_TRAP: { id: 13, atlasIndex: null, seethrough: true },
   WALL_DECO: { id: 17, atlasIndex: atlasIndex(1, 3), seethrough: false },
   EMPTY_DECO: { id: 18, atlasIndex: atlasIndex(3, 0), seethrough: true },
   HIGH_GRASS: { id: 19, atlasIndex: null, seethrough: false },
@@ -188,3 +191,19 @@ export const isWaterTile = (tile) => tile === BACKEND_TILE.FLOOR_WATER.id;
 export const isGrassTile = (tile) =>
   tile === BACKEND_TILE.FLOOR_GRASS.id ||
   tile === BACKEND_TILE.HIGH_GRASS.id;
+
+export const TRAP_VISUAL = {
+  worn_dart: { color: 7, shape: 5 },
+};
+
+export const trapSpriteIndex = (trapType) => {
+  const v = TRAP_VISUAL[trapType];
+  if (!v) return null;
+  return v.color + v.shape * 16;
+};
+
+export const trapDisarmedIndex = (trapType) => {
+  const v = TRAP_VISUAL[trapType];
+  if (!v) return null;
+  return 8 + v.shape * 16;
+};

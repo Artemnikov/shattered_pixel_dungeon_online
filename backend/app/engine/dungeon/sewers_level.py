@@ -251,7 +251,7 @@ def _roll_size_cat(room, rng):
 _FLOOD_PASSABLE = {
     TileType.FLOOR, TileType.DOOR, TileType.STAIRS_UP, TileType.STAIRS_DOWN,
     TileType.FLOOR_GRASS, TileType.HIGH_GRASS, TileType.FLOOR_WATER,
-    TileType.EMPTY_DECO,
+    TileType.EMPTY_DECO, TileType.SECRET_TRAP, TileType.TRAP, TileType.INACTIVE_TRAP,
 }
 
 

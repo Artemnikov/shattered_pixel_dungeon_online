@@ -3,7 +3,7 @@ from collections import deque
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from app.engine.dungeon.constants import RoomKind, TileType, TrapType  # noqa: F401 — re-exported
+from app.engine.dungeon.constants import RoomKind, TileType, TrapType, TrapVisual  # noqa: F401 — re-exported
 from app.engine.dungeon.models import Room, SewersGenerationResult, SewersProfile, TrapInfo  # noqa: F401 — re-exported
 from app.engine.dungeon.corridors import CorridorsMixin
 from app.engine.dungeon.sewers_generation import SewersGenerationMixin

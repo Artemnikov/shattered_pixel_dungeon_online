@@ -11,6 +11,7 @@ from app.engine.dungeon.generator import (
     SewersProfile,
     TileType,
     TrapInfo,
+    TrapVisual,
 )
 from app.engine.dungeon.terrain_flags import FloorFlagMaps, build_flag_maps
 from app.engine.mechanics import shadowcaster
@@ -637,9 +638,9 @@ class GameInstance:
                 if trap and trap.hidden:
                     trap.hidden = False
                     found_secret = True
-                    if floor.grid[ty][tx] == TileType.FLOOR:
-                        floor.grid[ty][tx] = TileType.FLOOR_COBBLE
-                        patches.append({"x": tx, "y": ty, "tile": TileType.FLOOR_COBBLE})
+                    if floor.grid[ty][tx] == TileType.SECRET_TRAP:
+                        floor.grid[ty][tx] = TileType.TRAP
+                        patches.append({"x": tx, "y": ty, "tile": TileType.TRAP})
 
         if patches:
             # Tile mutations changed the grid — refresh derived flag maps
@@ -703,9 +704,11 @@ class GameInstance:
         if trap.hidden:
             trap.hidden = False
 
-        if floor.grid[player.pos.y][player.pos.x] == TileType.FLOOR:
-            floor.grid[player.pos.y][player.pos.x] = TileType.FLOOR_COBBLE
-            patches.append({"x": player.pos.x, "y": player.pos.y, "tile": TileType.FLOOR_COBBLE})
+        # Any trap tile -> INACTIVE_TRAP on trigger
+        tile = floor.grid[player.pos.y][player.pos.x]
+        if tile in (TileType.SECRET_TRAP, TileType.TRAP):
+            floor.grid[player.pos.y][player.pos.x] = TileType.INACTIVE_TRAP
+            patches.append({"x": player.pos.x, "y": player.pos.y, "tile": TileType.INACTIVE_TRAP})
 
         trap.active = False
 
@@ -1761,6 +1764,10 @@ class GameInstance:
             floor = self._get_or_create_floor(player.floor_id)
             floor_players = [p for p in self._players_on_floor(player.floor_id)]
 
+            admin_traps = [
+                {"x": x, "y": y, "trap_type": t.trap_type}
+                for (x, y), t in floor.traps.items()
+            ]
             if player.is_admin:
                 all_tiles = [(x, y) for y in range(self.height) for x in range(self.width)]
                 return {
@@ -1771,11 +1778,18 @@ class GameInstance:
                     "visible_tiles": all_tiles,
                     "open_doors": self._get_open_doors(floor),
                     "grid": floor.grid,
+                    "traps": admin_traps,
                 }
 
             visible_tiles = self.get_visible_tiles(
                 player.pos, radius=self._view_distance(player), floor_id=player.floor_id)
             visible_set = set(visible_tiles)
+
+            player_traps = [
+                {"x": x, "y": y, "trap_type": t.trap_type}
+                for (x, y), t in floor.traps.items()
+                if (x, y) in visible_set and not t.hidden
+            ]
 
             return {
                 "depth": player.floor_id,
@@ -1785,6 +1799,7 @@ class GameInstance:
                 "visible_tiles": visible_tiles,
                 "open_doors": self._get_open_doors(floor),
                 "grid": floor.grid,
+                "traps": player_traps,
             }
 
         floor = self._get_or_create_floor(self.depth)
@@ -1795,4 +1810,5 @@ class GameInstance:
             "items": [self._serialize_floor_item(i) for i in floor.items.values() if i.pos],
             "open_doors": self._get_open_doors(floor),
             "grid": floor.grid,
+            "traps": [],
         }

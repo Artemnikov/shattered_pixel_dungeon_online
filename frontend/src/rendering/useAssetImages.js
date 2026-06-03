@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import sewerTiles from '../assets/pixel-dungeon/environment/tiles_sewers.png';
 import prisonTiles from '../assets/pixel-dungeon/environment/tiles_prison.png';
+import terrainFeatures from '../assets/pixel-dungeon/environment/terrain_features.png';
 import cavesTiles from '../assets/pixel-dungeon/environment/tiles_caves.png';
 import cityTiles from '../assets/pixel-dungeon/environment/tiles_city.png';
 import hallsTiles from '../assets/pixel-dungeon/environment/tiles_halls.png';
@@ -32,6 +33,7 @@ export default function useAssetImages() {
       city: null,
       halls: null,
     },
+    terrainFeatures: null,
     waterFrames: [null, null, null, null, null],
     warrior: null,
     mage: null,
@@ -86,6 +88,7 @@ export default function useAssetImages() {
     loadRegionTiles(cavesTiles, 'caves');
     loadRegionTiles(cityTiles, 'city');
     loadRegionTiles(hallsTiles, 'halls');
+    loadImage(terrainFeatures, 'terrainFeatures');
     loadWaterFrame(water0, 0);
     loadWaterFrame(water1, 1);
     loadWaterFrame(water2, 2);

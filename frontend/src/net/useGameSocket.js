@@ -23,6 +23,7 @@ export default function useGameSocket({
   visionRef,
   openDoorsRef,
   projectilesRef,
+  trapsRef,
   mobAnimRef,
   dyingMobsRef,
   playerAnimRef,
@@ -70,6 +71,7 @@ export default function useGameSocket({
         setGrid(data.grid);
         gridRef.current = data.grid;
         visionRef.current.discovered = new Set();
+        trapsRef.current = data.traps || [];
         if (typeof data.depth === 'number') setDepth(data.depth);
         if (data.player_id) {
           setMyPlayerId(data.player_id);
@@ -84,6 +86,7 @@ export default function useGameSocket({
       if (data.difficulty) setDifficulty(data.difficulty);
       if (typeof data.gold === 'number' && setGold) setGold(data.gold);
       if (typeof data.energy === 'number' && setEnergy) setEnergy(data.energy);
+      if (data.traps) trapsRef.current = data.traps;
 
       // Sync players
       const currentServerPlayerIds = new Set(data.players.map(p => p.id));

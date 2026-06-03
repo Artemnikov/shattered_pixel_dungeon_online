@@ -52,10 +52,15 @@ const getTerrainQuadrants = (grid, x, y, matcher, centerVariants, edgeByQuadrant
   return out;
 };
 
+const _isTrapTile = (tile) =>
+  tile === BACKEND_TILE.SECRET_TRAP.id ||
+  tile === BACKEND_TILE.TRAP.id ||
+  tile === BACKEND_TILE.INACTIVE_TRAP.id;
+
 export const getSewerTerrainInstructions = (grid, x, y, tile, openDoors = new Set()) => {
   if (tile === BACKEND_TILE.VOID.id) return [];
 
-  if (tile === BACKEND_TILE.FLOOR.id) {
+  if (tile === BACKEND_TILE.FLOOR.id || _isTrapTile(tile)) {
     return [{ srcIndex: getFloorBase(x, y), quadrant: QUADRANT.FULL }];
   }
 
