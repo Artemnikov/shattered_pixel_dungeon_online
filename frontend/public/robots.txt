@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# AI crawlers — allow (they only read HTML, no JS)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+Sitemap: https://spd.online/sitemap.xml

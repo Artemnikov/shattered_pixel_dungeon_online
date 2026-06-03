@@ -1,0 +1,241 @@
+# Sewers Enemy Balance Report (Shattered Pixel Dungeon)
+## For reference in the game remake
+## Floors 1-4 (pre-boss), source: SPD source code
+
+========================================
+CORE COMBAT SYSTEM
+========================================
+
+Hit formula:
+  acuRoll = Random.Float(attackSkill)
+  defRoll = Random.Float(defenseSkill)
+  Hit if acuRoll >= defRoll
+
+Damage formula:
+  MAX(0, damageRoll() - drRoll())
+
+Respawn timer: 50 turns base (no respawns on floor 1)
+
+========================================
+HERO BASELINE (level 1, no upgrades)
+========================================
+
+HP:            20
+Attack Skill:  10
+Defense Skill: 5
+STR:           10
+Weapon:        Worn Shortsword (tier 1)
+  Damage:      1-10 (min = 1+lvl, max = 5*(tier+1) + lvl*(tier+1))
+  DR:          0 (weapon)
+Armor:         Cloth Armor (tier 1)
+  DRMin:       0
+  DRMax:       2
+Total DR:      0-2
+XP to lvl 2:  10 (formula: 5+lvl*5)
+
+========================================
+SEWER ENEMIES - STAT TABLES
+========================================
+
+--- Rat ---
+HP:        8
+DefSkill:  2
+Damage:    1-4
+AtkSkill:  8
+DR:        0-1
+Speed:     1.0
+EXP:       1
+MaxLvl:    5
+Loot:      none
+Tactical:  Weakest enemy. Hero kills in ~2 hits (5.5 avg dmg - 0.5 avg DR = 5.0 net).
+           Rat needs ~13 hits to kill hero (2.5 avg dmg - 0.5 avg DR = 2.0 net to hero).
+           Hero hit chance vs rat: 10 vs 2 = ~83% hit rate.
+           Rat hit chance vs hero: 8 vs 5 = ~62% hit rate.
+
+--- Snake ---
+HP:        4
+DefSkill:  25 (!)
+Damage:    1-4
+AtkSkill:  10
+DR:        0
+Speed:     1.0
+EXP:       2
+MaxLvl:    7
+Loot:      Seed (25%)
+Tactical:  Tutorial mob - teaches surprise attacks. DefSkill=25 is extreme for sewers.
+           Hero hit rate: 10 vs 25 = ~40% (without surprise).
+           Surprise attacks (from invis/out-of-FOV) guarantee hit.
+           Dies in 1 hit if you can land it (4 HP vs 5.5 avg hero dmg).
+           Snake hits hero: 10 vs 5 = ~66% hit rate, 2.5 dmg avg.
+
+--- Gnoll ---
+HP:        12
+DefSkill:  4
+Damage:    1-6
+AtkSkill:  10
+DR:        0-2
+Speed:     1.0
+EXP:       2
+MaxLvl:    8
+Loot:      Gold (50%)
+Tactical:  First "real" enemy. Tankier than rat, hits harder.
+           Hero: ~3 hits to kill (4.5 net dmg). Gnoll: ~8 hits to kill hero (2.5 avg net).
+           Hero hit rate: 10 vs 4 = ~83%. Gnoll hit rate: 10 vs 5 = ~66%.
+
+--- Swarm ---
+HP:        50 (highest in sewers)
+DefSkill:  5
+Damage:    1-4
+AtkSkill:  10
+DR:        0
+Speed:     1.0
+EXP:       3 (children give 0 EXP)
+MaxLvl:    9
+Flying:    true
+Loot:      PotionOfHealing (16.7%, limited to 5 drops per game)
+Special:   Splits on hit if HP >= damage+2.
+           Split: creates clone with half remaining HP, placed on adjacent tile.
+           Hero ~9 hits to kill base swarm (assuming no splitting).
+           Split makes effective HP much higher vs low-damage attacks.
+Tactical:  Burst damage to kill before split threshold. AoE helps.
+           Splitting also means more total damage output from multiple bodies.
+
+--- Crab ---
+HP:        15
+DefSkill:  5
+Damage:    1-7
+AtkSkill:  12
+DR:        0-4
+Speed:     2.0  (!)
+EXP:       4
+MaxLvl:    9
+Loot:      Mystery Meat (16.7%)
+Tactical:  DOUBLE SPEED - reaches hero in half the turns of other enemies.
+           Often the first hit in an encounter if hero is exploring.
+           Hero: ~5 hits to kill (3.5 avg net due to 0-4 DR).
+           Highest DR in sewers (0-4). DR rolls high can block most hero damage.
+           Crab hit rate vs hero: 12 vs 5 = ~71%. Damage avg 4 - 0.5 DR = 3.5 net.
+           ~6 hits to kill hero.
+
+--- Slime ---
+HP:        20
+DefSkill:  5
+Damage:    2-5
+AtkSkill:  12
+DR:        0
+Speed:     1.0
+EXP:       4
+MaxLvl:    9
+Loot:      Tier-2 weapon (20%, limited to 1 per game)
+Special:   Damage cap: incoming damage >5 is sqrt-compressed.
+           Formula for capped dmg: 4 + (sqrt(8*(dmg-4)+1)-1)/2
+           Example: 25 incoming dmg -> ~10 actual. 10 -> ~6. 7 -> ~5.
+Tactical:  Tankiest non-boss in sewers. Damage cap prevents one-shots.
+           Hero: ~5-6 hits to kill (5.5 avg dmg, 55% chance of cap trigger).
+           Slime hits hero: 12 vs 5 = ~71%, 3.5 avg dmg. ~6 hits to kill hero.
+
+========================================
+RARE ALT ENEMIES (2% chance per mob spawn)
+========================================
+
+--- Albino (Rat alt) ---
+HP:        12 (+50%)
+Damage:    inherits 1-4
+Speed:     1.0
+Special:   50% bleed proc on hit (2-3 dmg/turn for a few turns)
+Loot:      Guaranteed Mystery Meat
+Note:      Bleed means damage-over-time even after disengaging.
+
+--- GnollExile (Gnoll alt) ---
+HP:        24 (2x)
+DefSkill:  6 (+50%)
+Damage:    1-10 (+67%)
+AtkSkill:  15 (+50%)
+DR:        0-1
+Speed:     1.0
+Reach:     +1 (attacks from 2 tiles away)
+AI:        Passive (doesn't aggro) until debuffed or attacked
+Loot:      2-3 random items (guaranteed)
+Note:      Strong but avoidable. High value in drops.
+
+--- HermitCrab (Crab alt) ---
+HP:        25 (+67%)
+DefSkill:  5
+Damage:    inherits 1-7
+AtkSkill:  12
+DR:        2-6 (base +2 flat)
+Speed:     1.0  (-50%, same as normal mobs)
+Loot:      Guaranteed random armor, Mystery Meat (50%)
+Note:      Slower than normal crab, but much tankier. Good loot.
+
+--- CausticSlime (Slime alt) ---
+HP:        inherits 20
+Damage:    inherits 2-5
+AtkSkill:  12
+Special:   50% Ooze proc on hit (armor-damaging debuff)
+Loot:      GooBlob (quest item, guaranteed)
+Properties: ACIDIC
+Note:      Ooze reduces hero armor effectiveness.
+
+========================================
+FLOOR-BY-FLOOR SPAWNING
+========================================
+
+--- Floor 1 ---
+Rotation:   Rat x3, Snake x1 (recycles to fill spawns)
+Mobs:       8 pre-spawned (no respawns, mobLimit=0)
+Traps:      WornDartTrap only
+Rooms:      4-6 standard, 1-2 special
+XP total:   ~10 (rats=1xp x6 + snakes=2xp x2), enough for level 2
+Vibe:       Pure tutorial. No respawns, simple enemies.
+
+--- Floor 2 ---
+Rotation:   Rat x2, Snake x1, Gnoll x2
+Mob limit:  5-7 (formula: 3 + depth%5 + RNG(0-2) = 3+2+RNG)
+Traps:      All sewer traps available
+25% chance second mob per room on generation
+Note:       Gnolls introduced. Rats still dominate.
+
+--- Floor 3 ---
+Rotation:   Rat x1, Snake x1, Gnoll x3, Swarm x1, Crab x1
+Mob limit:  6-8 (3+3+RNG)
+Note:       Crabs and Swarms introduced. Rats phasing out.
+
+--- Floor 4 ---
+Rotation:   Gnoll x1, Swarm x1, Crab x2, Slime x2
+Mob limit:  7-9 (3+4+RNG)
+Rare:       2.5% chance to add Thief (Prison mob) to rotation
+Note:       Rats and snakes completely gone. Slimes introduced.
+            Highest mob density in sewers. Pre-boss floor.
+
+========================================
+DIFFICULTY CURVE SUMMARY
+========================================
+
+Metric            Floor 1    Floor 2    Floor 3    Floor 4
+Mob density       8 mobs     5-7        6-8        7-9
+Avg enemy HP      ~7         9          13         18
+Avg enemy dmg     ~2.5       2.9        3.1        3.5
+Avg enemy DefSkill 8         5          5          5
+Hardest enemy     Snake      Gnoll      Crab       Slime
+New mechanic      surprise   -          split/speed dmg cap
+
+Key difficulty spikes:
+1. Snake (F1): DefSkill=25 frustrates new players, teaches surprise mechanic
+2. Crab (F3): Speed=2.0 catches players off guard, punishes slow exploration
+3. Swarm (F3): Split mechanic requires strategy change from "hit everything"
+4. Slime (F4): Damage cap makes big weapons less effective, forces consistent damage
+
+========================================
+NOTES FOR REMAKE IMPLEMENTATION
+========================================
+
+- Enemies have separate damageRoll(), attackSkill(), and drRoll() overrides
+- Hit/miss is purely skill-based (no level-scaling to-hit)
+- Speed affects turn order (baseSpeed=2.0 = 2 turns per 1 hero turn)
+- MaxLvl = max hero level that gains EXP from this enemy type
+- Limited drops use global counters (e.g., Swarm HP pot limited to 5)
+- Champion enemies spawn with multipliers (separate system)
+- Ascension mode applies stat multipliers to enemies after beating the game
+- Each mob type can define attackProc (on-hit effects), defenseProc (when hit)
+- No damage types/resistances in sewers (no Elemental properties)

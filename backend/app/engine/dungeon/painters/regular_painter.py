@@ -247,7 +247,9 @@ class RegularPainter(Painter):
                 if roll <= acc:
                     chosen_type = t
                     break
-            self.placed_traps[(x, y)] = TrapInfo(x=x, y=y, trap_type=chosen_type)
+            hidden = TrapType.CAN_BE_HIDDEN.get(chosen_type, True)
+            self.placed_traps[(x, y)] = TrapInfo(x=x, y=y, trap_type=chosen_type, hidden=hidden)
+            level.grid[y][x] = TileType.SECRET_TRAP if hidden else TileType.TRAP
 
 
 def _all_standard_rooms_reachable(rooms: List[Room], start: Room) -> bool:

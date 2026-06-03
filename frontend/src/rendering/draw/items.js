@@ -1,5 +1,5 @@
 import { TILE_SIZE, TILE_SCALE } from '../../constants';
-import { getItemSpriteCoords } from '../sprites';
+import { coordsForItem } from '../sprites';
 
 export function drawItems(ctx, { entitiesRef, visionRef, assetImages }) {
   if (!entitiesRef.current.items) return;
@@ -7,7 +7,8 @@ export function drawItems(ctx, { entitiesRef, visionRef, assetImages }) {
     if (!visionRef.current.visible.has(`${item.pos.x},${item.pos.y}`)) return;
 
     if (assetImages.items) {
-      const coords = getItemSpriteCoords(item.name, item.type);
+      const coords = coordsForItem(item);
+      if (!coords) return;
       ctx.drawImage(
         assetImages.items,
         coords[0] * (TILE_SIZE / TILE_SCALE),

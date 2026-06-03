@@ -3,6 +3,8 @@ import './App.css';
 
 import CharacterSelection from './CharacterSelection';
 import MainMenu from './menu/MainMenu';
+import cursorMouseUrl from './assets/cursors/cursor_mouse.png';
+import cursorControllerUrl from './assets/cursors/cursor_controller.png';
 
 import { TILE_SIZE } from './constants';
 import useAudioUnlock from './audio/useAudioUnlock';
@@ -13,14 +15,50 @@ import useGameSocket from './net/useGameSocket';
 import useKeyboardControls from './input/useKeyboardControls';
 import useCanvasControls from './input/useCanvasControls';
 import { resolveTapAction } from './input/resolveTap';
+import { describeCell } from './input/describeCell';
 import useDebugApi from './dev/useDebugApi';
 
 import StatusPane from './ui/StatusPane';
 import Toolbar from './ui/Toolbar';
+import InventoryPane from './ui/InventoryPane';
 import WndBag from './ui/WndBag';
-import MessageLog from './ui/MessageLog';
+import WndQuickBag from './ui/WndQuickBag';
+import RadialMenu from './ui/RadialMenu';
+import WndUseItem from './ui/WndUseItem';
+import RightClickMenu from './ui/RightClickMenu';
 import LoadingOverlay from './ui/LoadingOverlay';
 import GameOverScreen from './ui/GameOverScreen';
+
+// Live viewport position of an inspect-popup anchor (a world tile, or a mob we follow
+// by its renderPos). Returns { left, top, below } or null when the popup should hide
+// (mob gone/out of view, or the anchor panned off the visible canvas). Pure so it can
+// be called from the per-frame rAF loop without reading refs during render.
+function inspectScreenPos(canvas, cam, zoom, anchor, mobs, visible) {
+  if (!canvas || !anchor) return null;
+  let wx, wyTop, wyBottom;
+  if (anchor.type === 'mob') {
+    const mob = mobs[anchor.id];
+    if (!mob) return null;
+    const mx = Math.round(mob.renderPos.x), my = Math.round(mob.renderPos.y);
+    if (!visible.has(`${mx},${my}`)) return null;
+    wx = (mob.renderPos.x + 0.5) * TILE_SIZE;
+    wyTop = mob.renderPos.y * TILE_SIZE;
+    wyBottom = (mob.renderPos.y + 1) * TILE_SIZE;
+  } else {
+    wx = (anchor.x + 0.5) * TILE_SIZE;
+    wyTop = anchor.y * TILE_SIZE;
+    wyBottom = (anchor.y + 1) * TILE_SIZE;
+  }
+  const rect = canvas.getBoundingClientRect();
+  const cw = canvas.width, ch = canvas.height;
+  const left = rect.left + (wx - cam.x - cw / 2) * zoom + cw / 2;
+  const topY = rect.top + (wyTop - cam.y - ch / 2) * zoom + ch / 2;
+  const bottomY = rect.top + (wyBottom - cam.y - ch / 2) * zoom + ch / 2;
+  // Hide once the anchor is panned off the visible canvas.
+  if (left < rect.left || left > rect.right || bottomY < rect.top || topY > rect.bottom) return null;
+  const below = topY < rect.top + 70;
+  return { left, top: below ? bottomY + 6 : topY - 6, below };
+}
 
 function App() {
   // --- screen flow / session state ---
@@ -32,15 +70,22 @@ function App() {
 
   // --- game state ---
   const [grid, setGrid] = useState([]);
-  const [messages, setMessages] = useState([]);
   const [myPlayerId, setMyPlayerId] = useState(null);
   const [viewport, setViewport] = useState({ width: window.innerWidth, height: window.innerHeight });
   const [showInventory, setShowInventory] = useState(false);
+  // Open info+actions popup (item) and right-click context menu ({item,x,y}).
+  const [useItemTarget, setUseItemTarget] = useState(null);
+  const [ctxMenu, setCtxMenu] = useState(null);
   const [inventory, setInventory] = useState([]);
   const [equippedItems, setEquippedItems] = useState({ weapon: null, wearable: null });
   const [belongings, setBelongings] = useState(null);
   const [quickslot, setQuickslot] = useState(null);
   const [targetingMode, setTargetingMode] = useState(false);
+  // Examine mode: 1st search trigger arms it (click a cell to inspect), 2nd trigger
+  // performs the reveal. Mirrors the original's btnSearch examine→search two-step.
+  const [examineMode, setExamineMode] = useState(false);
+  // Inspect popup: { name, sub, left, top, below } positioned over the inspected cell.
+  const [inspectInfo, setInspectInfo] = useState(null);
   const [myStats, setMyStats] = useState({ hp: 0, maxHp: 10, name: '' });
   const [depth, setDepth] = useState(1);
   const [, setCamera] = useState({ x: 0, y: 0 });
@@ -52,6 +97,9 @@ function App() {
   const [interfaceSize, setInterfaceSize] = useState(getInitialInterfaceSize());
   const [gold, setGold] = useState(0);
   const [energy, setEnergy] = useState(0);
+  const [showQuickBag, setShowQuickBag] = useState(false);
+  const [radialOpen, setRadialOpen] = useState(false);
+  const [swappedQuickslots, setSwappedQuickslots] = useState(false);
 
   // --- shared refs ---
   const canvasRef = useRef(null);
@@ -63,6 +111,12 @@ function App() {
   // Latest targeting-tap resolver, shared with the touch handler (canvas has
   // touch-action:none, so taps don't fire onClick — see resolveTargetingTap).
   const onTargetTapRef = useRef(null);
+  // Examine-mode state + tap resolver, shared with the touch handler (same pattern
+  // as targeting, since the canvas has touch-action:none so taps don't fire onClick).
+  const examineModeRef = useRef(false);
+  const onExamineTapRef = useRef(null);
+  const inspectPopupRef = useRef(null);
+  const inspectSubRef = useRef(null);
   const projectilesRef = useRef([]);
   const visionRef = useRef({ visible: new Set(), discovered: new Set() });
   const openDoorsRef = useRef(new Set());
@@ -78,10 +132,13 @@ function App() {
   const dyingMobsRef = useRef({});
   const playerAnimRef = useRef({});
   const particlesRef = useRef([]);
+  const searchEffectsRef = useRef([]);
   const floatingTextRef = useRef([]);
+  const trapsRef = useRef([]);
   const depthRef = useRef(1);
 
   useEffect(() => { targetingModeRef.current = targetingMode; }, [targetingMode]);
+  useEffect(() => { examineModeRef.current = examineMode; }, [examineMode]);
   useEffect(() => { depthRef.current = depth; }, [depth]);
 
   const wrapperRef = useRef(null);
@@ -136,9 +193,10 @@ function App() {
     gameId, selectedClass, difficulty, playerName,
     socketRef, gridRef, myPlayerIdRef, entitiesRef,
     visionRef, openDoorsRef, projectilesRef,
-    mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef, floatingTextRef, wasDownedRef,
+    trapsRef,
+    mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef, searchEffectsRef, floatingTextRef, wasDownedRef,
     setGrid, setDepth, setMyPlayerId, setInventory,
-    setEquippedItems, setMyStats, setMessages, setDifficulty,
+    setEquippedItems, setMyStats, setDifficulty,
     setGold, setEnergy, setBelongings, setQuickslot,
   });
 
@@ -148,13 +206,15 @@ function App() {
     panOffsetRef, zoomRef, cameraLerpRef,
     isDraggingRef, isRefocusingRef, isPinchingRef,
     targetingModeRef, onTargetTapRef,
+    examineModeRef, onExamineTapRef,
     entitiesRef, myPlayerIdRef,
   });
 
   useGameRenderer({
     canvasRef, grid, myPlayerId, depth, assetImages,
     entitiesRef, visionRef, openDoorsRef, projectilesRef,
-    mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef, floatingTextRef, myPlayerIdRef,
+    trapsRef,
+    mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef, searchEffectsRef, floatingTextRef, myPlayerIdRef,
     panOffsetRef, cameraLerpRef, zoomRef,
     isRefocusingRef, isDraggingRef,
     setCamera,
@@ -182,16 +242,21 @@ function App() {
   // against the tapped cell. Shared by the mouse onClick path and the touch path.
   const resolveTargetingTap = (tileX, tileY) => {
     const tm = targetingModeRef.current;
+    console.log('resolveTargetingTap', { tm, tileX, tileY });
     // New SPD-style path: an item action awaiting a target cell.
     if (tm && typeof tm === 'object' && tm.action) {
+      console.log('Sending EXECUTE_ITEM_ACTION', { item_id: tm.itemId, action: tm.action, target_x: tileX, target_y: tileY });
       send({ type: 'EXECUTE_ITEM_ACTION', item_id: tm.itemId, action: tm.action, target_x: tileX, target_y: tileY });
+      setTargetingMode(false);
       return;
     }
     // Legacy path: equipped ranged weapon kept armed for repeat fire.
     const weaponId = typeof tm === 'string' ? tm : equippedItems.weapon?.id;
     if (weaponId) {
       send({ type: 'RANGED_ATTACK', item_id: weaponId, target_x: tileX, target_y: tileY });
-      setTargetingMode(true);
+      // Keep armed for repeat fire only when already in "always armed" mode (tm===true),
+      // not when a single action was selected from toolbar (tm is a string item ID).
+      setTargetingMode(typeof tm === 'string' ? false : true);
     }
   };
   useEffect(() => { onTargetTapRef.current = resolveTargetingTap; });
@@ -205,21 +270,16 @@ function App() {
     }
     send({ type: 'EXECUTE_ITEM_ACTION', item_id: itemId, action, target_x: tx, target_y: ty });
   };
+  const handleQuickBag = () => setShowQuickBag(true);
+  const handleSwap = () => setSwappedQuickslots(v => !v);
+  const handleRadialSelect = () => setRadialOpen(true);
+
   const assignQuickslot = (itemId) => {
     const slots = quickslot?.slots || [];
     let idx = slots.findIndex(s => !s.item_id);
     if (idx < 0) idx = 0;
     send({ type: 'SET_QUICKSLOT', index: idx, item_id: itemId });
   };
-  const useQuickslotSlot = (index, item) => {
-    const action = item?.default_action;
-    if (action && TARGETED_ACTIONS.includes(action)) {
-      setTargetingMode({ itemId: item.id, action });
-      return;
-    }
-    send({ type: 'USE_QUICKSLOT', index });
-  };
-
   // Flatten belongings into an id->item map for quickslot resolution.
   const itemsById = {};
   if (belongings) {
@@ -239,6 +299,97 @@ function App() {
       socketRef.current.send(JSON.stringify({ type: 'SEARCH' }));
     }
   };
+
+  // Magnifying-glass / E / Search button: 1st trigger arms examine mode, 2nd performs
+  // the reveal. (In examine mode, tapping a cell inspects it and exits — see
+  // resolveExamineTap.) Mirrors the original Toolbar.btnSearch examine→search two-step.
+  const clearInspect = () => {
+    setInspectInfo(null);
+  };
+
+  const handleExamineOrReveal = () => {
+    clearInspect();
+    if (examineModeRef.current) {
+      setExamineMode(false);
+      triggerSearch();
+    } else {
+      setTargetingMode(false);
+      setExamineMode(true);
+    }
+  };
+
+  const cancelModes = () => {
+    setExamineMode(false);
+    setTargetingMode(false);
+    clearInspect();
+  };
+
+  // Examine-mode tap: open a small popup naming whatever is in the cell, anchored to it
+  // (the live screen position is recomputed each frame by computeInspectPos so it sticks
+  // to the tile/mob as the camera or that mob moves), then leave examine mode.
+  const resolveExamineTap = (tileX, tileY) => {
+    const info = describeCell({
+      tileX, tileY, gridRef, entitiesRef, visionRef,
+      myPlayerId: myPlayerIdRef.current,
+    });
+    setExamineMode(false);
+    if (!info) { clearInspect(); return; }
+    setInspectInfo({ name: info.name, sub: info.sub, anchor: info.anchor });
+  };
+  useEffect(() => { onExamineTapRef.current = resolveExamineTap; });
+
+  // While a popup is open, drive it every frame: reposition from the live camera + anchor
+  // (so it sticks to its tile/mob), refresh a mob's HP, and handle auto-dismiss. Done in a
+  // rAF (not render) so we don't read refs during render. Dismissal is timestamp-based:
+  // the popup stays alive for DISMISS_MS after the last "activity" — for a mob that's its
+  // last HP change, so you can watch a fight and it fades 3s after the final hit; for a
+  // tile it's the inspect itself (fixed 3s). A vanished mob dismisses immediately.
+  useEffect(() => {
+    if (!inspectInfo) return;
+    const anchor = inspectInfo.anchor;
+    const DISMISS_MS = 3000;
+    let raf;
+    let lastSub;
+    let lastActive = performance.now();
+    const tick = () => {
+      const now = performance.now();
+
+      // Resolve the live secondary line (a mob's current HP), and bump the activity
+      // timestamp whenever it changes so active combat keeps the popup on screen.
+      let sub = inspectInfo.sub;
+      if (anchor.type === 'mob') {
+        const mob = entitiesRef.current.mobs[anchor.id];
+        if (!mob) { setInspectInfo(null); return; } // mob gone (killed/despawned)
+        sub = mob.hp != null && mob.max_hp != null ? `HP ${mob.hp}/${mob.max_hp}` : null;
+      }
+      if (sub !== lastSub) { lastSub = sub; lastActive = now; }
+      if (now - lastActive > DISMISS_MS) { setInspectInfo(null); return; }
+
+      const el = inspectPopupRef.current;
+      if (el) {
+        const pos = inspectScreenPos(
+          canvasRef.current, cameraLerpRef.current, zoomRef.current,
+          anchor, entitiesRef.current.mobs, visionRef.current.visible,
+        );
+        if (pos) {
+          el.style.display = '';
+          el.style.left = `${pos.left}px`;
+          el.style.top = `${pos.top}px`;
+          el.style.transform = pos.below ? 'translate(-50%, 0)' : 'translate(-50%, -100%)';
+          const subEl = inspectSubRef.current;
+          if (subEl) {
+            subEl.textContent = sub || '';
+            subEl.style.display = sub ? '' : 'none';
+          }
+        } else {
+          el.style.display = 'none';
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [inspectInfo]);
 
   const triggerWait = () => {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
@@ -263,6 +414,14 @@ function App() {
     const tileX = Math.floor(worldX / TILE_SIZE);
     const tileY = Math.floor(worldY / TILE_SIZE);
 
+    if (examineModeRef.current) {
+      resolveExamineTap(tileX, tileY);
+      return;
+    }
+
+    // Any non-examine tap dismisses a lingering inspect popup.
+    clearInspect();
+
     if (targetingModeRef.current) {
       resolveTargetingTap(tileX, tileY);
       return;
@@ -272,7 +431,7 @@ function App() {
       const myPlayer = entitiesRef.current.players[myPlayerIdRef.current];
       const playerTile = myPlayer ? (myPlayer.targetPos || myPlayer.renderPos) : null;
       const action = resolveTapAction({ tileX, tileY, playerTile });
-      if (action.type === 'MOVE_TO') isRefocusingRef.current = true;
+      if (action.type === 'MOVE_TO' || action.type === 'MOVE') isRefocusingRef.current = true;
       socketRef.current.send(JSON.stringify(action));
     }
   };
@@ -302,10 +461,10 @@ function App() {
     } else if (item.type === 'wearable') {
       equipItem(item.id);
     } else if (item.type === 'throwable') {
-      if (targetingMode === item.id) {
+      if (targetingMode && typeof targetingMode === 'object' && targetingMode.itemId === item.id) {
         setTargetingMode(false);
       } else {
-        setTargetingMode(item.id);
+        setTargetingMode({ itemId: item.id, action: 'THROW' });
       }
     }
   };
@@ -347,8 +506,11 @@ function App() {
   useKeyboardControls({
     socketRef, inventory, setShowInventory,
     handleToolbarClick, handleToolbarDoubleClick,
-    triggerSearch, triggerWait,
+    onExamineOrReveal: handleExamineOrReveal, onCancelModes: cancelModes,
+    triggerWait,
     isRefocusingRef, isDraggingRef,
+    quickslot, itemsById,
+    onRadialSelect: handleRadialSelect,
   });
 
   // Reset transient game state on death so a fresh run starts clean (no stale
@@ -367,19 +529,46 @@ function App() {
     setInventory([]);
   };
 
+  const isDesktop = interfaceSize > 0;
+
   // --- screen flow ---
   if (gameState === 'WELCOME') {
-    return <MainMenu onStart={() => setGameState('SELECT')} />;
+    return (
+      <>
+        <title>SPD Online — Play Shattered Pixel Dungeon in your browser</title>
+        <meta name="description" content="Play the roguelike dungeon crawler Shattered Pixel Dungeon online, for free in your browser. Multiplayer real-time, no download required." />
+        <div className={isDesktop ? 'desktop-mode' : ''}
+             style={isDesktop ? { '--cursor-mouse': `url(${cursorMouseUrl}) 1 1, pointer` } : {}}>
+          <MainMenu onStart={() => setGameState('SELECT')} />
+        </div>
+      </>
+    );
   }
 
   if (gameState === 'SELECT') {
-    return <CharacterSelection onSelect={(c, d, n) => {
-      setSelectedClass(c);
-      setDifficulty(d);
-      setPlayerName(n);
-      setGameState('PLAYING');
-    }} />;
+    return (
+      <>
+        <title>SPD Online — Choose your class</title>
+        <meta name="description" content="Select your hero class — Warrior, Mage, Rogue, or Archer — and descend into the dungeon." />
+        <div className={isDesktop ? 'desktop-mode' : ''}
+             style={isDesktop ? { '--cursor-mouse': `url(${cursorMouseUrl}) 1 1, pointer` } : {}}>
+          <CharacterSelection onSelect={(c, d, n) => {
+            setSelectedClass(c);
+            setDifficulty(d);
+            setPlayerName(n);
+            setGameState('PLAYING');
+          }} />
+        </div>
+      </>
+    );
   }
+  const cursorStyle = (targetingMode || examineMode)
+    ? isDesktop
+      ? `url(${cursorControllerUrl}) 8 8, crosshair`
+      : 'crosshair'
+    : isDesktop
+      ? `url(${cursorMouseUrl}) 1 1, auto`
+      : 'default';
 
   // Toolbar quickslots mirror the real quickslot state (as in the original game),
   // resolving each slot's item id against the flattened belongings.
@@ -389,47 +578,99 @@ function App() {
   });
 
   return (
-    <div className="game-container">
+    <>
+      <title>SPD Online — Floor {depth}</title>
+      <meta name="description" content={`Playing SPD Online — exploring floor ${depth} of the dungeon.`} />
+      <div className={`game-container ${isDesktop ? 'desktop-mode' : ''}`}
+           style={isDesktop ? { '--cursor-mouse': `url(${cursorMouseUrl}) 1 1, pointer` } : {}}>
       <LoadingOverlay visible={grid.length === 0} />
 
-      <StatusPane myStats={myStats} depth={depth} onSearch={triggerSearch} />
+      <StatusPane myStats={myStats} depth={depth} onSearch={handleExamineOrReveal} />
 
       <div className="canvas-wrapper" ref={wrapperRef}>
         <canvas
           ref={canvasRef}
           width={viewport.width}
           height={viewport.height}
-          className={`game-canvas ${targetingMode ? 'cursor-crosshair' : ''}`}
+          className="game-canvas"
+          style={{ cursor: cursorStyle }}
           onClick={handleCanvasClick}
         />
       </div>
 
-      {/* Bottom-centered HUD: message log, then toolbar, then the inventory
-          pane below it (toggled open/closed with 'f' or the bag button). */}
+      {inspectInfo && (
+        <div
+          ref={inspectPopupRef}
+          className="inspect-popup"
+          style={{
+            position: 'fixed',
+            left: 0,
+            top: 0,
+            display: 'none',
+            transform: 'translate(-50%, -100%)',
+            background: 'rgba(0, 0, 0, 0.85)',
+            border: '1px solid #6a6a6a',
+            borderRadius: 3,
+            padding: '3px 7px',
+            color: '#ffffff',
+            font: '11px monospace',
+            lineHeight: 1.25,
+            whiteSpace: 'nowrap',
+            textAlign: 'center',
+            pointerEvents: 'none',
+            zIndex: 60,
+          }}
+        >
+          <div style={{ fontWeight: 'bold' }}>{inspectInfo.name}</div>
+          {/* Uncontrolled (no React child) so the rAF loop can update the live HP text
+              without React clobbering it on the next per-frame re-render. */}
+          <div ref={inspectSubRef} style={{ color: '#bdbdbd', display: 'none' }} />
+        </div>
+      )}
+
+      {/* Bottom-right HUD: toolbar, then the inventory pane below it
+          (toggled open/closed with 'f' or the bag button). */}
       <div className="hud-bottom">
-        <MessageLog messages={messages} />
         <Toolbar
           mode={interfaceSize > 0 ? 'group' : 'split'}
           interfaceSize={interfaceSize}
           flipToolbar={false}
-          quickSwapper={false}
+          quickSwapper={!isDesktop}
           canvasWidth={viewport.width}
           items={toolbarItems}
           equippedItems={equippedItems}
           targetingMode={targetingMode}
+          swappedQuickslots={swappedQuickslots}
           onWait={triggerWait}
-          onSearch={triggerSearch}
+          onSearch={handleExamineOrReveal}
           onInventory={() => setShowInventory(v => !v)}
+          onQuickBag={handleQuickBag}
           onSlotClick={handleToolbarClick}
           onSlotDoubleClick={handleToolbarDoubleClick}
+          onSwap={handleSwap}
         />
-        {showInventory && (
+        {showInventory && (isDesktop ? (
+          <InventoryPane
+            belongings={belongings}
+            gold={gold}
+            energy={energy}
+            strength={myStats.strength}
+            onOpenItem={setUseItemTarget}
+            onContextMenu={(item, x, y) => setCtxMenu({ item, x, y })}
+            onDefaultAction={(item) => executeItemAction(item.id, item.default_action)}
+          />
+        ) : (
           <WndBag
             belongings={belongings}
-            onAction={executeItemAction}
-            onAssignQuickslot={assignQuickslot}
+            gold={gold}
+            energy={energy}
+            strength={myStats.strength}
+            onOpenItem={setUseItemTarget}
+            onContextMenu={(item, x, y) => setCtxMenu({ item, x, y })}
+            onDefaultAction={(item) => executeItemAction(item.id, item.default_action)}
+            onClose={() => setShowInventory(false)}
           />
-        )}
+        ))}
       </div>
 
       <button className="fullscreen-btn" onClick={toggleFullscreen} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>
@@ -442,6 +683,43 @@ function App() {
         </svg>
       </button>
 
+      {useItemTarget && (
+        <WndUseItem
+          item={itemsById[useItemTarget.id] || useItemTarget}
+          onAction={executeItemAction}
+          onAssignQuickslot={assignQuickslot}
+          onClose={() => setUseItemTarget(null)}
+        />
+      )}
+
+      {ctxMenu && (
+        <RightClickMenu
+          item={itemsById[ctxMenu.item.id] || ctxMenu.item}
+          x={ctxMenu.x}
+          y={ctxMenu.y}
+          onAction={executeItemAction}
+          onAssignQuickslot={assignQuickslot}
+          onClose={() => setCtxMenu(null)}
+        />
+      )}
+
+      {showQuickBag && (
+        <WndQuickBag
+          belongings={belongings}
+          onUse={(itemId, action) => executeItemAction(itemId, action)}
+          onClose={() => setShowQuickBag(false)}
+        />
+      )}
+
+      {radialOpen && (
+        <RadialMenu
+          items={toolbarItems}
+          size={isDesktop ? 200 : 140}
+          onSelect={(idx) => { handleToolbarClick(toolbarItems[idx], idx); }}
+          onClose={() => setRadialOpen(false)}
+        />
+      )}
+
       {!!myStats.isDowned && (
         <GameOverScreen
           onNewGame={() => { resetForRestart(); setGameState('SELECT'); }}
@@ -449,6 +727,7 @@ function App() {
         />
       )}
     </div>
+    </>
   );
 }
 

@@ -2,8 +2,10 @@ import { useEffect } from 'react';
 import { TILE_SIZE, PLAYER_ATTACK_DURATION, PLAYER_OPERATE_DURATION, HIT_CONNECT_DELAY, FLASH_DURATION } from '../constants';
 import { getWsBaseUrl } from '../config/urls';
 import AudioManager from '../audio/AudioManager';
-import { spawnBlood, spawnHeal } from '../rendering/draw/particles';
+import { spawnBlood, spawnCritSparkle, spawnDust, spawnGrimShadow, spawnHeal } from '../rendering/draw/particles';
+import { spawnCheckedCells } from '../rendering/draw/searchEffects';
 import { spawnFloatingText } from '../rendering/draw/floatingText';
+import { coordsForItem } from '../rendering/sprites';
 
 // Blood color per mob (default red; Goo bleeds green like its acidic body).
 const BLOOD_COLORS = { Goo: '#8eb300' };
@@ -21,10 +23,12 @@ export default function useGameSocket({
   visionRef,
   openDoorsRef,
   projectilesRef,
+  trapsRef,
   mobAnimRef,
   dyingMobsRef,
   playerAnimRef,
   particlesRef,
+  searchEffectsRef,
   floatingTextRef,
   wasDownedRef,
   setGrid,
@@ -33,7 +37,6 @@ export default function useGameSocket({
   setInventory,
   setEquippedItems,
   setMyStats,
-  setMessages,
   setDifficulty,
   setGold,
   setEnergy,
@@ -52,23 +55,14 @@ export default function useGameSocket({
     socketRef.current = ws;
     let hasConnected = false;
 
-    const addConnectionFailedMessage = () => {
-      setMessages(prev => (
-        prev[prev.length - 1] === "Failed to connect to channel"
-          ? prev
-          : [...prev, "Failed to connect to channel"]
-      ));
-    };
-
     ws.onopen = () => {
       hasConnected = true;
-      setMessages(prev => [...prev, "Connected to server"]);
     };
     ws.onerror = () => {
-      if (!hasConnected) addConnectionFailedMessage();
+      if (!hasConnected) console.warn('Failed to connect to channel');
     };
     ws.onclose = () => {
-      if (!hasConnected) addConnectionFailedMessage();
+      if (!hasConnected) console.warn('Failed to connect to channel');
     };
 
     ws.onmessage = (event) => {
@@ -77,6 +71,7 @@ export default function useGameSocket({
         setGrid(data.grid);
         gridRef.current = data.grid;
         visionRef.current.discovered = new Set();
+        trapsRef.current = data.traps || [];
         if (typeof data.depth === 'number') setDepth(data.depth);
         if (data.player_id) {
           setMyPlayerId(data.player_id);
@@ -91,6 +86,7 @@ export default function useGameSocket({
       if (data.difficulty) setDifficulty(data.difficulty);
       if (typeof data.gold === 'number' && setGold) setGold(data.gold);
       if (typeof data.energy === 'number' && setEnergy) setEnergy(data.energy);
+      if (data.traps) trapsRef.current = data.traps;
 
       // Sync players
       const currentServerPlayerIds = new Set(data.players.map(p => p.id));
@@ -109,13 +105,12 @@ export default function useGameSocket({
           });
           if (setBelongings) setBelongings(p.belongings || null);
           if (setQuickslot) setQuickslot(p.quickslot || null);
-          const healthBoost = p.equipped_wearable ? p.equipped_wearable.health_boost : 0;
           // Death sound is played for all players (incl. local) by the entity-sync
           // transition below, so it is not duplicated here.
           wasDownedRef.current = p.is_downed;
           setMyStats({
             hp: p.hp,
-            maxHp: p.max_hp + healthBoost,
+            maxHp: p.max_hp,
             name: p.name,
             isDowned: p.is_downed,
             isRegen: (p.heal_left || 0) > 0,
@@ -125,6 +120,7 @@ export default function useGameSocket({
             effects: p.active_effects || [],
             classType: p.class_type || 'warrior',
             armorTier: 0,
+            strength: p.strength ?? 10,
           });
         }
 
@@ -150,7 +146,7 @@ export default function useGameSocket({
             const dx = p.pos.x - currentTarget.x;
             const dy = p.pos.y - currentTarget.y;
 
-            if (Math.abs(dx) > Math.abs(dy)) {
+            if (Math.abs(dx) >= Math.abs(dy)) {
               if (dx > 0) { existing.facing = 'RIGHT'; existing.flipX = false; }
               else if (dx < 0) { existing.facing = 'LEFT'; existing.flipX = true; }
             } else {
@@ -169,7 +165,11 @@ export default function useGameSocket({
           // Start the death animation (and death sound) the instant a player dies.
           if (p.is_downed && !existing.is_downed) {
             existing.deathStart = performance.now();
-            AudioManager.play('DEATH');
+            const localPlayer = p.id === myPlayerIdRef.current;
+            const visible = visionRef.current?.visible;
+            if (localPlayer || visible?.has(`${p.pos.x},${p.pos.y}`)) {
+              AudioManager.play('DEATH');
+            }
           }
           existing.is_downed = p.is_downed;
           existing.heal_left = p.heal_left;
@@ -258,9 +258,9 @@ export default function useGameSocket({
       if (data.events) {
         data.events.forEach(event => {
           handleEvent(event, {
-            myPlayerIdRef, gridRef, setGrid, entitiesRef,
+            myPlayerIdRef, gridRef, setGrid, entitiesRef, visionRef,
             projectilesRef, mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef,
-            floatingTextRef,
+            searchEffectsRef, floatingTextRef,
           });
         });
       }
@@ -276,20 +276,40 @@ export default function useGameSocket({
 }
 
 function handleEvent(event, {
-  myPlayerIdRef, gridRef, setGrid, entitiesRef,
+  myPlayerIdRef, gridRef, setGrid, entitiesRef, visionRef,
   projectilesRef, mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef,
-  floatingTextRef,
+  searchEffectsRef, floatingTextRef,
 }) {
   if (event.type === 'PLAY_SOUND') {
     AudioManager.play(event.data.sound);
     return;
   }
 
+  if (event.type === 'SEARCH') {
+    // Reveal/search feedback (searcher-only event): the hero plays the operate
+    // hand-raise pose and a cyan CheckedCell ring sweeps outward over the searched
+    // cells, mirroring Hero.search() -> sprite.operate() + GameScene.effectOverFog().
+    const pid = event.data.player;
+    if (playerAnimRef && entitiesRef.current.players[pid]) {
+      if (!playerAnimRef.current[pid]) playerAnimRef.current[pid] = {};
+      playerAnimRef.current[pid].operateUntil = performance.now() + PLAYER_OPERATE_DURATION;
+    }
+    if (searchEffectsRef) {
+      spawnCheckedCells(searchEffectsRef, event.data.cells, event.data.x, event.data.y);
+    }
+    return;
+  }
+
   if (event.type === 'DRINK') {
-    AudioManager.play('DRINK');
+    const pid = event.data.player;
+    const isLocal = pid === myPlayerIdRef.current;
+    const drinker = entitiesRef.current.players[pid];
+    const visible = visionRef?.current?.visible;
+    if (isLocal || (drinker && visible?.has(`${drinker.pos.x},${drinker.pos.y}`))) {
+      AudioManager.play('DRINK');
+    }
     // Play the "operate" gesture (raise item) on the drinker, mirroring
     // Potion.drink() -> hero.sprite.operate() in the original game.
-    const pid = event.data.player;
     if (playerAnimRef && entitiesRef.current.players[pid]) {
       if (!playerAnimRef.current[pid]) playerAnimRef.current[pid] = {};
       playerAnimRef.current[pid].operateUntil = performance.now() + PLAYER_OPERATE_DURATION;
@@ -307,6 +327,25 @@ function handleEvent(event, {
     }
     if (particlesRef) {
       spawnHeal(particlesRef, cx, cy + TILE_SIZE / 2, 4);
+    }
+    return;
+  }
+
+  if (event.type === 'TRAP_TRIGGERED') {
+    const player = entitiesRef.current.players[event.data.player];
+    if (player) {
+      const cx = player.renderPos.x * TILE_SIZE + TILE_SIZE / 2;
+      const cy = player.renderPos.y * TILE_SIZE;
+
+      AudioManager.play('TRAP');
+
+      if (event.data.damage > 0 && floatingTextRef) {
+        spawnFloatingText(floatingTextRef, cx, cy, `-${event.data.damage}`, '#e74c3c');
+      }
+
+      if (particlesRef) {
+        spawnDust(particlesRef, cx, cy + TILE_SIZE / 2, 8);
+      }
     }
     return;
   }
@@ -342,10 +381,13 @@ function handleEvent(event, {
         AudioManager.play('MOVE');
       }
     } else {
-      if (isDoor) {
-        AudioManager.play('DOOR_OPEN');
-      } else {
-        AudioManager.play(event.type);
+      const visible = visionRef?.current?.visible;
+      if (visible?.has(`${tileX},${tileY}`)) {
+        if (isDoor) {
+          AudioManager.play('DOOR_OPEN');
+        } else {
+          AudioManager.play(event.type);
+        }
       }
     }
     return;
@@ -357,6 +399,11 @@ function handleEvent(event, {
     const targetX = event.data.target_x * TILE_SIZE + TILE_SIZE / 2;
     const targetY = event.data.target_y * TILE_SIZE + TILE_SIZE / 2;
 
+    // Thrown inventory items carry their own item data so they fly as the real
+    // item sprite; wands/arrows fall back to the generic projectile sprite map.
+    const thrownItem = event.data.item;
+    const spriteCoords = thrownItem ? coordsForItem(thrownItem) : null;
+
     projectilesRef.current.push({
       x: startX,
       y: startY,
@@ -365,14 +412,23 @@ function handleEvent(event, {
       targetX,
       targetY,
       type: event.data.projectile || 'arrow',
+      spriteCoords,
       progress: 0,
+      rotation: 0,
       finished: false,
     });
 
-    if (event.data.projectile === 'magic_bolt') {
-      AudioManager.play('ATTACK_MAGIC');
-    } else {
-      AudioManager.play('ATTACK_BOW');
+    const src = event.data.source;
+    const isLocal = src === myPlayerIdRef.current;
+    const visible = visionRef?.current?.visible;
+    if (isLocal || visible?.has(`${event.data.x},${event.data.y}`)) {
+      if (thrownItem) {
+        AudioManager.play('THROW');
+      } else if (event.data.projectile === 'magic_bolt') {
+        AudioManager.play('ATTACK_MAGIC');
+      } else {
+        AudioManager.play('ATTACK_BOW');
+      }
     }
     return;
   }
@@ -401,7 +457,7 @@ function handleEvent(event, {
     // 1) Play the attacker's swing.
     if (srcMob) {
       if (!mobAnimRef.current[src]) mobAnimRef.current[src] = {};
-      const attackDuration = srcMob.name === 'Goo' ? 300 : srcMob.name === 'Scorpio' ? 200 : srcMob.name === 'Rat' ? 333 : 250;
+      const attackDuration = srcMob.name === 'Goo' ? 300 : srcMob.name === 'Scorpio' ? 200 : srcMob.name === 'Rat' ? 333 : srcMob.name === 'Snake' ? 333 : 250;
       mobAnimRef.current[src].attackUntil = now + attackDuration;
     } else if (srcPlayer && playerAnimRef) {
       if (!playerAnimRef.current[src]) playerAnimRef.current[src] = {};
@@ -428,23 +484,82 @@ function handleEvent(event, {
       const isMobTarget = !!entitiesRef.current.mobs[tgt];
       const maxHp = tgtEntity.max_hp || 1;
       const color = BLOOD_COLORS[tgtEntity.name] || '#bb0000';
+      const isCrit = event.data.crit;
+      const isGrim = event.data.grim_proc;
 
       setTimeout(() => {
-        const flashUntil = performance.now() + FLASH_DURATION;
+        const flashDuration = isCrit ? FLASH_DURATION * 2 : FLASH_DURATION;
+        const flashUntil = performance.now() + flashDuration;
         if (isMobTarget) {
           if (!mobAnimRef.current[tgt]) mobAnimRef.current[tgt] = {};
           mobAnimRef.current[tgt].flashUntil = flashUntil;
-          // Blood only on mobs (heroes suppress blood, like HeroSprite.bloodBurstA).
           if (particlesRef) {
             const awayAngle = sc ? Math.atan2(tc.y - sc.y, tc.x - sc.x) : -Math.PI / 2;
-            const count = Math.min(Math.round(9 * Math.sqrt(damage / maxHp)), 9);
-            spawnBlood(particlesRef, tc.x, tc.y, awayAngle, count, color);
+            if (isCrit) {
+              const critCount = Math.min(Math.round(14 * Math.sqrt(damage / maxHp)), 14);
+              spawnBlood(particlesRef, tc.x, tc.y, awayAngle, critCount, '#ffcc00');
+              spawnCritSparkle(particlesRef, tc.x, tc.y, 10);
+              spawnFloatingText(floatingTextRef, tc.x, tc.y - TILE_SIZE / 2, 'CRIT!', '#ffcc00');
+            } else {
+              const count = Math.min(Math.round(9 * Math.sqrt(damage / maxHp)), 9);
+              spawnBlood(particlesRef, tc.x, tc.y, awayAngle, count, color);
+            }
+            if (isGrim) {
+              spawnGrimShadow(particlesRef, tc.x, tc.y, 8);
+            }
           }
         } else if (playerAnimRef) {
           if (!playerAnimRef.current[tgt]) playerAnimRef.current[tgt] = {};
           playerAnimRef.current[tgt].flashUntil = flashUntil;
+          if (isCrit && floatingTextRef) {
+            spawnFloatingText(floatingTextRef, tc.x, tc.y - TILE_SIZE / 2, 'CRIT!', '#ffcc00');
+          }
+          if (isGrim && floatingTextRef) {
+            spawnGrimShadow(particlesRef, tc.x, tc.y, 8);
+          }
         }
       }, HIT_CONNECT_DELAY);
+    }
+    return;
+  }
+
+  if (event.type === 'MISS') {
+    const tgt = event.data.target;
+    const verb = event.data.defense_verb || 'dodged';
+    const target = entitiesRef.current.mobs[tgt] || entitiesRef.current.players[tgt];
+    if (target) {
+      const visible = visionRef?.current?.visible;
+      const tx = Math.round(target.renderPos.x);
+      const ty = Math.round(target.renderPos.y);
+      const isVisible = visible?.has(`${tx},${ty}`);
+      const isLocal = tgt === myPlayerIdRef.current;
+      if (isLocal || isVisible) {
+        const cx = target.renderPos.x * TILE_SIZE + TILE_SIZE / 2;
+        const cy = target.renderPos.y * TILE_SIZE;
+        if (floatingTextRef) {
+          spawnFloatingText(floatingTextRef, cx, cy, verb, '#ffffff');
+        }
+        AudioManager.play('MISS');
+      }
+    }
+    return;
+  }
+
+  if (event.type === 'DAMAGE') {
+    const tgt = event.data.target;
+    const tgtEntity = entitiesRef.current.mobs[tgt] || entitiesRef.current.players[tgt];
+    if (!tgtEntity) return;
+    const isGrim = event.data.grim_proc;
+    const isCrit = event.data.crit;
+    const tc = {
+      x: tgtEntity.renderPos.x * TILE_SIZE + TILE_SIZE / 2,
+      y: tgtEntity.renderPos.y * TILE_SIZE + TILE_SIZE / 2,
+    };
+    if (isGrim && particlesRef) {
+      spawnGrimShadow(particlesRef, tc.x, tc.y, 8);
+    }
+    if (isCrit && floatingTextRef) {
+      spawnFloatingText(floatingTextRef, tc.x, tc.y - TILE_SIZE / 2, 'CRIT!', '#ffcc00');
     }
     return;
   }

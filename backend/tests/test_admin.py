@@ -9,24 +9,24 @@ import uuid
 def test_admin_player_takes_no_damage():
     player = Player(
         id="p1", name="Admin", pos=Position(x=0, y=0),
-        hp=10, max_hp=10, attack=5, defense=0, faction="player",
+        hp=20, max_hp=20, attack=5, defense=0, faction="player",
         is_admin=True,
     )
     dmg = player.take_damage(5)
     assert dmg == 0
-    assert player.hp == 10
+    assert player.hp == 20
     assert player.is_downed == False
 
 
 def test_normal_player_takes_damage():
     player = Player(
         id="p2", name="Normal", pos=Position(x=0, y=0),
-        hp=10, max_hp=10, attack=5, defense=0, faction="player",
+        hp=20, max_hp=20, attack=5, defense=0, faction="player",
         is_admin=False,
     )
     dmg = player.take_damage(5)
     assert dmg == 5
-    assert player.hp == 5
+    assert player.hp == 15
 
 
 def test_add_player_sets_is_admin():

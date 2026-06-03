@@ -14,6 +14,8 @@ export default function useCanvasControls({
   isPinchingRef,
   targetingModeRef,
   onTargetTapRef,
+  examineModeRef,
+  onExamineTapRef,
   entitiesRef,
   myPlayerIdRef,
 }) {
@@ -50,7 +52,7 @@ export default function useCanvasControls({
       };
     };
 
-    const onMouseUp = () => { isDraggingRef.current = false; };
+    const onMouseUp = () => { isDraggingRef.current = false; hasDraggedRef.current = false; };
 
     const onWheel = (e) => {
       e.preventDefault();
@@ -144,7 +146,11 @@ export default function useCanvasControls({
       const tileY = Math.floor(worldY / TILE_SIZE);
 
       // The canvas has touch-action:none so taps don't synthesize a click; resolve
-      // targeting (THROW/ZAP aim) here instead of relying on the onClick handler.
+      // examine/targeting here instead of relying on the onClick handler.
+      if (examineModeRef?.current) {
+        onExamineTapRef?.current?.(tileX, tileY);
+        return;
+      }
       if (targetingModeRef.current) {
         onTargetTapRef?.current?.(tileX, tileY);
         return;
@@ -174,7 +180,7 @@ export default function useCanvasControls({
       canvas.removeEventListener('touchmove', onTouchMove);
       canvas.removeEventListener('touchend', onTouchEnd);
     };
-  }, [enabled, canvasRef, socketRef, panOffsetRef, zoomRef, cameraLerpRef, isDraggingRef, isRefocusingRef, isPinchingRef, targetingModeRef, onTargetTapRef, entitiesRef, myPlayerIdRef]);
+  }, [enabled, canvasRef, socketRef, panOffsetRef, zoomRef, cameraLerpRef, isDraggingRef, isRefocusingRef, isPinchingRef, targetingModeRef, onTargetTapRef, examineModeRef, onExamineTapRef, entitiesRef, myPlayerIdRef]);
 
   return { hasDraggedRef };
 }

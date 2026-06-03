@@ -5,6 +5,7 @@ import stepSound from '../assets/pixel-dungeon/audio/step.mp3';
 import hitArrowSound from '../assets/pixel-dungeon/audio/hit_arrow.mp3';
 import hitSlashSound from '../assets/pixel-dungeon/audio/hit_slash.mp3';
 import hitBodySound from '../assets/pixel-dungeon/audio/hit.mp3';
+import hitStrongSound from '../assets/sounds/hit_strong.mp3';
 import healthWarnSound from '../assets/pixel-dungeon/audio/health_warn.mp3';
 import clickSound from '../assets/pixel-dungeon/audio/click.mp3';
 import itemSound from '../assets/sounds/item.mp3';
@@ -14,7 +15,9 @@ import waterStepSound from '../assets/sounds/water.mp3';
 import grassStepSound from '../assets/sounds/grass.mp3';
 import descendSound from '../assets/pixel-dungeon/audio/descend.mp3';
 import drinkSound from '../assets/sounds/drink.mp3';
+import throwSound from '../assets/sounds/miss.mp3';
 import levelUpSound from '../assets/sounds/levelup.mp3';
+import trapSound from '../assets/sounds/trap.mp3';
 import { effectiveSfxVolume } from '../menu/menuSettings';
 
 class AudioManager {
@@ -30,6 +33,8 @@ class AudioManager {
         this.masterGain.connect(this.audioCtx.destination);
 
         this.loadSound('ATTACK_BOW', atkBowSound);
+        this.loadSound('THROW', throwSound);
+        this.loadSound('MISS', throwSound);
         this.loadSound('ATTACK_MAGIC', zapSound);
         this.loadSound('HIT_MAGIC', hitMagicSound);
         this.loadSound('STEP', stepSound);
@@ -37,6 +42,7 @@ class AudioManager {
         this.loadSound('STEP_GRASS', grassStepSound);
         this.loadSound('HIT_ARROW', hitArrowSound);
         this.loadSound('HIT_SLASH', hitSlashSound);
+        this.loadSound('HIT_STRONG', hitStrongSound);
         this.loadSound('HIT_BODY', hitBodySound);
         this.loadSound('HEALTH_WARN', healthWarnSound);
         this.loadSound('CLICK', clickSound);
@@ -46,6 +52,7 @@ class AudioManager {
         this.loadSound('STAIRS_DOWN', descendSound);
         this.loadSound('DRINK', drinkSound);
         this.loadSound('LEVELUP', levelUpSound);
+        this.loadSound('TRAP', trapSound);
 
         const doorSounds = import.meta.glob('../assets/sounds/door_open.mp3', { eager: true, query: '?url' });
         const doorUrl = doorSounds['../assets/sounds/door_open.mp3']?.default;

@@ -9,9 +9,16 @@ def _kill_adjacent_mob(mob_exp):
     pid = "p"
     player = game.add_player(pid, "Tester")
     player.pos = Position(x=1, y=1)
-    player.attack = 50  # one-shot
+    # Override weapon with a 50-damage weapon for one-shot kill
+    from app.engine.entities.base import Weapon
+    player.belongings.weapon = Weapon(
+        id="big_sword", name="Big Sword", damage=50,
+        strength_requirement=10, attack_cooldown=0.0,
+    )
+    player.attack_skill = 100  # guarantee hit
     mob = MobEntity(id="m", name="Rat", pos=Position(x=2, y=1),
-                    hp=1, max_hp=1, attack=1, defense=0, exp=mob_exp)
+                    hp=1, max_hp=1, attack=1, defense=0, defense_skill=0,
+                    dr_min=0, dr_max=0, exp=mob_exp)
     game.mobs["m"] = mob
     game.move_entity(pid, 1, 0)  # attack into the mob
     return game, player, mob
@@ -38,8 +45,8 @@ def _player():
         id="p1",
         name="Tester",
         pos=Position(x=1, y=1),
-        hp=10,
-        max_hp=10,
+        hp=20,
+        max_hp=20,
         attack=3,
         defense=1,
         faction="player",
@@ -58,7 +65,7 @@ def test_earn_exp_below_threshold_no_levelup():
     assert leveled is False
     assert p.level == 1
     assert p.experience == 9
-    assert p.max_hp == 10
+    assert p.max_hp == 20
 
 
 def test_earn_exp_levels_up_and_boosts_hp():
@@ -67,8 +74,10 @@ def test_earn_exp_levels_up_and_boosts_hp():
     assert leveled is True
     assert p.level == 2
     assert p.experience == 0
-    assert p.max_hp == 15  # +5 per level
-    assert p.hp == 15  # healed the gain
+    assert p.max_hp == 25  # +5 per level
+    assert p.hp == 25  # healed the gain
+    assert p.attack_skill == 11
+    assert p.defense_skill == 6
 
 
 def test_earn_exp_multi_level_in_one_award():
@@ -78,7 +87,7 @@ def test_earn_exp_multi_level_in_one_award():
     assert leveled is True
     assert p.level == 3
     assert p.experience == 0
-    assert p.max_hp == 20  # +5 twice
+    assert p.max_hp == 30  # +5 twice
 
 
 def test_earn_exp_caps_at_max_level():

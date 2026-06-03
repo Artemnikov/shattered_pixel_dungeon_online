@@ -2,9 +2,57 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/src/assets/pixel-dungeon/icons/icon_16.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Online Pixel Dungeon</title>
+    <meta name="application-name" content="SPD Online" />
+    <meta name="description" content="Play the roguelike dungeon crawler Shattered Pixel Dungeon online, for free in your browser. Multiplayer real-time, no download required." />
+    <meta name="keywords" content="shattered pixel dungeon online, spd online, play pixel dungeon online, roguelike browser game, free online roguelike, multiplayer dungeon crawler" />
+
+    <link rel="icon" type="image/png" sizes="16x16" href="/src/assets/pixel-dungeon/icons/icon_16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/src/assets/pixel-dungeon/icons/icon_32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/src/assets/pixel-dungeon/icons/icon_48.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/src/assets/pixel-dungeon/icons/icon_64.png" />
+    <link rel="icon" type="image/png" sizes="128x128" href="/src/assets/pixel-dungeon/icons/icon_128.png" />
+    <link rel="icon" type="image/png" sizes="256x256" href="/src/assets/pixel-dungeon/icons/icon_256.png" />
+    <link rel="apple-touch-icon" sizes="256x256" href="/src/assets/pixel-dungeon/icons/icon_256.png" />
+    <link rel="canonical" href="https://spd.online/" />
+
+    <title>SPD Online — Play Shattered Pixel Dungeon in your browser</title>
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://spd.online/" />
+    <meta property="og:title" content="SPD Online — Play Shattered Pixel Dungeon in your browser" />
+    <meta property="og:description" content="Play the roguelike dungeon crawler Shattered Pixel Dungeon online, for free in your browser. Multiplayer real-time, no download required." />
+    <meta property="og:image" content="https://spd.online/og-image.png" />
+    <meta property="og:image:width" content="256" />
+    <meta property="og:image:height" content="256" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="SPD Online — Play Shattered Pixel Dungeon in your browser" />
+    <meta name="twitter:description" content="Play the roguelike dungeon crawler Shattered Pixel Dungeon online, for free in your browser. Multiplayer real-time, no download required." />
+    <meta name="twitter:image" content="https://spd.online/og-image.png" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "SPD Online",
+      "url": "https://spd.online/",
+      "description": "Play the roguelike dungeon crawler Shattered Pixel Dungeon online, for free in your browser. Multiplayer real-time, no download required.",
+      "applicationCategory": "Game",
+      "operatingSystem": "Web",
+      "browserRequirements": "Requires JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "image": "https://spd.online/og-image.png"
+    }
+    </script>
+
+    <!-- SEO meta tags above are static fallback. React 19 native <title>/<meta>
+         in App.jsx overrides them per screen (WELCOME/SELECT/PLAYING) when
+         JavaScript executes. -->
   </head>
   <body>
     <div id="root"></div>

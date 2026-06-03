@@ -325,9 +325,24 @@
   padding: 4px;
   border-radius: 4px;
 }
-/* Targeting Mode */
-.cursor-crosshair {
-  cursor: crosshair !important;
+/* Desktop mode: custom cursor (cursor_mouse.png) everywhere */
+.desktop-mode {
+  cursor: var(--cursor-mouse, auto);
+}
+.desktop-mode button,
+.desktop-mode a,
+.desktop-mode [role="button"],
+.desktop-mode select,
+.desktop-mode input,
+.desktop-mode summary,
+.desktop-mode label,
+.desktop-mode .inv-slot,
+.desktop-mode .inv-bag-tab,
+.desktop-mode .toolbar-slot,
+.desktop-mode .toolbar-canvas,
+.desktop-mode .quickslot,
+.desktop-mode .opd-fade-catcher {
+  cursor: var(--cursor-mouse, pointer);
 }
 
 .targeting-active {
@@ -344,8 +359,8 @@
 
 .fullscreen-btn {
   position: absolute;
-  bottom: 12px;
-  right: 12px;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
   z-index: 200;
   width: 40px;
   height: 40px;
@@ -428,40 +443,63 @@
   }
 }
 
-/* --- SPD-style inventory window (WndBag) --- */
-.wndbag {
+/* --- SPD-style inventory pane (InventoryPane) --- */
+.inv-pane {
   background: #2a2a33;
   border: 4px solid #4a4a55;
   border-radius: 10px;
-  width: 420px;
-  max-width: 94%;
-  padding: 16px;
+  width: 380px;
+  max-width: 96vw;
+  padding: 12px;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.85);
   font-family: 'Courier New', Courier, monospace;
 }
 
-.wndbag-equipped {
+.inv-equip-row {
   display: flex;
-  gap: 6px;
-  justify-content: center;
-  padding-bottom: 12px;
-  margin-bottom: 12px;
+  gap: 5px;
+  align-items: center;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
   border-bottom: 2px solid #3a3a44;
 }
 
-.wndbag-grid {
+.inv-currency {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  padding-right: 4px;
+}
+.inv-gold { color: #f1c40f; font-size: 14px; display: inline-flex; align-items: center; gap: 4px; }
+.inv-energy { color: #44ccff; font-size: 13px; display: inline-flex; align-items: center; gap: 4px; }
+.inv-gold-icon, .inv-energy-icon {
+  width: 9px; height: 9px; display: inline-block; border-radius: 50%;
+}
+.inv-gold-icon { background: #f1c40f; box-shadow: inset -2px -2px 0 rgba(0,0,0,0.3); }
+.inv-energy-icon { background: #44ccff; box-shadow: inset -2px -2px 0 rgba(0,0,0,0.3); }
+
+.inv-bag-tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+.inv-bag-tab {
+  padding: 4px; display: flex; align-items: center; justify-content: center;
+  background: #42443d; border: 1px solid #55555f; border-radius: 4px; cursor: pointer;
+}
+.inv-bag-tab.active { background: #53564d; color: #fff; border-color: #f1c40f; }
+
+.inv-grid {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 5px;
-  max-height: 320px;
+  max-height: 300px;
   overflow-y: auto;
 }
 
-.wndbag-slot {
+.inv-slot {
   position: relative;
-  width: 44px;
-  height: 44px;
-  background: #1c1c22;
+  width: 40px;
+  height: 40px;
+  background: #53564d;
   border: 2px solid #3a3a44;
   border-radius: 5px;
   display: flex;
@@ -470,42 +508,73 @@
   padding: 0;
   cursor: pointer;
 }
-.wndbag-slot.filled:hover { border-color: #f1c40f; }
-.wndbag-slot.empty { background: #16161a; border-style: dashed; cursor: default; }
-.wndbag-slot.selected { border-color: #f1c40f; box-shadow: 0 0 8px rgba(241,196,15,0.5); }
-.wndbag-slot-label { font-size: 8px; color: #666; text-transform: uppercase; }
+.inv-slot.filled:hover { border-color: #f1c40f; }
+.inv-slot.empty { background: #16161a; border-style: dashed; cursor: default; }
+.desktop-mode .inv-slot.empty { cursor: var(--cursor-mouse, pointer); }
+/* equipped items get a lighter background, like ItemSlot.EQUIPPED */
+.inv-slot.equipped { background: #91938c; }
+/* Identification / curse tints. Like ItemSlot.java these are an additive overlay ON TOP
+   of the (normal or equipped) background rather than a replacement, so an equipped +
+   unidentified item keeps its lighter background and is tinted. Rendered as a translucent
+   inset fill that sits behind the item sprite. */
+.inv-slot.tint-cursed { box-shadow: inset 0 0 0 40px rgba(255, 70, 70, 0.32); }
+.inv-slot.tint-unknown { box-shadow: inset 0 0 0 40px rgba(190, 90, 255, 0.30); }
+.inv-slot.tint-magic { box-shadow: inset 0 0 0 40px rgba(70, 130, 255, 0.32); }
+.inv-slot-label { font-size: 9px; color: #888; text-transform: uppercase; }
 
-.wndbag-qty {
-  position: absolute;
-  bottom: 1px;
-  right: 2px;
-  font-size: 11px;
-  color: #fff;
-  text-shadow: 1px 1px 0 #000;
+.inv-qty {
+  position: absolute; top: 1px; left: 2px;
+  font-size: 11px; color: #fff; text-shadow: 1px 1px 0 #000;
 }
-.wndbag-level { position: absolute; top: 1px; right: 2px; font-size: 10px; text-shadow: 1px 1px 0 #000; }
-.wndbag-level.up { color: #5fd35f; }
-.wndbag-level.down { color: #e06666; }
-.wndbag-curse { position: absolute; top: 1px; left: 2px; font-size: 10px; color: #c060ff; text-shadow: 1px 1px 0 #000; }
+.inv-str { position: absolute; top: 1px; right: 2px; font-size: 10px; text-shadow: 1px 1px 0 #000; }
+.inv-str.str-ok { color: #fff; }
+.inv-str.str-bad { color: #ff4444; }
+.inv-str.str-warn { color: #ff8800; }
+.inv-level { position: absolute; bottom: 1px; right: 2px; font-size: 10px; text-shadow: 1px 1px 0 #000; }
+.inv-level.up { color: #44ff44; }
+.inv-level.down { color: #ff4444; }
+.inv-curse { position: absolute; bottom: 1px; left: 2px; font-size: 10px; color: #c060ff; text-shadow: 1px 1px 0 #000; }
+/* SPD ItemSlot type-glyph: small icon on identified consumables, centre-right. */
+.inv-glyph { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); background-repeat: no-repeat; pointer-events: none; }
 
-.wndbag-actions {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 2px solid #3a3a44;
+/* --- Item info popup (WndUseItem) --- */
+.wnd-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
 }
-.wndbag-actions-name { color: #f1c40f; margin-bottom: 8px; }
-.wndbag-actions-btns { display: flex; flex-wrap: wrap; gap: 6px; }
-.wndbag-actions-btns button {
-  padding: 6px 12px;
-  font-size: 12px;
-  background: #3a3a44;
-  border: 1px solid #55555f;
-  color: #fff;
-  border-radius: 4px;
-  cursor: pointer;
+.wnd-item {
+  background: #32323a;
+  border: 4px solid #4a4a55;
+  border-radius: 10px;
+  width: 280px; max-width: 92vw;
+  padding: 14px;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
+  font-family: 'Courier New', Courier, monospace;
 }
-.wndbag-actions-btns button:hover { background: #4a4a55; }
-.wndbag-actions-btns .qs-assign { background: #2c4a6e; }
+.wnd-item-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: bold; }
+.wnd-item-desc { margin: 10px 0; font-size: 12px; line-height: 1.5; color: #d8d8d8; white-space: pre-wrap; }
+.wnd-item-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.wnd-item-actions button, .rc-menu button {
+  padding: 6px 12px; font-size: 12px; color: #fff;
+  background: #3a3a44; border: 1px solid #55555f; border-radius: 4px; cursor: pointer;
+  font-family: inherit;
+}
+.wnd-item-actions button:hover, .rc-menu button:hover { background: #4a4a55; }
+.wnd-item-actions button.default, .rc-menu button.default { color: #f1c40f; }
+.wnd-item-actions .qs-assign, .rc-menu .qs-assign { background: #2c4a6e; }
+
+/* --- Right-click context menu (RightClickMenu) --- */
+.rc-menu {
+  position: fixed; z-index: 210;
+  display: flex; flex-direction: column; gap: 3px;
+  background: #32323a; border: 3px solid #4a4a55; border-radius: 6px;
+  padding: 6px; min-width: 110px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.9);
+  font-family: 'Courier New', Courier, monospace;
+}
+.rc-menu-title { color: #f1c40f; font-size: 12px; font-weight: bold; padding: 2px 4px 4px; }
+.rc-menu button { text-align: left; }
 
 /* --- Quickslot bar --- */
 .quickslot-bar { display: flex; gap: 4px; margin: 4px 0; }
@@ -529,16 +598,129 @@
 /* --- Unified bottom-centered HUD: message log, toolbar, then inventory --- */
 .hud-bottom {
   position: fixed;
-  left: 50%;
-  bottom: 6px;
-  transform: translateX(-50%);
+  right: max(6px, env(safe-area-inset-right));
+  bottom: max(6px, env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
   gap: 6px;
   z-index: 50;
   pointer-events: none;
 }
 .hud-bottom > * { pointer-events: auto; }
 /* Docked inventory panel sits directly below the toolbar */
-.hud-bottom .wndbag { width: 360px; max-width: 96vw; padding: 12px; }
+.hud-bottom .inv-pane { width: 360px; max-width: 96vw; padding: 12px; }
+
+/* --- WndBag — mobile inventory popup --- */
+.wnd-bag-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+}
+.wnd-bag {
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.wnd-bag-close {
+  position: absolute;
+  top: -8px; right: -8px;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  background: #4a1a1a; border: 2px solid #7a3333;
+  color: #ff6666; font-size: 14px; font-weight: bold;
+  border-radius: 50%;
+  cursor: pointer; z-index: 10;
+  padding: 0; line-height: 1;
+}
+.wnd-bag-close:hover { background: #6a2a2a; border-color: #aa4444; }
+
+/* --- WndQuickBag — quick-use popup --- */
+.wnd-qb-overlay {
+  position: fixed; inset: 0; z-index: 250;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+.wnd-qb {
+  background: #2a2a33;
+  border: 4px solid #4a4a55;
+  border-radius: 10px;
+  padding: 14px;
+  max-width: 92vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
+  font-family: 'Courier New', Courier, monospace;
+}
+.wnd-qb-title {
+  color: #f1c40f;
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #3a3a44;
+}
+.wnd-qb-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.wnd-qb-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #3a3a44;
+  border: 1px solid #4a4a55;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+}
+.wnd-qb-item:hover { background: #4a4a55; border-color: #f1c40f; }
+.wnd-qb-item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* --- RadialMenu --- */
+.radial-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+}
+.radial-container {
+  position: relative;
+  touch-action: none;
+}
+.radial-svg {
+  position: absolute;
+  top: 0; left: 0;
+}
+.radial-slot {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #3a3a44;
+  border-radius: 6px;
+  background: rgba(30, 30, 38, 0.9);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.05s;
+}
+.radial-slot.active {
+  border-color: #f1c40f;
+  background: rgba(241, 196, 15, 0.15);
+  transform: scale(1.15);
+}
+.radial-slot.empty {
+  border-style: dashed;
+  opacity: 0.6;
+  cursor: default;
+}
+.radial-slot-num {
+  color: #666;
+  font-size: 12px;
+  font-weight: bold;
+  font-family: 'Courier New', Courier, monospace;
+}

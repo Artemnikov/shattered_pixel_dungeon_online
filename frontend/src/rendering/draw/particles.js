@@ -54,6 +54,69 @@ export function spawnHeal(particlesRef, cx, cy, count, color = '#2ecc71') {
   }
 }
 
+// Dust puff, matching Trap's visual poof in the original game (WornDartTrap).
+// Neutral gray-brown specks spreading outward with gravity, no directional bias.
+export function spawnDust(particlesRef, cx, cy, count = 6, color = '#997a4d') {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 16 + Math.random() * 40;
+    const life = 0.3 + Math.random() * 0.3;
+    particlesRef.current.push({
+      x: cx + (Math.random() - 0.5) * 8,
+      y: cy + (Math.random() - 0.5) * 8,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 20,
+      life,
+      maxLife: life,
+      size: 2 + Math.floor(Math.random() * 2),
+      color,
+      gravity: true,
+    });
+  }
+}
+
+// Golden crit sparkles, matching a more dramatic version of the original's
+// Speck.POSITION effect: wider spread, faster, no gravity, golden color.
+export function spawnCritSparkle(particlesRef, cx, cy, count = 12, color = '#ffcc00') {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 48 + Math.random() * 96;
+    const life = 0.5 + Math.random() * 0.3;
+    particlesRef.current.push({
+      x: cx + (Math.random() - 0.5) * 12,
+      y: cy + (Math.random() - 0.5) * 12,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 30,
+      life,
+      maxLife: life,
+      size: 2 + Math.floor(Math.random() * 2), // 2-3 px squares
+      color,
+      gravity: false,
+    });
+  }
+}
+
+// Grim shadow burst, mirroring ShadowParticle.UP from the original: dark
+// upward-floating specks (no gravity, slow upward drift, fade out).
+export function spawnGrimShadow(particlesRef, cx, cy, count = 8, color = '#000000') {
+  for (let i = 0; i < count; i++) {
+    const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI;
+    const speed = 16 + Math.random() * 32;
+    const life = 0.6 + Math.random() * 0.4;
+    particlesRef.current.push({
+      x: cx + (Math.random() - 0.5) * 20,
+      y: cy + (Math.random() - 0.5) * 20,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 10,
+      life,
+      maxLife: life,
+      size: 3 + Math.floor(Math.random() * 3), // 3-5 px squares
+      color,
+      gravity: false,
+    });
+  }
+}
+
 export function advanceAndDrawParticles(ctx, { particlesRef }) {
   const now = performance.now();
   if (lastNow == null) lastNow = now;

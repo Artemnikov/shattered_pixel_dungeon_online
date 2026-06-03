@@ -40,7 +40,8 @@ class ConnectionManager:
             "depth": player_floor,
             "grid": state["grid"],
             "width": game.width,
-            "height": game.height
+            "height": game.height,
+            "traps": state.get("traps", []),
         })
         self.last_sent_floor.setdefault(game_id, {})[player_id] = player_floor
 
@@ -77,7 +78,8 @@ class ConnectionManager:
                             "depth": player_floor,
                             "grid": state["grid"],
                             "width": game.width,
-                            "height": game.height
+                            "height": game.height,
+                            "traps": state.get("traps", []),
                         })
                         self.last_sent_floor[game_id][player_id] = player_floor
                     
@@ -93,6 +95,7 @@ class ConnectionManager:
                         "mobs": state["mobs"],
                         "items": state.get("items", []),
                         "visible_tiles": state.get("visible_tiles", []),
+                        "traps": state.get("traps", []),
                         "gold": gold,
                         "energy": energy,
                         "events": game.filter_events_for_player(events, player_id)
@@ -133,6 +136,10 @@ async def game_websocket(websocket: WebSocket, game_id: str, class_type: str = "
                 elif direction == "DOWN": dy = 1
                 elif direction == "LEFT": dx = -1
                 elif direction == "RIGHT": dx = 1
+                elif direction == "UP_LEFT": dx = -1; dy = -1
+                elif direction == "UP_RIGHT": dx = 1; dy = -1
+                elif direction == "DOWN_LEFT": dx = -1; dy = 1
+                elif direction == "DOWN_RIGHT": dx = 1; dy = 1
                 if player_id in game.players:
                     game.players[player_id].path_queue = []
                 game.move_entity(player_id, dx, dy)
@@ -184,7 +191,12 @@ async def game_websocket(websocket: WebSocket, game_id: str, class_type: str = "
                 game.search(player_id)
 
             elif message["type"] == "WAIT":
-                game.search(player_id)
+                # WAIT no longer triggers a reveal. The reveal/search action is now
+                # exclusively the examine-mode flow on the magnifying-glass button, so
+                # tapping your own character (which sends WAIT) must not search. There
+                # is no turn-based wait mechanic in this real-time engine yet, so this
+                # is intentionally a no-op.
+                pass
 
     except WebSocketDisconnect:
         manager.disconnect(game_id, websocket)

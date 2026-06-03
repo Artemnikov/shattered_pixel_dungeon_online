@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import sewerTiles from '../assets/pixel-dungeon/environment/tiles_sewers.png';
 import prisonTiles from '../assets/pixel-dungeon/environment/tiles_prison.png';
+import terrainFeatures from '../assets/pixel-dungeon/environment/terrain_features.png';
 import cavesTiles from '../assets/pixel-dungeon/environment/tiles_caves.png';
 import cityTiles from '../assets/pixel-dungeon/environment/tiles_city.png';
 import hallsTiles from '../assets/pixel-dungeon/environment/tiles_halls.png';
@@ -16,6 +17,7 @@ import rogueSprite from '../assets/pixel-dungeon/sprites/rogue.png';
 import huntressSprite from '../assets/pixel-dungeon/sprites/huntress.png';
 import itemsSprite from '../assets/pixel-dungeon/sprites/items.png';
 import ratSprite from '../assets/pixel-dungeon/sprites/rat.png';
+import snakeSprite from '../assets/pixel-dungeon/sprites/snake.png';
 import batSprite from '../assets/pixel-dungeon/sprites/bat.png';
 import gnollSprite from '../assets/pixel-dungeon/sprites/gnoll.png';
 import gooSprite from '../assets/pixel-dungeon/sprites/goo.png';
@@ -31,6 +33,7 @@ export default function useAssetImages() {
       city: null,
       halls: null,
     },
+    terrainFeatures: null,
     waterFrames: [null, null, null, null, null],
     warrior: null,
     mage: null,
@@ -38,6 +41,7 @@ export default function useAssetImages() {
     huntress: null,
     items: null,
     rat: null,
+    snake: null,
     bat: null,
     gnoll: null,
     goo: null,
@@ -84,6 +88,7 @@ export default function useAssetImages() {
     loadRegionTiles(cavesTiles, 'caves');
     loadRegionTiles(cityTiles, 'city');
     loadRegionTiles(hallsTiles, 'halls');
+    loadImage(terrainFeatures, 'terrainFeatures');
     loadWaterFrame(water0, 0);
     loadWaterFrame(water1, 1);
     loadWaterFrame(water2, 2);
@@ -95,6 +100,7 @@ export default function useAssetImages() {
     loadImage(huntressSprite, 'huntress');
     loadImage(itemsSprite, 'items');
     loadImage(ratSprite, 'rat');
+    loadImage(snakeSprite, 'snake');
     loadImage(batSprite, 'bat');
     loadImage(gnollSprite, 'gnoll');
     loadImage(gooSprite, 'goo');

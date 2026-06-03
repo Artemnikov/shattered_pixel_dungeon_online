@@ -90,7 +90,7 @@ def test_capacity_limit():
 def test_equip_routes_to_correct_slot():
     p = make_player()
     p.add_to_inventory(MeleeWeapon(id="w", name="Sword", damage=3, strength_requirement=0))
-    p.add_to_inventory(Armor(id="a", name="Mail", health_boost=4, strength_requirement=0))
+    p.add_to_inventory(Armor(id="a", name="Mail", tier=3, strength_requirement=0))
     p.add_to_inventory(Ring(id="r", name="Ring", strength_requirement=0))
     assert p.equip_item("w") and p.belongings.weapon.id == "w"
     assert p.equip_item("a") and p.belongings.armor.id == "a"

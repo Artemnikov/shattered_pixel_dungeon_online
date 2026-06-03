@@ -3,11 +3,13 @@ import { TILE_SIZE, MOVE_DURATION, CAMERA_LERP } from '../constants';
 import { DEST_TILE_SIZE } from './sewers/constants';
 import { buildWaterClipPath, drawWaterBackground, getWaterTextureForDepth } from './sewers/draw';
 import { drawGrid, drawGridCaps } from './draw/grid';
+import { drawTerrainFeatures } from './draw/terrainFeatures';
 import { drawItems } from './draw/items';
 import { drawMobs } from './draw/mobs';
 import { drawPlayers } from './draw/players';
 import { advanceAndDrawProjectiles } from './draw/projectiles';
 import { advanceAndDrawParticles } from './draw/particles';
+import { advanceAndDrawCheckedCells } from './draw/searchEffects';
 import { advanceAndDrawFloatingText } from './draw/floatingText';
 
 export default function useGameRenderer({
@@ -20,10 +22,12 @@ export default function useGameRenderer({
   visionRef,
   openDoorsRef,
   projectilesRef,
+  trapsRef,
   mobAnimRef,
   dyingMobsRef,
   playerAnimRef,
   particlesRef,
+  searchEffectsRef,
   floatingTextRef,
   myPlayerIdRef,
   panOffsetRef,
@@ -90,8 +94,9 @@ export default function useGameRenderer({
         const gridCols = grid[0]?.length ?? 0;
         const gridRows = grid.length;
         const z = zoomRef.current;
-        const halfW = (canvas.width / 2 - TILE_SIZE / 2) / z;
-        const halfH = (canvas.height / 2 - TILE_SIZE / 2) / z;
+        const PAN_BORDER = 3;
+        const halfW = (PAN_BORDER * (canvas.width / 2 - TILE_SIZE / 2)) / z;
+        const halfH = (PAN_BORDER * (canvas.height / 2 - TILE_SIZE / 2)) / z;
         cameraX = Math.max(-halfW, Math.min(cameraX, gridCols * TILE_SIZE - canvas.width / z + halfW));
         cameraY = Math.max(-halfH, Math.min(cameraY, gridRows * TILE_SIZE - canvas.height / z + halfH));
 
@@ -118,13 +123,15 @@ export default function useGameRenderer({
 
       drawWaterBackground(ctx, waterTex, waterClipPath, gridBounds, performance.now());
       drawGrid(ctx, { grid, depth, assetImages, visionRef, openDoorsRef });
+      drawTerrainFeatures(ctx, assetImages.terrainFeatures, trapsRef.current, grid, visionRef);
       drawItems(ctx, { entitiesRef, visionRef, assetImages });
       drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef, dyingMobsRef });
       drawPlayers(ctx, { entitiesRef, visionRef, assetImages, playerAnimRef, myPlayerId });
       drawGridCaps(ctx, { grid, depth, assetImages, visionRef });
+      advanceAndDrawCheckedCells(ctx, { ref: searchEffectsRef });
       advanceAndDrawParticles(ctx, { particlesRef });
       advanceAndDrawFloatingText(ctx, { floatingTextRef });
-      advanceAndDrawProjectiles(ctx, { projectilesRef });
+      advanceAndDrawProjectiles(ctx, { projectilesRef, assetImages });
 
       ctx.restore();
 
