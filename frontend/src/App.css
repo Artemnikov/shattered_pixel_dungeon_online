@@ -334,6 +334,7 @@
 .desktop-mode .inv-slot,
 .desktop-mode .inv-bag-tab,
 .desktop-mode .toolbar-slot,
+.desktop-mode .toolbar-canvas,
 .desktop-mode .quickslot,
 .desktop-mode .inventory-toggle-btn-bottom,
 .desktop-mode .fullscreen-btn,
@@ -348,6 +349,17 @@
   cursor: var(--cursor-mouse, pointer);
 }
 .desktop-mode .inv-slot.empty {
+  cursor: var(--cursor-mouse, pointer);
+}
+
+.desktop-mode .opd-menu-btn,
+.desktop-mode .opd-fade-catcher,
+.desktop-mode .opd-fade-btn,
+.desktop-mode .opd-panel-close,
+.desktop-mode .opd-toggle,
+.desktop-mode .hero-bust-btn,
+.desktop-mode .hero-diff-btn,
+.desktop-mode .hero-start-btn {
   cursor: var(--cursor-mouse, pointer);
 }
 
