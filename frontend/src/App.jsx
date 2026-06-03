@@ -21,6 +21,9 @@ import useDebugApi from './dev/useDebugApi';
 import StatusPane from './ui/StatusPane';
 import Toolbar from './ui/Toolbar';
 import InventoryPane from './ui/InventoryPane';
+import WndBag from './ui/WndBag';
+import WndQuickBag from './ui/WndQuickBag';
+import RadialMenu from './ui/RadialMenu';
 import WndUseItem from './ui/WndUseItem';
 import RightClickMenu from './ui/RightClickMenu';
 import LoadingOverlay from './ui/LoadingOverlay';
@@ -94,6 +97,9 @@ function App() {
   const [interfaceSize, setInterfaceSize] = useState(getInitialInterfaceSize());
   const [gold, setGold] = useState(0);
   const [energy, setEnergy] = useState(0);
+  const [showQuickBag, setShowQuickBag] = useState(false);
+  const [radialOpen, setRadialOpen] = useState(false);
+  const [swappedQuickslots, setSwappedQuickslots] = useState(false);
 
   // --- shared refs ---
   const canvasRef = useRef(null);
@@ -261,6 +267,10 @@ function App() {
     }
     send({ type: 'EXECUTE_ITEM_ACTION', item_id: itemId, action, target_x: tx, target_y: ty });
   };
+  const handleQuickBag = () => setShowQuickBag(true);
+  const handleSwap = () => setSwappedQuickslots(v => !v);
+  const handleRadialSelect = () => setRadialOpen(true);
+
   const assignQuickslot = (itemId) => {
     const slots = quickslot?.slots || [];
     let idx = slots.findIndex(s => !s.item_id);
@@ -418,7 +428,7 @@ function App() {
       const myPlayer = entitiesRef.current.players[myPlayerIdRef.current];
       const playerTile = myPlayer ? (myPlayer.targetPos || myPlayer.renderPos) : null;
       const action = resolveTapAction({ tileX, tileY, playerTile });
-      if (action.type === 'MOVE_TO') isRefocusingRef.current = true;
+      if (action.type === 'MOVE_TO' || action.type === 'MOVE') isRefocusingRef.current = true;
       socketRef.current.send(JSON.stringify(action));
     }
   };
@@ -497,6 +507,7 @@ function App() {
     triggerWait,
     isRefocusingRef, isDraggingRef,
     quickslot, itemsById,
+    onRadialSelect: handleRadialSelect,
   });
 
   // Reset transient game state on death so a fresh run starts clean (no stale
@@ -578,7 +589,7 @@ function App() {
           ref={canvasRef}
           width={viewport.width}
           height={viewport.height}
-          className={`game-canvas ${(targetingMode || examineMode) ? 'cursor-crosshair' : ''}`}
+          className="game-canvas"
           style={{ cursor: cursorStyle }}
           onClick={handleCanvasClick}
         />
@@ -621,18 +632,21 @@ function App() {
           mode={interfaceSize > 0 ? 'group' : 'split'}
           interfaceSize={interfaceSize}
           flipToolbar={false}
-          quickSwapper={false}
+          quickSwapper={!isDesktop}
           canvasWidth={viewport.width}
           items={toolbarItems}
           equippedItems={equippedItems}
           targetingMode={targetingMode}
+          swappedQuickslots={swappedQuickslots}
           onWait={triggerWait}
           onSearch={handleExamineOrReveal}
           onInventory={() => setShowInventory(v => !v)}
+          onQuickBag={handleQuickBag}
           onSlotClick={handleToolbarClick}
           onSlotDoubleClick={handleToolbarDoubleClick}
+          onSwap={handleSwap}
         />
-        {showInventory && (
+        {showInventory && (isDesktop ? (
           <InventoryPane
             belongings={belongings}
             gold={gold}
@@ -642,7 +656,18 @@ function App() {
             onContextMenu={(item, x, y) => setCtxMenu({ item, x, y })}
             onDefaultAction={(item) => executeItemAction(item.id, item.default_action)}
           />
-        )}
+        ) : (
+          <WndBag
+            belongings={belongings}
+            gold={gold}
+            energy={energy}
+            strength={myStats.strength}
+            onOpenItem={setUseItemTarget}
+            onContextMenu={(item, x, y) => setCtxMenu({ item, x, y })}
+            onDefaultAction={(item) => executeItemAction(item.id, item.default_action)}
+            onClose={() => setShowInventory(false)}
+          />
+        ))}
       </div>
 
       <button className="fullscreen-btn" onClick={toggleFullscreen} title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}>
@@ -672,6 +697,23 @@ function App() {
           onAction={executeItemAction}
           onAssignQuickslot={assignQuickslot}
           onClose={() => setCtxMenu(null)}
+        />
+      )}
+
+      {showQuickBag && (
+        <WndQuickBag
+          belongings={belongings}
+          onUse={(itemId, action) => executeItemAction(itemId, action)}
+          onClose={() => setShowQuickBag(false)}
+        />
+      )}
+
+      {radialOpen && (
+        <RadialMenu
+          items={toolbarItems}
+          size={isDesktop ? 200 : 140}
+          onSelect={(idx) => { handleToolbarClick(toolbarItems[idx], idx); }}
+          onClose={() => setRadialOpen(false)}
         />
       )}
 

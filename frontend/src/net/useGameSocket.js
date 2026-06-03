@@ -143,7 +143,7 @@ export default function useGameSocket({
             const dx = p.pos.x - currentTarget.x;
             const dy = p.pos.y - currentTarget.y;
 
-            if (Math.abs(dx) > Math.abs(dy)) {
+            if (Math.abs(dx) >= Math.abs(dy)) {
               if (dx > 0) { existing.facing = 'RIGHT'; existing.flipX = false; }
               else if (dx < 0) { existing.facing = 'LEFT'; existing.flipX = true; }
             } else {

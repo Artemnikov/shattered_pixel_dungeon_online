@@ -133,6 +133,10 @@ async def game_websocket(websocket: WebSocket, game_id: str, class_type: str = "
                 elif direction == "DOWN": dy = 1
                 elif direction == "LEFT": dx = -1
                 elif direction == "RIGHT": dx = 1
+                elif direction == "UP_LEFT": dx = -1; dy = -1
+                elif direction == "UP_RIGHT": dx = 1; dy = -1
+                elif direction == "DOWN_LEFT": dx = -1; dy = 1
+                elif direction == "DOWN_RIGHT": dx = 1; dy = 1
                 if player_id in game.players:
                     game.players[player_id].path_queue = []
                 game.move_entity(player_id, dx, dy)

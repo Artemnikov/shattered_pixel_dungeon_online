@@ -742,6 +742,12 @@ class GameInstance:
         if not (0 <= new_x < self.width and 0 <= new_y < self.height):
             return
 
+        if dx != 0 and dy != 0:
+            if not floor.flags.passable[entity.pos.y][entity.pos.x + dx]:
+                return
+            if not floor.flags.passable[entity.pos.y + dy][entity.pos.x]:
+                return
+
         target_entity = None
         for p in self._players_on_floor(floor_id):
             if p.id != entity_id and p.pos.x == new_x and p.pos.y == new_y:
@@ -1229,7 +1235,7 @@ class GameInstance:
 
                 if is_passive and mob.hp >= mob.max_hp:
                     if random.random() < 0.02:
-                        dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0)])
+                        dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)])
                         self.move_entity(mob.id, dx, dy)
                     continue
 
@@ -1255,7 +1261,7 @@ class GameInstance:
                         dx, dy = target_player.pos.x - mob.pos.x, target_player.pos.y - mob.pos.y
                         self.move_entity(mob.id, dx, dy)
                     elif random.random() < 0.1 * max(1.0, mob.speed):
-                        dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0)])
+                        dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)])
                         self.move_entity(mob.id, dx, dy)
 
                 elif self.difficulty == Difficulty.NORMAL:
@@ -1270,7 +1276,7 @@ class GameInstance:
                         )):
                             self.move_entity(mob.id, step[0], step[1])
                     elif random.random() < 0.1 * max(1.0, mob.speed):
-                        dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0)])
+                        dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)])
                         self.move_entity(mob.id, dx, dy)
 
                 elif self.difficulty == Difficulty.HARD:
@@ -1282,7 +1288,7 @@ class GameInstance:
                         if step:
                             self.move_entity(mob.id, step[0], step[1])
                     elif random.random() < 0.1 * max(1.0, mob.speed):
-                        dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0)])
+                        dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)])
                         self.move_entity(mob.id, dx, dy)
 
     def _process_bleed_ooze(self, floor_id: int, active_players: List[Player]):
@@ -1559,7 +1565,7 @@ class GameInstance:
                     return path[0]
                 return None
 
-            for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+            for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]:
                 nx, ny = x + dx, y + dy
                 if (
                     0 <= nx < self.width
@@ -1568,6 +1574,10 @@ class GameInstance:
                     and floor.flags.passable[ny][nx]
                     and (nx, ny) not in visited
                 ):
+                    if dx != 0 and dy != 0:
+                        if not floor.flags.passable[y][x + dx] or not floor.flags.passable[y + dy][x]:
+                            continue
+
                     blocked = False
                     for mob in floor.mobs.values():
                         if mob.is_alive and mob.pos.x == nx and mob.pos.y == ny:
@@ -1591,7 +1601,7 @@ class GameInstance:
             x, y, path = queue.pop(0)
             if x == target.x and y == target.y:
                 return path
-            for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+            for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]:
                 nx, ny = x + dx, y + dy
                 if (
                     0 <= nx < self.width
@@ -1600,6 +1610,9 @@ class GameInstance:
                     and floor.flags.passable[ny][nx]
                     and (nx, ny) not in visited
                 ):
+                    if dx != 0 and dy != 0:
+                        if not floor.flags.passable[y][x + dx] or not floor.flags.passable[y + dy][x]:
+                            continue
                     visited.add((nx, ny))
                     queue.append((nx, ny, path + [(dx, dy)]))
             if len(visited) > 500:

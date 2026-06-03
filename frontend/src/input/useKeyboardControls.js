@@ -1,5 +1,32 @@
 import { useEffect, useRef } from 'react';
 
+const DIRECTION_KEYS = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd']);
+
+function isUp(key) { return key === 'ArrowUp' || key === 'w'; }
+function isDown(key) { return key === 'ArrowDown' || key === 's'; }
+function isLeft(key) { return key === 'ArrowLeft' || key === 'a'; }
+function isRight(key) { return key === 'ArrowRight' || key === 'd'; }
+
+function getDirectionFromKeys(pressed) {
+  let dx = 0, dy = 0;
+  for (const key of pressed) {
+    if (isUp(key)) dy = -1;
+    if (isDown(key)) dy = 1;
+    if (isLeft(key)) dx = -1;
+    if (isRight(key)) dx = 1;
+  }
+  if (dx === 0 && dy === 0) return null;
+  if (dx === 0 && dy === -1) return 'UP';
+  if (dx === 0 && dy === 1) return 'DOWN';
+  if (dx === -1 && dy === 0) return 'LEFT';
+  if (dx === 1 && dy === 0) return 'RIGHT';
+  if (dx === -1 && dy === -1) return 'UP_LEFT';
+  if (dx === 1 && dy === -1) return 'UP_RIGHT';
+  if (dx === -1 && dy === 1) return 'DOWN_LEFT';
+  if (dx === 1 && dy === 1) return 'DOWN_RIGHT';
+  return null;
+}
+
 export default function useKeyboardControls({
   socketRef,
   inventory,
@@ -13,19 +40,29 @@ export default function useKeyboardControls({
   isDraggingRef,
   quickslot,
   itemsById,
+  onRadialSelect,
 }) {
   const lastKeyRef = useRef({ key: null, time: 0 });
   const holdSkipRef = useRef(false);
+  const pressedKeysRef = useRef(new Set());
+
+  const sendMove = (direction) => {
+    if (direction && socketRef.current?.readyState === WebSocket.OPEN) {
+      isRefocusingRef.current = true;
+      isDraggingRef.current = false;
+      socketRef.current.send(JSON.stringify({ type: 'MOVE', direction }));
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      pressedKeysRef.current.add(e.key);
+
       if (e.key === 'f') {
         setShowInventory(prev => !prev);
         return;
       }
       if (e.key === 'e') {
-        // Stateful examine→reveal, mirroring the original's btnSearch: 1st press arms
-        // examine mode (click a cell to inspect), 2nd press performs the reveal.
         if (onExamineOrReveal) onExamineOrReveal();
         return;
       }
@@ -38,12 +75,10 @@ export default function useKeyboardControls({
         if (triggerWait) triggerWait();
         return;
       }
-
-      let direction = null;
-      if (e.key === 'ArrowUp' || e.key === 'w') direction = 'UP';
-      if (e.key === 'ArrowDown' || e.key === 's') direction = 'DOWN';
-      if (e.key === 'ArrowLeft' || e.key === 'a') direction = 'LEFT';
-      if (e.key === 'ArrowRight' || e.key === 'd') direction = 'RIGHT';
+      if (e.key === 'q') {
+        if (onRadialSelect) onRadialSelect();
+        return;
+      }
 
       if (['1', '2', '3', '4', '5', '6'].includes(e.key)) {
         const index = parseInt(e.key) - 1;
@@ -63,20 +98,37 @@ export default function useKeyboardControls({
         }
       }
 
-      if (direction && socketRef.current?.readyState === WebSocket.OPEN) {
+      const currentPressed = pressedKeysRef.current;
+      if (DIRECTION_KEYS.has(e.key) && socketRef.current?.readyState === WebSocket.OPEN) {
         if (e.repeat) {
           holdSkipRef.current = !holdSkipRef.current;
           if (holdSkipRef.current) return;
         } else {
           holdSkipRef.current = false;
         }
-        isRefocusingRef.current = true;
-        isDraggingRef.current = false;
-        socketRef.current.send(JSON.stringify({ type: 'MOVE', direction }));
+        sendMove(getDirectionFromKeys(currentPressed));
       }
     };
 
+    const handleKeyUp = (e) => {
+      pressedKeysRef.current.delete(e.key);
+      const direction = getDirectionFromKeys(pressedKeysRef.current);
+      if (direction) {
+        sendMove(direction);
+      }
+    };
+
+    const handleBlur = () => {
+      pressedKeysRef.current.clear();
+    };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [inventory, handleToolbarClick, handleToolbarDoubleClick, socketRef, setShowInventory, onExamineOrReveal, onCancelModes, triggerWait, isRefocusingRef, isDraggingRef, quickslot, itemsById]);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, [inventory, handleToolbarClick, handleToolbarDoubleClick, socketRef, setShowInventory, onExamineOrReveal, onCancelModes, triggerWait, isRefocusingRef, isDraggingRef, quickslot, itemsById, onRadialSelect]);
 }
