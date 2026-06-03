@@ -20,6 +20,7 @@ from app.engine.entities.base import (
     Belongings,
     Boomerang,
     Bow,
+    Dagger,
     CharacterClass,
     Difficulty,
     Effect,
@@ -539,13 +540,8 @@ class GameInstance:
             )
 
         elif class_type == CharacterClass.ROGUE:
-            belongings.weapon = Weapon(
+            belongings.weapon = Dagger(
                 id=str(uuid.uuid4()),
-                name="Dagger",
-                damage=2,
-                range=1,
-                strength_requirement=9,
-                attack_cooldown=1.5,
             )
             belongings.armor = Armor(
                 id=str(uuid.uuid4()),
@@ -801,11 +797,25 @@ class GameInstance:
                     self.add_event("ATTACK", {"source": entity.id, "target": target_entity.id, "damage": 0, "surprise": False}, floor_id=floor_id)
                     return
                 dmg = result["damage"]
-                self.add_event("ATTACK", {"source": entity.id, "target": target_entity.id, "damage": dmg, "surprise": result["surprise"]}, floor_id=floor_id)
+                self.add_event("ATTACK", {
+                    "source": entity.id,
+                    "target": target_entity.id,
+                    "damage": dmg,
+                    "surprise": result["surprise"],
+                    "crit": result.get("crit", False),
+                    "grim_proc": result.get("grim_proc", False),
+                }, floor_id=floor_id)
                 if isinstance(entity, Player):
-                    self.add_event("PLAY_SOUND", {"sound": "HIT_SLASH"}, floor_id=floor_id, source_player_id=entity.id)
+                    sound = "HIT_STRONG" if result.get("crit") else "HIT_SLASH"
+                    self.add_event("PLAY_SOUND", {"sound": sound}, floor_id=floor_id, source_player_id=entity.id)
                 if dmg > 0:
-                    self.add_event("DAMAGE", {"target": target_entity.id, "amount": dmg}, floor_id=floor_id)
+                    self.add_event("DAMAGE", {
+                        "target": target_entity.id,
+                        "amount": dmg,
+                        "grim_proc": result.get("grim_proc", False),
+                    }, floor_id=floor_id)
+                    if result.get("grim_proc"):
+                        self.add_event("PLAY_SOUND", {"sound": "HIT_STRONG"}, floor_id=floor_id, source_player_id=entity.id)
                     if isinstance(target_entity, Player):
                         self.add_event("PLAY_SOUND", {"sound": "HIT_BODY"}, floor_id=floor_id, source_player_id=target_entity.id)
                         if target_entity.hp / target_entity.get_total_max_hp() <= 0.3:
@@ -934,6 +944,8 @@ class GameInstance:
             "target_x": target_x,
             "target_y": target_y,
             "projectile": projectile_type,
+            "crit": False,
+            "grim_proc": False,
         }
         # Thrown inventory items fly as their own sprite (not a generic dart).
         # Wands keep the magic_bolt projectile.
@@ -956,8 +968,8 @@ class GameInstance:
                 if result["missed"]:
                     self.add_event("MISS", {"source": player.id, "target": target_entity.id, "defense_verb": result.get("defense_verb", "dodged")}, floor_id=floor_id)
                 damage_dealt = result["damage"]
-                if result["surprise"]:
-                    pass
+                ranged_event_data["crit"] = result.get("crit", False)
+                ranged_event_data["grim_proc"] = result.get("grim_proc", False)
             else:
                 if is_wand:
                     atk_min = atk_max = item.damage
@@ -982,9 +994,18 @@ class GameInstance:
                 if result["missed"]:
                     self.add_event("MISS", {"source": player.id, "target": target_entity.id, "defense_verb": result.get("defense_verb", "dodged")}, floor_id=floor_id)
                 damage_dealt = result["damage"]
+                ranged_event_data["crit"] = result.get("crit", False)
+                ranged_event_data["grim_proc"] = result.get("grim_proc", False)
 
             if damage_dealt > 0:
-                self.add_event("DAMAGE", {"target": target_entity.id, "amount": damage_dealt}, floor_id=floor_id)
+                self.add_event("DAMAGE", {
+                    "target": target_entity.id,
+                    "amount": damage_dealt,
+                    "crit": result.get("crit", False),
+                    "grim_proc": result.get("grim_proc", False),
+                }, floor_id=floor_id)
+                if result.get("grim_proc"):
+                    self.add_event("PLAY_SOUND", {"sound": "HIT_STRONG"}, floor_id=floor_id, source_player_id=player.id)
                 if projectile_type == "magic_bolt":
                     self.add_event("PLAY_SOUND", {"sound": "HIT_MAGIC"}, floor_id=floor_id, source_player_id=player.id)
                 else:
@@ -1183,6 +1204,11 @@ class GameInstance:
             self._apply_room_heal_tick(player)
             self._apply_passive_regen(player)
             player.decay_shields()
+            if player.has_fury:
+                player.fury_turns_remaining -= 1
+                if player.fury_turns_remaining <= 0:
+                    player.has_fury = False
+                    player.fury_turns_remaining = 0
 
         for floor_id, floor in self.floors.items():
             active_players = [p for p in self._players_on_floor(floor_id) if p.is_alive and not p.is_downed]

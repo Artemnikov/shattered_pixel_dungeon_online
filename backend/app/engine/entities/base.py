@@ -65,6 +65,16 @@ class Entity(BaseModel):
     # Shields (absorption layers)
     shields: List[Shield] = Field(default_factory=list)
 
+    # Crit / surprise-attack damage bonus multiplier (e.g. 0.5 = +50%)
+    crit_damage_bonus: float = 0.0
+    # Grim enchantment: max execute chance at 0 HP
+    grim_max_chance: float = 0.0
+    # Kinetic enchantment: overflow damage carried to next hit
+    conserved_damage: int = 0
+    # Fury buff: flat 1.5x damage multiplier
+    has_fury: bool = False
+    fury_turns_remaining: int = 0
+
 
     def get_dr_min(self) -> int:
         return self.dr_min
@@ -284,11 +294,23 @@ class KindOfWeapon(EquipableItem):
     attack_cooldown: float = 1.0
     enchantment: Optional[str] = None
     projectile_type: Optional[str] = None
+    # On surprise attacks, damage floor is raised by this fraction of the range
+    surprise_damage_floor: float = 0.0
 
 
 class MeleeWeapon(KindOfWeapon):
     kind: Literal["melee_weapon"] = "melee_weapon"
     DESC: ClassVar[str] = "A reliable melee weapon. Equip it to strike enemies in close combat."
+
+
+class Dagger(MeleeWeapon):
+    kind: Literal["dagger"] = "dagger"
+    name: str = "Dagger"
+    damage: int = 2
+    attack_cooldown: float = 1.5
+    strength_requirement: int = 9
+    surprise_damage_floor: float = 0.75
+    DESC: ClassVar[str] = "A quick dagger. Surprise attacks deal more consistent damage."
 
 
 class Bow(KindOfWeapon):
@@ -402,6 +424,13 @@ class RevivingPotion(Potion):
     name: str = "Reviving Potion"
     effect: str = "revive"
     DESC: ClassVar[str] = "A potent elixir that can bring a fallen hero back from the brink."
+
+
+class FuryPotion(Potion):
+    kind: Literal["fury_potion"] = "fury_potion"
+    name: str = "Potion of Fury"
+    effect: str = "fury"
+    DESC: ClassVar[str] = "Drinking this potion fills you with rage, empowering your attacks for a short time."
 
 
 class Scroll(ItemBase):
@@ -651,9 +680,9 @@ class PotionBandolier(Bag):
 # for clean outbound dumps + a stable client contract.
 AnyItem = Annotated[
     Union[
-        MeleeWeapon, Bow, Staff, MissileWeapon,
+        MeleeWeapon, Dagger, Bow, Staff, MissileWeapon,
         Armor, Ring, Artifact, Wand,
-        HealthPotion, RevivingPotion, Potion, Scroll, Gold, Food, MysteryMeat, Key,
+        HealthPotion, RevivingPotion, FuryPotion, Potion, Scroll, Gold, Food, MysteryMeat, Key,
         Seed, Stone, Boomerang, ThrowableDagger, Throwable,
         VelvetPouch, ScrollHolder, MagicalHolster, PotionBandolier, Bag,
     ],
@@ -889,6 +918,12 @@ class Player(Entity):
         if isinstance(w, KindOfWeapon):
             return w.damage
         return self.damage_max
+
+    def get_surprise_damage_floor(self) -> float:
+        w = self.belongings.weapon
+        if isinstance(w, KindOfWeapon):
+            return w.surprise_damage_floor
+        return 0.0
 
     def get_dr_min(self) -> int:
         a = self.belongings.armor

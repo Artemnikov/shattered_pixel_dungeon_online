@@ -10,7 +10,7 @@ before dispatch, so handlers can assume the action is legal for the item.
 """
 from typing import Optional
 
-from app.engine.entities.base import Action, Position
+from app.engine.entities.base import Action, Position, Player
 
 
 def _floor_drop(game, player, item) -> None:
@@ -51,13 +51,21 @@ def action_drink(game, player, item, tx=None, ty=None) -> None:
     # pool per heal-tick. Reviving potions are consumed by reviving a downed ally
     # (see move_entity), not by self-drinking, so they no-op here.
     game.identify_kind(item)  # drinking reveals the potion type to the party
-    if getattr(item, "effect", "") == "regen":
+    effect = getattr(item, "effect", "")
+    if effect == "regen":
         amount = round(0.8 * player.get_total_max_hp() + 14)
         player.set_heal(amount, 0.25, 0)
         removed = player.belongings.backpack.detach(item.id)
         if removed is not None and player.belongings.get_item(item.id) is None:
             player.quickslot.convert_to_placeholder(removed)
         game.add_event("DRINK", {"player": player.id, "type": "regen"}, floor_id=player.floor_id, source_player_id=player.id)
+    elif effect == "fury":
+        player.has_fury = True
+        player.fury_turns_remaining = 10
+        removed = player.belongings.backpack.detach(item.id)
+        if removed is not None and player.belongings.get_item(item.id) is None:
+            player.quickslot.convert_to_placeholder(removed)
+        game.add_event("DRINK", {"player": player.id, "type": "fury"}, floor_id=player.floor_id, source_player_id=player.id)
 
 
 def action_read(game, player, item, tx=None, ty=None) -> None:

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { TILE_SIZE, PLAYER_ATTACK_DURATION, PLAYER_OPERATE_DURATION, HIT_CONNECT_DELAY, FLASH_DURATION } from '../constants';
 import { getWsBaseUrl } from '../config/urls';
 import AudioManager from '../audio/AudioManager';
-import { spawnBlood, spawnDust, spawnHeal } from '../rendering/draw/particles';
+import { spawnBlood, spawnCritSparkle, spawnDust, spawnGrimShadow, spawnHeal } from '../rendering/draw/particles';
 import { spawnCheckedCells } from '../rendering/draw/searchEffects';
 import { spawnFloatingText } from '../rendering/draw/floatingText';
 import { coordsForItem } from '../rendering/sprites';
@@ -481,21 +481,39 @@ function handleEvent(event, {
       const isMobTarget = !!entitiesRef.current.mobs[tgt];
       const maxHp = tgtEntity.max_hp || 1;
       const color = BLOOD_COLORS[tgtEntity.name] || '#bb0000';
+      const isCrit = event.data.crit;
+      const isGrim = event.data.grim_proc;
 
       setTimeout(() => {
-        const flashUntil = performance.now() + FLASH_DURATION;
+        const flashDuration = isCrit ? FLASH_DURATION * 2 : FLASH_DURATION;
+        const flashUntil = performance.now() + flashDuration;
         if (isMobTarget) {
           if (!mobAnimRef.current[tgt]) mobAnimRef.current[tgt] = {};
           mobAnimRef.current[tgt].flashUntil = flashUntil;
-          // Blood only on mobs (heroes suppress blood, like HeroSprite.bloodBurstA).
           if (particlesRef) {
             const awayAngle = sc ? Math.atan2(tc.y - sc.y, tc.x - sc.x) : -Math.PI / 2;
-            const count = Math.min(Math.round(9 * Math.sqrt(damage / maxHp)), 9);
-            spawnBlood(particlesRef, tc.x, tc.y, awayAngle, count, color);
+            if (isCrit) {
+              const critCount = Math.min(Math.round(14 * Math.sqrt(damage / maxHp)), 14);
+              spawnBlood(particlesRef, tc.x, tc.y, awayAngle, critCount, '#ffcc00');
+              spawnCritSparkle(particlesRef, tc.x, tc.y, 10);
+              spawnFloatingText(floatingTextRef, tc.x, tc.y - TILE_SIZE / 2, 'CRIT!', '#ffcc00');
+            } else {
+              const count = Math.min(Math.round(9 * Math.sqrt(damage / maxHp)), 9);
+              spawnBlood(particlesRef, tc.x, tc.y, awayAngle, count, color);
+            }
+            if (isGrim) {
+              spawnGrimShadow(particlesRef, tc.x, tc.y, 8);
+            }
           }
         } else if (playerAnimRef) {
           if (!playerAnimRef.current[tgt]) playerAnimRef.current[tgt] = {};
           playerAnimRef.current[tgt].flashUntil = flashUntil;
+          if (isCrit && floatingTextRef) {
+            spawnFloatingText(floatingTextRef, tc.x, tc.y - TILE_SIZE / 2, 'CRIT!', '#ffcc00');
+          }
+          if (isGrim && floatingTextRef) {
+            spawnGrimShadow(particlesRef, tc.x, tc.y, 8);
+          }
         }
       }, HIT_CONNECT_DELAY);
     }
@@ -520,6 +538,25 @@ function handleEvent(event, {
         }
         AudioManager.play('MISS');
       }
+    }
+    return;
+  }
+
+  if (event.type === 'DAMAGE') {
+    const tgt = event.data.target;
+    const tgtEntity = entitiesRef.current.mobs[tgt] || entitiesRef.current.players[tgt];
+    if (!tgtEntity) return;
+    const isGrim = event.data.grim_proc;
+    const isCrit = event.data.crit;
+    const tc = {
+      x: tgtEntity.renderPos.x * TILE_SIZE + TILE_SIZE / 2,
+      y: tgtEntity.renderPos.y * TILE_SIZE + TILE_SIZE / 2,
+    };
+    if (isGrim && particlesRef) {
+      spawnGrimShadow(particlesRef, tc.x, tc.y, 8);
+    }
+    if (isCrit && floatingTextRef) {
+      spawnFloatingText(floatingTextRef, tc.x, tc.y - TILE_SIZE / 2, 'CRIT!', '#ffcc00');
     }
     return;
   }

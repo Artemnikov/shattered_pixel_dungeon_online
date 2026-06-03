@@ -5,6 +5,7 @@ import stepSound from '../assets/pixel-dungeon/audio/step.mp3';
 import hitArrowSound from '../assets/pixel-dungeon/audio/hit_arrow.mp3';
 import hitSlashSound from '../assets/pixel-dungeon/audio/hit_slash.mp3';
 import hitBodySound from '../assets/pixel-dungeon/audio/hit.mp3';
+import hitStrongSound from '../assets/sounds/hit_strong.mp3';
 import healthWarnSound from '../assets/pixel-dungeon/audio/health_warn.mp3';
 import clickSound from '../assets/pixel-dungeon/audio/click.mp3';
 import itemSound from '../assets/sounds/item.mp3';
@@ -41,6 +42,7 @@ class AudioManager {
         this.loadSound('STEP_GRASS', grassStepSound);
         this.loadSound('HIT_ARROW', hitArrowSound);
         this.loadSound('HIT_SLASH', hitSlashSound);
+        this.loadSound('HIT_STRONG', hitStrongSound);
         this.loadSound('HIT_BODY', hitBodySound);
         this.loadSound('HEALTH_WARN', healthWarnSound);
         this.loadSound('CLICK', clickSound);
