@@ -724,3 +724,22 @@
   font-weight: bold;
   font-family: 'Courier New', Courier, monospace;
 }
+
+/* Reconnect status banner shown while the socket is dropped/retrying. */
+.reconnect-banner {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  padding: 6px 16px;
+  background: rgba(120, 20, 20, 0.92);
+  color: #fff;
+  font-size: 13px;
+  font-weight: bold;
+  font-family: 'Courier New', Courier, monospace;
+  border: 1px solid #000;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  pointer-events: none;
+}

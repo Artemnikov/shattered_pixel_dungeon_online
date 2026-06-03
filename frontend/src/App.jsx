@@ -67,6 +67,14 @@ function App() {
   const [playerName, setPlayerName] = useState('');
   const [difficulty, setDifficulty] = useState('normal');
   const [gameId] = useState('default-lobby');
+  // Stable per-run identity so a dropped socket can reconnect to the same hero.
+  // A fresh id is minted when a new run starts (see startGame); persisted so a
+  // page reload mid-run could resume the same session server-side.
+  const [sessionId, setSessionId] = useState(
+    () => sessionStorage.getItem('opd_session') || ''
+  );
+  // 'connected' | 'reconnecting' | null — drives the reconnect banner.
+  const [connectionStatus, setConnectionStatus] = useState(null);
 
   // --- game state ---
   const [grid, setGrid] = useState([]);
@@ -190,7 +198,8 @@ function App() {
 
   useGameSocket({
     enabled: gameState === 'PLAYING',
-    gameId, selectedClass, difficulty, playerName,
+    gameId, sessionId, selectedClass, difficulty, playerName,
+    setConnectionStatus,
     socketRef, gridRef, myPlayerIdRef, entitiesRef,
     visionRef, openDoorsRef, projectilesRef,
     trapsRef,
@@ -221,15 +230,15 @@ function App() {
   });
 
   // --- send helpers ---
-  const equipItem = (itemId) => {
-    socketRef.current.send(JSON.stringify({ type: 'EQUIP_ITEM', item_id: itemId }));
+  // Drop (don't throw) sends while the socket is closed/reconnecting.
+  const sendMessage = (msg) => {
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify(msg));
+    }
   };
-  const dropItem = (itemId) => {
-    socketRef.current.send(JSON.stringify({ type: 'DROP_ITEM', item_id: itemId }));
-  };
-  const useItem = (itemId) => {
-    socketRef.current.send(JSON.stringify({ type: 'USE_ITEM', item_id: itemId }));
-  };
+  const equipItem = (itemId) => sendMessage({ type: 'EQUIP_ITEM', item_id: itemId });
+  const dropItem = (itemId) => sendMessage({ type: 'DROP_ITEM', item_id: itemId });
+  const useItem = (itemId) => sendMessage({ type: 'USE_ITEM', item_id: itemId });
 
   // --- SPD-style generic item-action dispatch ---
   const TARGETED_ACTIONS = ['THROW', 'ZAP'];
@@ -527,6 +536,7 @@ function App() {
     setGrid([]);
     setMyStats({ hp: 0, maxHp: 10, name: '' });
     setInventory([]);
+    setConnectionStatus(null);
   };
 
   const isDesktop = interfaceSize > 0;
@@ -556,6 +566,11 @@ function App() {
             setSelectedClass(c);
             setDifficulty(d);
             setPlayerName(n);
+            // Fresh identity for the new run so we spawn a new hero rather than
+            // rebinding to a previous (possibly dead) one.
+            const newSession = crypto.randomUUID();
+            sessionStorage.setItem('opd_session', newSession);
+            setSessionId(newSession);
             setGameState('PLAYING');
           }} />
         </div>
@@ -584,6 +599,12 @@ function App() {
       <div className={`game-container ${isDesktop ? 'desktop-mode' : ''}`}
            style={isDesktop ? { '--cursor-mouse': `url(${cursorMouseUrl}) 1 1, pointer` } : {}}>
       <LoadingOverlay visible={grid.length === 0} />
+
+      {connectionStatus === 'reconnecting' && (
+        <div className="reconnect-banner" role="status">
+          Connection lost — reconnecting…
+        </div>
+      )}
 
       <StatusPane myStats={myStats} depth={depth} onSearch={handleExamineOrReveal} />
 
