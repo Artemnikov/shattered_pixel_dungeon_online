@@ -42,6 +42,10 @@ class Entity(BaseModel):
     last_attack_time: float = 0.0
     attack_cooldown: float = 1.0
 
+    # Vision range in tiles (SPD Char.viewDistance = 8). Single field that future
+    # Light/Blindness/Farsight-style buffs adjust; 0 means effectively sightless.
+    view_distance: int = 8
+
     # SPD combat stats
     attack_skill: int = 10
     defense_skill: int = 5

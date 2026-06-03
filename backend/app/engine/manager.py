@@ -13,6 +13,7 @@ from app.engine.dungeon.generator import (
     TrapInfo,
 )
 from app.engine.dungeon.terrain_flags import FloorFlagMaps, build_flag_maps
+from app.engine.mechanics import shadowcaster
 from app.engine.entities.base import (
     Armor,
     Bag,
@@ -95,6 +96,12 @@ class GameInstance:
         self.players: Dict[str, Player] = {}
         self.floors: Dict[int, FloorState] = {}
         self.events: List[dict] = []
+
+        # Per-tick shadowcasting caches. Open doors depend on occupancy, which
+        # changes as entities move, so both are invalidated every tick (and on
+        # any movement) via _invalidate_fov_cache().
+        self._fov_cache: Dict[Tuple[int, int, int, int], List[bool]] = {}
+        self._blocking_cache: Dict[int, List[bool]] = {}
 
         self.difficulty = Difficulty.NORMAL
         self.player_count = 0
@@ -828,6 +835,9 @@ class GameInstance:
             return
 
         entity.move(dx, dy)
+        # Position changed: source cells and occupancy-based open doors moved,
+        # so any cached shadowcasting is stale.
+        self._invalidate_fov_cache()
         if isinstance(entity, Player):
             self.add_event("MOVE", {"entity": entity_id, "x": entity.pos.x, "y": entity.pos.y}, floor_id=floor_id)
 
@@ -1135,6 +1145,10 @@ class GameInstance:
         self.add_event("DEATH", {"target": player.id}, floor_id=floor_id)
 
     def update_tick(self):
+        # Occupancy (and thus open doors / FOV sources) may have changed since
+        # the last tick; start each tick with fresh shadowcasting caches.
+        self._invalidate_fov_cache()
+
         # Process any players that died since the last tick (from any source).
         for player in self.players.values():
             if not player.is_alive and not player.death_processed:
@@ -1432,38 +1446,77 @@ class GameInstance:
             and floor.grid[y][x] == TileType.DOOR
         ]
 
-    def _is_in_los(self, p1: Position, p2: Position, floor_id: Optional[int] = None) -> bool:
+    def _invalidate_fov_cache(self):
+        """Drop cached shadowcasting results. Call whenever positions, doors, or
+        terrain change (every tick and on movement)."""
+        self._fov_cache.clear()
+        self._blocking_cache.clear()
+
+    def _view_distance(self, entity) -> int:
+        """Resolve an entity's effective vision radius. Single hook point for
+        future Light/Blindness/Farsight buffs (mirrors SPD
+        Level.updateFieldOfView's viewDist scaling). Clamped to the
+        shadowcaster's supported range; missing field defaults to SPD's 8."""
+        dist = getattr(entity, "view_distance", 8)
+        return max(0, min(dist, shadowcaster.MAX_DISTANCE))
+
+    def _effective_blocking(self, floor: "FloorState") -> List[bool]:
+        """Flat (y*w+x) LOS-blocking map with open doors cleared.
+
+        SPD bakes door open-state into losBlocking; here doors are statically
+        LOS-blocking in flags and "open" when occupied (_is_door_open), so we
+        derive the effective map per tick and memoise it."""
+        cached = self._blocking_cache.get(floor.floor_id)
+        if cached is not None:
+            return cached
+
+        w, h = self.width, self.height
+        los = floor.flags.los_blocking if floor.flags else None
+        blocking = [False] * (w * h)
+        for y in range(h):
+            row = los[y] if los else None
+            grid_row = floor.grid[y]
+            base = y * w
+            for x in range(w):
+                block = row[x] if row else True
+                if block and grid_row[x] == TileType.DOOR and self._is_door_open(floor, x, y):
+                    block = False
+                blocking[base + x] = block
+
+        self._blocking_cache[floor.floor_id] = blocking
+        return blocking
+
+    def _fov_from(self, src: Position, floor: "FloorState", distance: int) -> List[bool]:
+        """Shadowcast FOV (flat bool list) from `src` on `floor`, cached per tick."""
+        key = (floor.floor_id, src.x, src.y, distance)
+        cached = self._fov_cache.get(key)
+        if cached is not None:
+            return cached
+
+        blocking = self._effective_blocking(floor)
+        fov = shadowcaster.compute_fov(blocking, self.width, self.height, src.x, src.y, distance)
+        self._fov_cache[key] = fov
+        return fov
+
+    def _is_in_los(self, p1: Position, p2: Position, floor_id: Optional[int] = None,
+                   distance: Optional[int] = None) -> bool:
+        """True iff p2 lies within p1's shadowcast field of view.
+
+        Unified LOS: vision, mob sight, event audibility, and ranged targeting
+        all go through the same recursive shadowcasting as SPD, so none of them
+        leak through wall corners."""
         floor = self._get_or_create_floor(floor_id or self.depth)
 
-        x1, y1 = p1.x, p1.y
-        x2, y2 = p2.x, p2.y
-        dx = abs(x2 - x1)
-        dy = -abs(y2 - y1)
-        sx = 1 if x1 < x2 else -1
-        sy = 1 if y1 < y2 else -1
-        err = dx + dy
+        if not (0 <= p1.x < self.width and 0 <= p1.y < self.height):
+            return False
+        if not (0 <= p2.x < self.width and 0 <= p2.y < self.height):
+            return False
 
-        curr_x, curr_y = x1, y1
-        while True:
-            if curr_x == x2 and curr_y == y2:
-                return True
+        if distance is None:
+            distance = shadowcaster.MAX_DISTANCE
 
-            if 0 <= curr_x < self.width and 0 <= curr_y < self.height:
-                if not (curr_x == x1 and curr_y == y1):
-                    tile = floor.grid[curr_y][curr_x]
-                    if tile == TileType.DOOR:
-                        if not self._is_door_open(floor, curr_x, curr_y):
-                            return False
-                    elif floor.flags and floor.flags.los_blocking[curr_y][curr_x]:
-                        return False
-
-            e2 = 2 * err
-            if e2 >= dy:
-                err += dy
-                curr_x += sx
-            if e2 <= dx:
-                err += dx
-                curr_y += sy
+        fov = self._fov_from(p1, floor, distance)
+        return fov[p2.y * self.width + p2.x]
 
     def _get_next_step_to(self, start: Position, target: Position, floor_id: Optional[int] = None) -> Optional[tuple]:
         floor = self._get_or_create_floor(floor_id or self.depth)
@@ -1531,17 +1584,21 @@ class GameInstance:
             self.difficulty = new_level
 
     def get_visible_tiles(self, pos: Position, radius: int = 8, floor_id: Optional[int] = None) -> List[Tuple[int, int]]:
+        """Tiles visible from `pos` within `radius`, via recursive shadowcasting
+        (matches SPD). The circular cutoff comes from the shadowcaster's ROUNDING
+        table, not a separate dist_sq test."""
         floor = self._get_or_create_floor(floor_id or self.depth)
 
+        distance = max(0, min(radius, shadowcaster.MAX_DISTANCE))
+        fov = self._fov_from(pos, floor, distance)
+
+        w, h = self.width, self.height
         visible = []
-        for dy in range(-radius, radius + 1):
-            for dx in range(-radius, radius + 1):
-                tx, ty = pos.x + dx, pos.y + dy
-                if 0 <= tx < self.width and 0 <= ty < self.height:
-                    dist_sq = dx * dx + dy * dy
-                    if dist_sq <= radius * radius:
-                        if self._is_in_los(pos, Position(x=tx, y=ty), floor_id=floor.floor_id):
-                            visible.append((tx, ty))
+        for y in range(h):
+            base = y * w
+            for x in range(w):
+                if fov[base + x]:
+                    visible.append((x, y))
         return visible
 
     # --- identification masking -------------------------------------------
@@ -1656,6 +1713,9 @@ class GameInstance:
         return self._mask_item_dict(item.model_dump())
 
     def get_state(self, player_id: Optional[str] = None):
+        # Occupancy-based open doors and entity positions may have changed since
+        # the last computation; rebuild FOV from a clean cache for this snapshot.
+        self._invalidate_fov_cache()
         if player_id and player_id in self.players:
             player = self.players[player_id]
             floor = self._get_or_create_floor(player.floor_id)
@@ -1673,7 +1733,8 @@ class GameInstance:
                     "grid": floor.grid,
                 }
 
-            visible_tiles = self.get_visible_tiles(player.pos, floor_id=player.floor_id)
+            visible_tiles = self.get_visible_tiles(
+                player.pos, radius=self._view_distance(player), floor_id=player.floor_id)
             visible_set = set(visible_tiles)
 
             return {
