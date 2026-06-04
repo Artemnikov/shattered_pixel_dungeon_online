@@ -4,14 +4,38 @@ Events are buffered each tick, then filtered per-player (by floor, target, and
 line-of-sight to the source) before being flushed to clients.
 """
 
+import logging
+import os
 from typing import List, Optional
+
+from app.schemas.events import EVENT_MODELS
+
+logger = logging.getLogger(__name__)
+
+# Opt-in: when set, validate each event's payload against its schema and warn on
+# drift. Off in production (zero overhead, no wire change); on in tests.
+_VALIDATE_EVENTS = bool(os.environ.get("PXD_VALIDATE_EVENTS"))
+
+
+def _validate_event_payload(event_type: str, data: dict) -> None:
+    model = EVENT_MODELS.get(event_type)
+    if model is None:
+        logger.warning("Unknown event type %r (no schema in EVENT_MODELS)", event_type)
+        return
+    try:
+        model.model_validate(data)
+    except Exception as exc:  # pydantic.ValidationError
+        logger.warning("Event %r payload failed validation: %s", event_type, exc)
 
 
 class EventsMixin:
     def add_event(self, event_type: str, data: dict = None, floor_id: Optional[int] = None, player_id: Optional[str] = None, source_player_id: Optional[str] = None):
+        data = data or {}
+        if _VALIDATE_EVENTS:
+            _validate_event_payload(event_type, data)
         event = {
             "type": event_type,
-            "data": data or {},
+            "data": data,
         }
         if floor_id is not None:
             event["_floor_id"] = floor_id

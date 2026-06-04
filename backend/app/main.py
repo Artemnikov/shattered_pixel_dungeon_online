@@ -5,12 +5,22 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from typing import List, Dict, Tuple
 import asyncio
-import json
+import logging
 import time
 import uuid
 import os
+from pydantic import ValidationError
 from app.engine.manager import GameInstance
 from app.engine.entities.base import Position
+from app.schemas import (
+    CLIENT_MESSAGE_ADAPTER,
+    InitMessage,
+    PongMessage,
+    StateUpdateMessage,
+)
+from app.schemas import messages as msg
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Online Pixel Dungeon API")
 
@@ -66,15 +76,15 @@ class ConnectionManager:
         state = game.get_state(player_id)
         player_floor = state.get("depth", 1)
 
-        await websocket.send_json({
-            "type": "INIT",
-            "player_id": player_id,
-            "depth": player_floor,
-            "grid": state["grid"],
-            "width": state["width"],
-            "height": state["height"],
-            "traps": state.get("traps", []),
-        })
+        init = InitMessage(
+            player_id=player_id,
+            depth=player_floor,
+            grid=state["grid"],
+            width=state["width"],
+            height=state["height"],
+            traps=state.get("traps", []),
+        )
+        await websocket.send_json(init.model_dump(exclude_none=True))
         self.last_sent_floor.setdefault(game_id, {})[player_id] = player_floor
 
 
@@ -151,33 +161,33 @@ class ConnectionManager:
                     previous_floor = self.last_sent_floor.setdefault(game_id, {}).get(player_id)
                     
                     if previous_floor != player_floor:
-                        await connection.send_json({
-                            "type": "INIT",
-                            "depth": player_floor,
-                            "grid": state["grid"],
-                            "width": state["width"],
-                            "height": state["height"],
-                            "traps": state.get("traps", []),
-                        })
+                        init = InitMessage(
+                            depth=player_floor,
+                            grid=state["grid"],
+                            width=state["width"],
+                            height=state["height"],
+                            traps=state.get("traps", []),
+                        )
+                        await connection.send_json(init.model_dump(exclude_none=True))
                         self.last_sent_floor[game_id][player_id] = player_floor
-                    
+
                     player_obj = game.players.get(player_id)
                     gold = player_obj.gold if player_obj else 0
                     energy = player_obj.energy if player_obj else 0
 
-                    await connection.send_json({
-                        "type": "STATE_UPDATE",
-                        "depth": player_floor,
-                        "difficulty": game.difficulty,
-                        "players": state["players"],
-                        "mobs": state["mobs"],
-                        "items": state.get("items", []),
-                        "visible_tiles": state.get("visible_tiles", []),
-                        "traps": state.get("traps", []),
-                        "gold": gold,
-                        "energy": energy,
-                        "events": game.filter_events_for_player(events, player_id)
-                    })
+                    update = StateUpdateMessage(
+                        depth=player_floor,
+                        difficulty=game.difficulty,
+                        players=state["players"],
+                        mobs=state["mobs"],
+                        items=state.get("items", []),
+                        visible_tiles=state.get("visible_tiles", []),
+                        traps=state.get("traps", []),
+                        gold=gold,
+                        energy=energy,
+                        events=game.filter_events_for_player(events, player_id),
+                    )
+                    await connection.send_json(update.model_dump(exclude_none=True))
                 except Exception as e:
                     print(f"Error broadcasting to {player_id}: {e}")
                     pass
@@ -206,85 +216,80 @@ async def game_websocket(websocket: WebSocket, game_id: str, class_type: str = "
     try:
         while True:
             data = await websocket.receive_text()
-            message = json.loads(data)
-
-            if message["type"] == "PING":
-                await websocket.send_json({"type": "PONG"})
+            try:
+                message = CLIENT_MESSAGE_ADAPTER.validate_json(data)
+            except ValidationError as e:
+                # Log and ignore malformed input; a bad frame must never kill the
+                # connection or the game loop.
+                logger.warning("Invalid WS message from %s: %s", player_id, e)
                 continue
 
-            if message["type"] == "MOVE":
-                direction = message["direction"]
-                dx, dy = 0, 0
-                if direction == "UP": dy = -1
-                elif direction == "DOWN": dy = 1
-                elif direction == "LEFT": dx = -1
-                elif direction == "RIGHT": dx = 1
-                elif direction == "UP_LEFT": dx = -1; dy = -1
-                elif direction == "UP_RIGHT": dx = 1; dy = -1
-                elif direction == "DOWN_LEFT": dx = -1; dy = 1
-                elif direction == "DOWN_RIGHT": dx = 1; dy = 1
+            if isinstance(message, msg.Ping):
+                await websocket.send_json(PongMessage().model_dump())
+                continue
+
+            if isinstance(message, msg.Move):
+                dx, dy = message.direction.delta
                 if player_id in game.players:
                     # A single tap-step overrides any held keyboard intent / travel path.
                     game.players[player_id].path_queue = []
                     game.players[player_id].move_intent = None
                 game.move_entity(player_id, dx, dy)
 
-            elif message["type"] == "MOVE_INTENT":
+            elif isinstance(message, msg.MoveIntent):
                 # Held keyboard direction. The update tick paces the actual stepping
                 # (see GameInstance.update_tick), so movement speed is server-authoritative.
-                game.set_move_intent(player_id, int(message.get("dx", 0)), int(message.get("dy", 0)))
+                game.set_move_intent(player_id, message.dx, message.dy)
 
-            elif message["type"] == "MOVE_STOP":
+            elif isinstance(message, msg.MoveStop):
                 game.set_move_intent(player_id, 0, 0)
 
-            elif message["type"] == "MOVE_TO":
-                tx, ty = message.get("x"), message.get("y")
-                if tx is not None and ty is not None and player_id in game.players:
+            elif isinstance(message, msg.MoveTo):
+                if player_id in game.players:
                     player = game.players[player_id]
                     player.move_intent = None
-                    path = game._bfs_full_path(player.pos, Position(x=tx, y=ty), player.floor_id)
+                    path = game._bfs_full_path(player.pos, Position(x=message.x, y=message.y), player.floor_id)
                     player.path_queue = list(path)
                     player.last_auto_move_time = 0.0
 
-            elif message["type"] == "EXECUTE_ITEM_ACTION":
+            elif isinstance(message, msg.ExecuteItemAction):
                 # Generic SPD-style dispatch: {item_id, action, target_x?, target_y?}.
                 game.execute_item_action(
-                    player_id, message["item_id"], message["action"],
-                    message.get("target_x"), message.get("target_y"),
+                    player_id, message.item_id, message.action,
+                    message.target_x, message.target_y,
                 )
 
-            elif message["type"] == "SET_QUICKSLOT":
-                game.set_quickslot(player_id, message["index"], message["item_id"])
+            elif isinstance(message, msg.SetQuickslot):
+                game.set_quickslot(player_id, message.index, message.item_id)
 
-            elif message["type"] == "USE_QUICKSLOT":
+            elif isinstance(message, msg.UseQuickslot):
                 game.use_quickslot(
-                    player_id, message["index"],
-                    message.get("target_x"), message.get("target_y"),
+                    player_id, message.index,
+                    message.target_x, message.target_y,
                 )
 
             # --- legacy handlers (thin wrappers over the generic dispatch) ---
-            elif message["type"] == "EQUIP_ITEM":
-                game.execute_item_action(player_id, message["item_id"], "EQUIP")
+            elif isinstance(message, msg.EquipItem):
+                game.execute_item_action(player_id, message.item_id, "EQUIP")
 
-            elif message["type"] == "DROP_ITEM":
-                game.execute_item_action(player_id, message["item_id"], "DROP")
+            elif isinstance(message, msg.DropItem):
+                game.execute_item_action(player_id, message.item_id, "DROP")
 
-            elif message["type"] == "USE_ITEM":
-                game.use_item(player_id, message["item_id"])
+            elif isinstance(message, msg.UseItem):
+                game.use_item(player_id, message.item_id)
 
-            elif message["type"] == "CHANGE_DIFFICULTY":
-                new_difficulty = message["difficulty"]
-                game.change_difficulty(new_difficulty)
+            elif isinstance(message, msg.ChangeDifficulty):
+                game.change_difficulty(message.difficulty)
 
-            elif message["type"] == "RANGED_ATTACK":
+            elif isinstance(message, msg.RangedAttack):
                 game.perform_ranged_attack(
-                    player_id, message["item_id"], message["target_x"], message["target_y"],
+                    player_id, message.item_id, message.target_x, message.target_y,
                 )
 
-            elif message["type"] == "SEARCH":
+            elif isinstance(message, msg.Search):
                 game.search(player_id)
 
-            elif message["type"] == "WAIT":
+            elif isinstance(message, msg.Wait):
                 # WAIT no longer triggers a reveal. The reveal/search action is now
                 # exclusively the examine-mode flow on the magnifying-glass button, so
                 # tapping your own character (which sends WAIT) must not search. There
