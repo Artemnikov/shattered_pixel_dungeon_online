@@ -19,11 +19,8 @@ from app.engine.mechanics import shadowcaster
 def _game_with_grid(grid):
     """Build a GameInstance whose only floor is `grid` (list of rows of tile
     ids), with flags derived from it."""
-    h = len(grid)
-    w = len(grid[0])
+    # width/height now derive from the installed floor's grid.
     game = GameInstance("test-game")
-    game.width = w
-    game.height = h
     floor = FloorState(floor_id=game.depth, grid=grid, rooms=[], mobs={}, items={})
     floor.rebuild_flags()
     game.floors[game.depth] = floor

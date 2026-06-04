@@ -84,6 +84,8 @@ class Swarm(MobEntity):
     ]
 
     def defense_proc(self, damage: int, attacker: "Entity", floor_mobs: dict, tile_x: int, tile_y: int):
+        # Splits into a clone on hit (SPD Swarm.defenseProc), but always returns
+        # the unchanged damage so the resolver still applies it.
         if self.hp >= damage + 2 and self.is_alive:
             clone_id = f"{self.id}_split_{random.randint(0, 99999)}"
             clone = self.model_copy(deep=True)
@@ -102,7 +104,8 @@ class Swarm(MobEntity):
                 if not occupied:
                     clone.pos = pos
                     floor_mobs[clone_id] = clone
-                    return
+                    break
+        return damage
 
 
 class Crab(MobEntity):

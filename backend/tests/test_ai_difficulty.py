@@ -1,15 +1,20 @@
 import pytest
 from app.engine.manager import GameInstance
-from app.engine.entities.base import Position, Difficulty, TileType
+from app.engine.entities.base import Position, Difficulty
+from app.engine.entities.mobs import Rat
+from app.engine.dungeon.constants import TileType
 
 def setup_game():
     game = GameInstance("test-game")
-    game.mobs = {}
     game.players = {}
-    # Create a simple 10x10 room
-    game.width = 10
-    game.height = 10
+    # Replace the generated floor with a simple 10x10 open room and rebuild its
+    # flag maps so LOS/pathfinding match the new grid.
     game.grid = [[TileType.FLOOR for _ in range(10)] for _ in range(10)]
+    game._get_or_create_floor(game.depth).rebuild_flags()
+    # One controllable mob in place of the generated rotation.
+    game.mobs = {}
+    mob = game._spawn_mob_at(Rat, 3, 3)
+    game.mobs[mob.id] = mob
     return game
 
 def test_easy_ai_roams_or_attacks():
@@ -32,10 +37,21 @@ def test_easy_ai_roams_or_attacks():
             break
     assert moved, "Easy mob should roam eventually"
     
-    # Test attack if adjacent
+    # Test attack if adjacent. Pre-arm past the aggro windup (which backdates the
+    # attack timer on first engagement) and retry across ticks — a single melee
+    # swing can roll a miss, so loop until one lands (all-miss odds are negligible).
+    import time
     mob.pos = Position(x=2, y=1)
-    game.update_tick()
-    assert player.hp < 10, "Easy mob should attack when adjacent"
+    mob.engaged = True
+    landed = False
+    for _ in range(25):
+        mob.last_attack_time = time.time() - 10  # clear windup/cooldown each try
+        before = player.hp
+        game.update_tick()
+        if player.hp < before:
+            landed = True
+            break
+    assert landed, "Easy mob should attack when adjacent"
 
 def test_normal_ai_chases_in_los():
     game = setup_game()

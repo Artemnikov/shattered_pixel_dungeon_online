@@ -71,8 +71,8 @@ class ConnectionManager:
             "player_id": player_id,
             "depth": player_floor,
             "grid": state["grid"],
-            "width": game.width,
-            "height": game.height,
+            "width": state["width"],
+            "height": state["height"],
             "traps": state.get("traps", []),
         })
         self.last_sent_floor.setdefault(game_id, {})[player_id] = player_floor
@@ -155,8 +155,8 @@ class ConnectionManager:
                             "type": "INIT",
                             "depth": player_floor,
                             "grid": state["grid"],
-                            "width": game.width,
-                            "height": game.height,
+                            "width": state["width"],
+                            "height": state["height"],
                             "traps": state.get("traps", []),
                         })
                         self.last_sent_floor[game_id][player_id] = player_floor

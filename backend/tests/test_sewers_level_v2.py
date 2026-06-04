@@ -21,6 +21,7 @@ _VALID_TILES = {
     TileType.STAIRS_UP, TileType.STAIRS_DOWN, TileType.FLOOR_WATER,
     TileType.FLOOR_GRASS, TileType.HIGH_GRASS, TileType.WALL_DECO,
     TileType.EMPTY_DECO, TileType.LOCKED_DOOR, TileType.SECRET_DOOR,
+    TileType.TRAP,
 }
 
 

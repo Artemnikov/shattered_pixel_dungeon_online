@@ -67,6 +67,12 @@ RESPAWN_TURNS = 50
 # No respawns on floor 1
 NO_RESPAWN_FLOORS = {1}
 
+# Canvas seed size handed to the generator. The v2 generator resizes its canvas
+# to fit the room layout, so each floor ends up a different size; these are only
+# the starting bounds. Per-floor dimensions live on FloorState.width/height.
+MAP_WIDTH = 60
+MAP_HEIGHT = 40
+
 @dataclass
 class FloorState:
     floor_id: int
@@ -87,13 +93,19 @@ class FloorState:
     def rebuild_flags(self) -> None:
         self.flags = build_flag_maps(self.grid)
 
+    @property
+    def width(self) -> int:
+        return len(self.grid[0]) if self.grid else 0
+
+    @property
+    def height(self) -> int:
+        return len(self.grid) if self.grid else 0
+
 
 class GameInstance:
     def __init__(self, game_id: str):
         self.game_id = game_id
         self.depth = 1  # Compatibility view for single-floor tests/legacy callers.
-        self.width = 60
-        self.height = 40
 
         self.players: Dict[str, Player] = {}
         self.floors: Dict[int, FloorState] = {}
@@ -121,6 +133,20 @@ class GameInstance:
         self.drop_counters: Dict[str, int] = {}
 
         self.generate_floor(1)
+
+    @property
+    def width(self) -> int:
+        """Current-depth floor width. Read-only compatibility view for the
+        generator seed, the client snapshot, and single-floor tests — never use
+        for per-floor logic (use the floor's own width). Falls back to the seed
+        constant before the current floor exists."""
+        f = self.floors.get(self.depth)
+        return f.width if f else MAP_WIDTH
+
+    @property
+    def height(self) -> int:
+        f = self.floors.get(self.depth)
+        return f.height if f else MAP_HEIGHT
 
     @property
     def grid(self) -> List[List[int]]:
@@ -238,7 +264,7 @@ class GameInstance:
         # per-process (PYTHONHASHSEED) — cross-process stability matters for
         # server restarts during a live game session.
         floor_seed = zlib.crc32(f"{self.game_id}:{depth}".encode("utf-8"))
-        generator = DungeonGenerator(self.width, self.height, seed=floor_seed)
+        generator = DungeonGenerator(MAP_WIDTH, MAP_HEIGHT, seed=floor_seed)
         floor: FloorState
         if depth <= SEWERS_MAX_FLOOR:
             sewers_result = generator.generate_sewers(SewersProfile(depth=depth))
@@ -282,15 +308,6 @@ class GameInstance:
                 items={},
                 region="legacy",
             )
-
-        # The v2 generator pipeline resizes its canvas to fit the actual
-        # room layout. Sync GameInstance dims to the real grid so every
-        # self.width/self.height reader (spawn, LOS, BFS) stays in range.
-        if floor.grid:
-            actual_h = len(floor.grid)
-            actual_w = len(floor.grid[0])
-            self.height = actual_h
-            self.width = actual_w
 
         floor.rebuild_flags()
         self.floors[depth] = floor
@@ -354,8 +371,8 @@ class GameInstance:
     def _spawn_content(self, floor: FloorState):
         floor_tiles = [
             (x, y)
-            for y in range(self.height)
-            for x in range(self.width)
+            for y in range(floor.height)
+            for x in range(floor.width)
             if floor.grid[y][x] in [
                 TileType.FLOOR,
                 TileType.FLOOR_WOOD,
@@ -589,8 +606,8 @@ class GameInstance:
 
     def _get_stairs_pos(self, tile_type: int, floor_id: Optional[int] = None) -> Position:
         floor = self._get_or_create_floor(floor_id or self.depth)
-        for y in range(self.height):
-            for x in range(self.width):
+        for y in range(floor.height):
+            for x in range(floor.width):
                 if floor.grid[y][x] == tile_type:
                     return Position(x=x, y=y)
         return Position(x=0, y=0)
@@ -623,7 +640,7 @@ class GameInstance:
                     continue
                 tx = player.pos.x + dx
                 ty = player.pos.y + dy
-                if not (0 <= tx < self.width and 0 <= ty < self.height):
+                if not (0 <= tx < floor.width and 0 <= ty < floor.height):
                     continue
 
                 checked.append([tx, ty])
@@ -761,7 +778,7 @@ class GameInstance:
         new_x = entity.pos.x + dx
         new_y = entity.pos.y + dy
 
-        if not (0 <= new_x < self.width and 0 <= new_y < self.height):
+        if not (0 <= new_x < floor.width and 0 <= new_y < floor.height):
             return
 
         # Diagonal moves past a wall corner are allowed, matching SPD's PathFinder
@@ -1157,7 +1174,7 @@ class GameInstance:
                 if ox == 0 and oy == 0:
                     continue
                 cx, cy = player.pos.x + ox, player.pos.y + oy
-                if not (0 <= cx < self.width and 0 <= cy < self.height):
+                if not (0 <= cx < floor.width and 0 <= cy < floor.height):
                     continue
                 if not floor.flags or not floor.flags.passable[cy][cx]:
                     continue
@@ -1358,7 +1375,7 @@ class GameInstance:
         rotation = self._get_sewers_rotation(floor_id)
         cls = random.choice(rotation) if rotation else Rat
         floor_tiles = [
-            (x, y) for y in range(self.height) for x in range(self.width)
+            (x, y) for y in range(floor.height) for x in range(floor.width)
             if floor.grid[y][x] in [TileType.FLOOR, TileType.FLOOR_WOOD, TileType.FLOOR_WATER, TileType.FLOOR_COBBLE, TileType.FLOOR_GRASS]
             and not self._is_in_safe_room(floor, x, y)
             and not any(m.pos.x == x and m.pos.y == y for m in floor.mobs.values() if m.is_alive)
@@ -1504,7 +1521,7 @@ class GameInstance:
                 occupied.add((item.pos.x, item.pos.y))
         return [
             [x, y] for x, y in occupied
-            if 0 <= x < self.width and 0 <= y < self.height
+            if 0 <= x < floor.width and 0 <= y < floor.height
             and floor.grid[y][x] == TileType.DOOR
         ]
 
@@ -1532,7 +1549,7 @@ class GameInstance:
         if cached is not None:
             return cached
 
-        w, h = self.width, self.height
+        w, h = floor.width, floor.height
         los = floor.flags.los_blocking if floor.flags else None
         blocking = [False] * (w * h)
         for y in range(h):
@@ -1556,7 +1573,7 @@ class GameInstance:
             return cached
 
         blocking = self._effective_blocking(floor)
-        fov = shadowcaster.compute_fov(blocking, self.width, self.height, src.x, src.y, distance)
+        fov = shadowcaster.compute_fov(blocking, floor.width, floor.height, src.x, src.y, distance)
         self._fov_cache[key] = fov
         return fov
 
@@ -1569,16 +1586,16 @@ class GameInstance:
         leak through wall corners."""
         floor = self._get_or_create_floor(floor_id or self.depth)
 
-        if not (0 <= p1.x < self.width and 0 <= p1.y < self.height):
+        if not (0 <= p1.x < floor.width and 0 <= p1.y < floor.height):
             return False
-        if not (0 <= p2.x < self.width and 0 <= p2.y < self.height):
+        if not (0 <= p2.x < floor.width and 0 <= p2.y < floor.height):
             return False
 
         if distance is None:
             distance = shadowcaster.MAX_DISTANCE
 
         fov = self._fov_from(p1, floor, distance)
-        return fov[p2.y * self.width + p2.x]
+        return fov[p2.y * floor.width + p2.x]
 
     def _get_next_step_to(self, start: Position, target: Position, floor_id: Optional[int] = None) -> Optional[tuple]:
         floor = self._get_or_create_floor(floor_id or self.depth)
@@ -1597,8 +1614,8 @@ class GameInstance:
             for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]:
                 nx, ny = x + dx, y + dy
                 if (
-                    0 <= nx < self.width
-                    and 0 <= ny < self.height
+                    0 <= nx < floor.width
+                    and 0 <= ny < floor.height
                     and floor.flags
                     and floor.flags.passable[ny][nx]
                     and (nx, ny) not in visited
@@ -1633,8 +1650,8 @@ class GameInstance:
             for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]:
                 nx, ny = x + dx, y + dy
                 if (
-                    0 <= nx < self.width
-                    and 0 <= ny < self.height
+                    0 <= nx < floor.width
+                    and 0 <= ny < floor.height
                     and floor.flags
                     and floor.flags.passable[ny][nx]
                     and (nx, ny) not in visited
@@ -1659,7 +1676,7 @@ class GameInstance:
         distance = max(0, min(radius, shadowcaster.MAX_DISTANCE))
         fov = self._fov_from(pos, floor, distance)
 
-        w, h = self.width, self.height
+        w, h = floor.width, floor.height
         visible = []
         for y in range(h):
             base = y * w
@@ -1793,7 +1810,7 @@ class GameInstance:
                 for (x, y), t in floor.traps.items()
             ]
             if player.is_admin:
-                all_tiles = [(x, y) for y in range(self.height) for x in range(self.width)]
+                all_tiles = [(x, y) for y in range(floor.height) for x in range(floor.width)]
                 return {
                     "depth": player.floor_id,
                     "players": [self._serialize_player(p) for p in floor_players],
@@ -1802,6 +1819,8 @@ class GameInstance:
                     "visible_tiles": all_tiles,
                     "open_doors": self._get_open_doors(floor),
                     "grid": floor.grid,
+                    "width": floor.width,
+                    "height": floor.height,
                     "traps": admin_traps,
                 }
 
@@ -1823,6 +1842,8 @@ class GameInstance:
                 "visible_tiles": visible_tiles,
                 "open_doors": self._get_open_doors(floor),
                 "grid": floor.grid,
+                "width": floor.width,
+                "height": floor.height,
                 "traps": player_traps,
             }
 
@@ -1834,5 +1855,7 @@ class GameInstance:
             "items": [self._serialize_floor_item(i) for i in floor.items.values() if i.pos],
             "open_doors": self._get_open_doors(floor),
             "grid": floor.grid,
+            "width": floor.width,
+            "height": floor.height,
             "traps": [],
         }
