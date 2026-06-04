@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import { TILE_SIZE, PLAYER_ATTACK_DURATION, PLAYER_OPERATE_DURATION, HIT_CONNECT_DELAY, FLASH_DURATION } from '../constants';
 import { getWsBaseUrl } from '../config/urls';
 import AudioManager from '../audio/AudioManager';
@@ -6,15 +7,159 @@ import { spawnBlood, spawnCritSparkle, spawnDust, spawnGrimShadow, spawnHeal } f
 import { spawnCheckedCells } from '../rendering/draw/searchEffects';
 import { spawnFloatingText } from '../rendering/draw/floatingText';
 import { coordsForItem } from '../rendering/sprites';
+import { sendMessage } from './send';
+import type {
+  Player,
+  Mob,
+  Difficulty,
+  GameEvent,
+  ServerMessage,
+  SerializedItem,
+  TrapInfo,
+} from '../types/contract';
 
 // Blood color per mob (default red; Goo bleeds green like its acidic body).
-const BLOOD_COLORS = { Goo: '#8eb300' };
+const BLOOD_COLORS: Record<string, string> = { Goo: '#8eb300' };
 
 // Reconnect/heartbeat tuning.
 const HEARTBEAT_INTERVAL_MS = 15000; // app-level PING cadence
 const WATCHDOG_TIMEOUT_MS = 30000;   // force-reconnect if silent this long
 const RECONNECT_BASE_MS = 500;       // first backoff delay
 const RECONNECT_MAX_MS = 10000;      // backoff cap
+
+// --- client-side render augmentation ---------------------------------------
+// The server entities (Player/Mob) gain interpolation/animation bookkeeping once
+// they live in the local entity store. These fields never cross the socket.
+
+interface RenderVec {
+  x: number;
+  y: number;
+}
+
+interface RenderPlayer extends Player {
+  renderPos: RenderVec;
+  animStartPos: RenderVec;
+  animStartTime: number | null;
+  targetPos?: RenderVec;
+  facing: string;
+  flipX: boolean;
+  deathStart: number | null;
+}
+
+interface RenderMob extends Mob {
+  renderPos: RenderVec;
+  animStartPos: RenderVec;
+  animStartTime: number | null;
+  targetPos?: RenderVec;
+  facing: string;
+  // Set by the shared attacker-facing logic (ATTACK event) which runs for mobs too,
+  // even though the mob renderer doesn't currently consume it.
+  flipX?: boolean;
+}
+
+type DyingMob = RenderMob & { deathStart: number };
+
+interface AnimState {
+  attackUntil?: number;
+  flashUntil?: number;
+  operateUntil?: number;
+}
+
+interface Projectile {
+  x: number;
+  y: number;
+  startX: number;
+  startY: number;
+  targetX: number;
+  targetY: number;
+  type: string;
+  spriteCoords: unknown;
+  progress: number;
+  rotation: number;
+  finished: boolean;
+}
+
+interface EntitiesState {
+  players: Record<string, RenderPlayer>;
+  mobs: Record<string, RenderMob>;
+  items: SerializedItem[];
+}
+
+interface VisionState {
+  visible: Set<string>;
+  discovered: Set<string>;
+}
+
+interface Ref<T> {
+  current: T;
+}
+
+interface MyStats {
+  hp: number;
+  maxHp: number;
+  name: string;
+  isDowned: boolean | undefined;
+  isRegen: boolean;
+  exp: number;
+  level: number;
+  maxExp: number;
+  effects: Player['active_effects'];
+  classType: string;
+  armorTier: number;
+  strength: number;
+}
+
+interface HookProps {
+  enabled: boolean;
+  gameId: string;
+  sessionId: string;
+  selectedClass: string;
+  difficulty: string;
+  playerName: string;
+  setConnectionStatus?: (status: string) => void;
+  socketRef: Ref<WebSocket | null>;
+  gridRef: Ref<number[][]>;
+  myPlayerIdRef: Ref<string | null>;
+  entitiesRef: Ref<EntitiesState>;
+  visionRef: Ref<VisionState>;
+  openDoorsRef: Ref<Set<string>>;
+  projectilesRef: Ref<Projectile[]>;
+  trapsRef: Ref<TrapInfo[]>;
+  mobAnimRef: Ref<Record<string, AnimState>>;
+  dyingMobsRef: Ref<Record<string, DyingMob>>;
+  playerAnimRef: Ref<Record<string, AnimState>>;
+  particlesRef: Ref<unknown[]>;
+  searchEffectsRef: Ref<unknown[]>;
+  floatingTextRef: Ref<unknown[]>;
+  wasDownedRef: Ref<boolean | undefined>;
+  setGrid: Dispatch<SetStateAction<number[][]>>;
+  setDepth: (depth: number) => void;
+  setMyPlayerId: (id: string) => void;
+  setInventory: (items: Player['inventory']) => void;
+  setEquippedItems: (e: { weapon: Player['equipped_weapon']; wearable: Player['equipped_wearable'] }) => void;
+  setMyStats: (stats: MyStats) => void;
+  setDifficulty: (difficulty: Difficulty) => void;
+  setGold?: (gold: number) => void;
+  setEnergy?: (energy: number) => void;
+  setBelongings?: (belongings: Player['belongings'] | null) => void;
+  setQuickslot?: (quickslot: Player['quickslot'] | null) => void;
+}
+
+type HandlerCtx = Pick<
+  HookProps,
+  | 'myPlayerIdRef'
+  | 'gridRef'
+  | 'setGrid'
+  | 'entitiesRef'
+  | 'visionRef'
+  | 'projectilesRef'
+  | 'mobAnimRef'
+  | 'dyingMobsRef'
+  | 'playerAnimRef'
+  | 'particlesRef'
+  | 'searchEffectsRef'
+  | 'floatingTextRef'
+>;
 
 export default function useGameSocket({
   enabled,
@@ -50,7 +195,7 @@ export default function useGameSocket({
   setEnergy,
   setBelongings,
   setQuickslot,
-}) {
+}: HookProps) {
   useEffect(() => {
     if (!enabled) return;
 
@@ -58,11 +203,11 @@ export default function useGameSocket({
     // to this effect run and torn down by the cleanup below.
     let attempt = 0;
     let intentionalClose = false;
-    let reconnectTimer = null;
-    let heartbeatTimer = null;
-    let watchdogTimer = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+    let watchdogTimer: ReturnType<typeof setInterval> | null = null;
     let lastMsgAt = Date.now();
-    const status = (s) => { if (setConnectionStatus) setConnectionStatus(s); };
+    const status = (s: string) => { if (setConnectionStatus) setConnectionStatus(s); };
 
     const clearTimers = () => {
       if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
@@ -97,7 +242,7 @@ export default function useGameSocket({
         clearTimers();
         heartbeatTimer = setInterval(() => {
           if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'PING' }));
+            sendMessage(ws, { type: 'PING' });
           }
         }, HEARTBEAT_INTERVAL_MS);
         // Watchdog: a silent socket (no frames, incl. PONG) is treated as dead.
@@ -117,7 +262,7 @@ export default function useGameSocket({
 
       ws.onmessage = (event) => {
         lastMsgAt = Date.now();
-        const data = JSON.parse(event.data);
+        const data = JSON.parse(event.data) as ServerMessage;
         if (data.type === 'PONG') return;
         if (data.type === 'INIT') {
         setGrid(data.grid);
@@ -293,7 +438,7 @@ export default function useGameSocket({
 
       const myPlayer = data.players.find(p => p.id === myPlayerIdRef.current);
       if (myPlayer?.is_admin && gridRef.current.length > 0) {
-        const allTiles = new Set();
+        const allTiles = new Set<string>();
         for (let y = 0; y < gridRef.current.length; y++) {
           for (let x = 0; x < gridRef.current[0].length; x++) {
             allTiles.add(`${x},${y}`);
@@ -336,11 +481,11 @@ export default function useGameSocket({
   }, [enabled, gameId, sessionId]);
 }
 
-function handleEvent(event, {
+function handleEvent(event: GameEvent, {
   myPlayerIdRef, gridRef, setGrid, entitiesRef, visionRef,
   projectilesRef, mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef,
   searchEffectsRef, floatingTextRef,
-}) {
+}: HandlerCtx) {
   if (event.type === 'PLAY_SOUND') {
     AudioManager.play(event.data.sound);
     return;

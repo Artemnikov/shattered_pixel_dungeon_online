@@ -1,0 +1,4356 @@
+{
+  "$defs": {
+    "Armor": {
+      "properties": {
+        "kind": {
+          "const": "armor",
+          "default": "armor",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "default": "wearable",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "strength_requirement": {
+          "default": 10,
+          "type": "integer"
+        },
+        "tier": {
+          "default": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "Artifact": {
+      "properties": {
+        "kind": {
+          "const": "artifact",
+          "default": "artifact",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "default": "artifact",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "strength_requirement": {
+          "default": 10,
+          "type": "integer"
+        },
+        "charge": {
+          "default": 0,
+          "type": "integer"
+        },
+        "charge_cap": {
+          "default": 100,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "Bag": {
+      "properties": {
+        "kind": {
+          "const": "bag",
+          "default": "bag",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "default": "bag",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": true,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "capacity": {
+          "default": 20,
+          "type": "integer"
+        },
+        "items": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "armor": "#/$defs/Armor",
+                "artifact": "#/$defs/Artifact",
+                "bag": "#/$defs/Bag",
+                "boomerang": "#/$defs/Boomerang",
+                "bow": "#/$defs/Bow",
+                "dagger": "#/$defs/Dagger",
+                "food": "#/$defs/Food",
+                "fury_potion": "#/$defs/FuryPotion",
+                "gold": "#/$defs/Gold",
+                "health_potion": "#/$defs/HealthPotion",
+                "key": "#/$defs/Key",
+                "magical_holster": "#/$defs/MagicalHolster",
+                "melee_weapon": "#/$defs/MeleeWeapon",
+                "missile_weapon": "#/$defs/MissileWeapon",
+                "mystery_meat": "#/$defs/MysteryMeat",
+                "potion": "#/$defs/Potion",
+                "potion_bandolier": "#/$defs/PotionBandolier",
+                "reviving_potion": "#/$defs/RevivingPotion",
+                "ring": "#/$defs/Ring",
+                "scroll": "#/$defs/Scroll",
+                "scroll_holder": "#/$defs/ScrollHolder",
+                "seed": "#/$defs/Seed",
+                "staff": "#/$defs/Staff",
+                "stone": "#/$defs/Stone",
+                "throwable": "#/$defs/Throwable",
+                "throwable_dagger": "#/$defs/ThrowableDagger",
+                "velvet_pouch": "#/$defs/VelvetPouch",
+                "wand": "#/$defs/Wand"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/MeleeWeapon"
+              },
+              {
+                "$ref": "#/$defs/Dagger"
+              },
+              {
+                "$ref": "#/$defs/Bow"
+              },
+              {
+                "$ref": "#/$defs/Staff"
+              },
+              {
+                "$ref": "#/$defs/MissileWeapon"
+              },
+              {
+                "$ref": "#/$defs/Armor"
+              },
+              {
+                "$ref": "#/$defs/Ring"
+              },
+              {
+                "$ref": "#/$defs/Artifact"
+              },
+              {
+                "$ref": "#/$defs/Wand"
+              },
+              {
+                "$ref": "#/$defs/HealthPotion"
+              },
+              {
+                "$ref": "#/$defs/RevivingPotion"
+              },
+              {
+                "$ref": "#/$defs/FuryPotion"
+              },
+              {
+                "$ref": "#/$defs/Potion"
+              },
+              {
+                "$ref": "#/$defs/Scroll"
+              },
+              {
+                "$ref": "#/$defs/Gold"
+              },
+              {
+                "$ref": "#/$defs/Food"
+              },
+              {
+                "$ref": "#/$defs/MysteryMeat"
+              },
+              {
+                "$ref": "#/$defs/Key"
+              },
+              {
+                "$ref": "#/$defs/Seed"
+              },
+              {
+                "$ref": "#/$defs/Stone"
+              },
+              {
+                "$ref": "#/$defs/Boomerang"
+              },
+              {
+                "$ref": "#/$defs/ThrowableDagger"
+              },
+              {
+                "$ref": "#/$defs/Throwable"
+              },
+              {
+                "$ref": "#/$defs/VelvetPouch"
+              },
+              {
+                "$ref": "#/$defs/ScrollHolder"
+              },
+              {
+                "$ref": "#/$defs/MagicalHolster"
+              },
+              {
+                "$ref": "#/$defs/PotionBandolier"
+              },
+              {
+                "$ref": "#/$defs/Bag"
+              }
+            ]
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "Belongings": {
+      "properties": {
+        "backpack": {
+          "$ref": "#/$defs/Bag"
+        },
+        "weapon": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "armor": "#/$defs/Armor",
+                  "artifact": "#/$defs/Artifact",
+                  "bag": "#/$defs/Bag",
+                  "boomerang": "#/$defs/Boomerang",
+                  "bow": "#/$defs/Bow",
+                  "dagger": "#/$defs/Dagger",
+                  "food": "#/$defs/Food",
+                  "fury_potion": "#/$defs/FuryPotion",
+                  "gold": "#/$defs/Gold",
+                  "health_potion": "#/$defs/HealthPotion",
+                  "key": "#/$defs/Key",
+                  "magical_holster": "#/$defs/MagicalHolster",
+                  "melee_weapon": "#/$defs/MeleeWeapon",
+                  "missile_weapon": "#/$defs/MissileWeapon",
+                  "mystery_meat": "#/$defs/MysteryMeat",
+                  "potion": "#/$defs/Potion",
+                  "potion_bandolier": "#/$defs/PotionBandolier",
+                  "reviving_potion": "#/$defs/RevivingPotion",
+                  "ring": "#/$defs/Ring",
+                  "scroll": "#/$defs/Scroll",
+                  "scroll_holder": "#/$defs/ScrollHolder",
+                  "seed": "#/$defs/Seed",
+                  "staff": "#/$defs/Staff",
+                  "stone": "#/$defs/Stone",
+                  "throwable": "#/$defs/Throwable",
+                  "throwable_dagger": "#/$defs/ThrowableDagger",
+                  "velvet_pouch": "#/$defs/VelvetPouch",
+                  "wand": "#/$defs/Wand"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/MeleeWeapon"
+                },
+                {
+                  "$ref": "#/$defs/Dagger"
+                },
+                {
+                  "$ref": "#/$defs/Bow"
+                },
+                {
+                  "$ref": "#/$defs/Staff"
+                },
+                {
+                  "$ref": "#/$defs/MissileWeapon"
+                },
+                {
+                  "$ref": "#/$defs/Armor"
+                },
+                {
+                  "$ref": "#/$defs/Ring"
+                },
+                {
+                  "$ref": "#/$defs/Artifact"
+                },
+                {
+                  "$ref": "#/$defs/Wand"
+                },
+                {
+                  "$ref": "#/$defs/HealthPotion"
+                },
+                {
+                  "$ref": "#/$defs/RevivingPotion"
+                },
+                {
+                  "$ref": "#/$defs/FuryPotion"
+                },
+                {
+                  "$ref": "#/$defs/Potion"
+                },
+                {
+                  "$ref": "#/$defs/Scroll"
+                },
+                {
+                  "$ref": "#/$defs/Gold"
+                },
+                {
+                  "$ref": "#/$defs/Food"
+                },
+                {
+                  "$ref": "#/$defs/MysteryMeat"
+                },
+                {
+                  "$ref": "#/$defs/Key"
+                },
+                {
+                  "$ref": "#/$defs/Seed"
+                },
+                {
+                  "$ref": "#/$defs/Stone"
+                },
+                {
+                  "$ref": "#/$defs/Boomerang"
+                },
+                {
+                  "$ref": "#/$defs/ThrowableDagger"
+                },
+                {
+                  "$ref": "#/$defs/Throwable"
+                },
+                {
+                  "$ref": "#/$defs/VelvetPouch"
+                },
+                {
+                  "$ref": "#/$defs/ScrollHolder"
+                },
+                {
+                  "$ref": "#/$defs/MagicalHolster"
+                },
+                {
+                  "$ref": "#/$defs/PotionBandolier"
+                },
+                {
+                  "$ref": "#/$defs/Bag"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "armor": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "armor": "#/$defs/Armor",
+                  "artifact": "#/$defs/Artifact",
+                  "bag": "#/$defs/Bag",
+                  "boomerang": "#/$defs/Boomerang",
+                  "bow": "#/$defs/Bow",
+                  "dagger": "#/$defs/Dagger",
+                  "food": "#/$defs/Food",
+                  "fury_potion": "#/$defs/FuryPotion",
+                  "gold": "#/$defs/Gold",
+                  "health_potion": "#/$defs/HealthPotion",
+                  "key": "#/$defs/Key",
+                  "magical_holster": "#/$defs/MagicalHolster",
+                  "melee_weapon": "#/$defs/MeleeWeapon",
+                  "missile_weapon": "#/$defs/MissileWeapon",
+                  "mystery_meat": "#/$defs/MysteryMeat",
+                  "potion": "#/$defs/Potion",
+                  "potion_bandolier": "#/$defs/PotionBandolier",
+                  "reviving_potion": "#/$defs/RevivingPotion",
+                  "ring": "#/$defs/Ring",
+                  "scroll": "#/$defs/Scroll",
+                  "scroll_holder": "#/$defs/ScrollHolder",
+                  "seed": "#/$defs/Seed",
+                  "staff": "#/$defs/Staff",
+                  "stone": "#/$defs/Stone",
+                  "throwable": "#/$defs/Throwable",
+                  "throwable_dagger": "#/$defs/ThrowableDagger",
+                  "velvet_pouch": "#/$defs/VelvetPouch",
+                  "wand": "#/$defs/Wand"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/MeleeWeapon"
+                },
+                {
+                  "$ref": "#/$defs/Dagger"
+                },
+                {
+                  "$ref": "#/$defs/Bow"
+                },
+                {
+                  "$ref": "#/$defs/Staff"
+                },
+                {
+                  "$ref": "#/$defs/MissileWeapon"
+                },
+                {
+                  "$ref": "#/$defs/Armor"
+                },
+                {
+                  "$ref": "#/$defs/Ring"
+                },
+                {
+                  "$ref": "#/$defs/Artifact"
+                },
+                {
+                  "$ref": "#/$defs/Wand"
+                },
+                {
+                  "$ref": "#/$defs/HealthPotion"
+                },
+                {
+                  "$ref": "#/$defs/RevivingPotion"
+                },
+                {
+                  "$ref": "#/$defs/FuryPotion"
+                },
+                {
+                  "$ref": "#/$defs/Potion"
+                },
+                {
+                  "$ref": "#/$defs/Scroll"
+                },
+                {
+                  "$ref": "#/$defs/Gold"
+                },
+                {
+                  "$ref": "#/$defs/Food"
+                },
+                {
+                  "$ref": "#/$defs/MysteryMeat"
+                },
+                {
+                  "$ref": "#/$defs/Key"
+                },
+                {
+                  "$ref": "#/$defs/Seed"
+                },
+                {
+                  "$ref": "#/$defs/Stone"
+                },
+                {
+                  "$ref": "#/$defs/Boomerang"
+                },
+                {
+                  "$ref": "#/$defs/ThrowableDagger"
+                },
+                {
+                  "$ref": "#/$defs/Throwable"
+                },
+                {
+                  "$ref": "#/$defs/VelvetPouch"
+                },
+                {
+                  "$ref": "#/$defs/ScrollHolder"
+                },
+                {
+                  "$ref": "#/$defs/MagicalHolster"
+                },
+                {
+                  "$ref": "#/$defs/PotionBandolier"
+                },
+                {
+                  "$ref": "#/$defs/Bag"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "artifact": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "armor": "#/$defs/Armor",
+                  "artifact": "#/$defs/Artifact",
+                  "bag": "#/$defs/Bag",
+                  "boomerang": "#/$defs/Boomerang",
+                  "bow": "#/$defs/Bow",
+                  "dagger": "#/$defs/Dagger",
+                  "food": "#/$defs/Food",
+                  "fury_potion": "#/$defs/FuryPotion",
+                  "gold": "#/$defs/Gold",
+                  "health_potion": "#/$defs/HealthPotion",
+                  "key": "#/$defs/Key",
+                  "magical_holster": "#/$defs/MagicalHolster",
+                  "melee_weapon": "#/$defs/MeleeWeapon",
+                  "missile_weapon": "#/$defs/MissileWeapon",
+                  "mystery_meat": "#/$defs/MysteryMeat",
+                  "potion": "#/$defs/Potion",
+                  "potion_bandolier": "#/$defs/PotionBandolier",
+                  "reviving_potion": "#/$defs/RevivingPotion",
+                  "ring": "#/$defs/Ring",
+                  "scroll": "#/$defs/Scroll",
+                  "scroll_holder": "#/$defs/ScrollHolder",
+                  "seed": "#/$defs/Seed",
+                  "staff": "#/$defs/Staff",
+                  "stone": "#/$defs/Stone",
+                  "throwable": "#/$defs/Throwable",
+                  "throwable_dagger": "#/$defs/ThrowableDagger",
+                  "velvet_pouch": "#/$defs/VelvetPouch",
+                  "wand": "#/$defs/Wand"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/MeleeWeapon"
+                },
+                {
+                  "$ref": "#/$defs/Dagger"
+                },
+                {
+                  "$ref": "#/$defs/Bow"
+                },
+                {
+                  "$ref": "#/$defs/Staff"
+                },
+                {
+                  "$ref": "#/$defs/MissileWeapon"
+                },
+                {
+                  "$ref": "#/$defs/Armor"
+                },
+                {
+                  "$ref": "#/$defs/Ring"
+                },
+                {
+                  "$ref": "#/$defs/Artifact"
+                },
+                {
+                  "$ref": "#/$defs/Wand"
+                },
+                {
+                  "$ref": "#/$defs/HealthPotion"
+                },
+                {
+                  "$ref": "#/$defs/RevivingPotion"
+                },
+                {
+                  "$ref": "#/$defs/FuryPotion"
+                },
+                {
+                  "$ref": "#/$defs/Potion"
+                },
+                {
+                  "$ref": "#/$defs/Scroll"
+                },
+                {
+                  "$ref": "#/$defs/Gold"
+                },
+                {
+                  "$ref": "#/$defs/Food"
+                },
+                {
+                  "$ref": "#/$defs/MysteryMeat"
+                },
+                {
+                  "$ref": "#/$defs/Key"
+                },
+                {
+                  "$ref": "#/$defs/Seed"
+                },
+                {
+                  "$ref": "#/$defs/Stone"
+                },
+                {
+                  "$ref": "#/$defs/Boomerang"
+                },
+                {
+                  "$ref": "#/$defs/ThrowableDagger"
+                },
+                {
+                  "$ref": "#/$defs/Throwable"
+                },
+                {
+                  "$ref": "#/$defs/VelvetPouch"
+                },
+                {
+                  "$ref": "#/$defs/ScrollHolder"
+                },
+                {
+                  "$ref": "#/$defs/MagicalHolster"
+                },
+                {
+                  "$ref": "#/$defs/PotionBandolier"
+                },
+                {
+                  "$ref": "#/$defs/Bag"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "misc": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "armor": "#/$defs/Armor",
+                  "artifact": "#/$defs/Artifact",
+                  "bag": "#/$defs/Bag",
+                  "boomerang": "#/$defs/Boomerang",
+                  "bow": "#/$defs/Bow",
+                  "dagger": "#/$defs/Dagger",
+                  "food": "#/$defs/Food",
+                  "fury_potion": "#/$defs/FuryPotion",
+                  "gold": "#/$defs/Gold",
+                  "health_potion": "#/$defs/HealthPotion",
+                  "key": "#/$defs/Key",
+                  "magical_holster": "#/$defs/MagicalHolster",
+                  "melee_weapon": "#/$defs/MeleeWeapon",
+                  "missile_weapon": "#/$defs/MissileWeapon",
+                  "mystery_meat": "#/$defs/MysteryMeat",
+                  "potion": "#/$defs/Potion",
+                  "potion_bandolier": "#/$defs/PotionBandolier",
+                  "reviving_potion": "#/$defs/RevivingPotion",
+                  "ring": "#/$defs/Ring",
+                  "scroll": "#/$defs/Scroll",
+                  "scroll_holder": "#/$defs/ScrollHolder",
+                  "seed": "#/$defs/Seed",
+                  "staff": "#/$defs/Staff",
+                  "stone": "#/$defs/Stone",
+                  "throwable": "#/$defs/Throwable",
+                  "throwable_dagger": "#/$defs/ThrowableDagger",
+                  "velvet_pouch": "#/$defs/VelvetPouch",
+                  "wand": "#/$defs/Wand"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/MeleeWeapon"
+                },
+                {
+                  "$ref": "#/$defs/Dagger"
+                },
+                {
+                  "$ref": "#/$defs/Bow"
+                },
+                {
+                  "$ref": "#/$defs/Staff"
+                },
+                {
+                  "$ref": "#/$defs/MissileWeapon"
+                },
+                {
+                  "$ref": "#/$defs/Armor"
+                },
+                {
+                  "$ref": "#/$defs/Ring"
+                },
+                {
+                  "$ref": "#/$defs/Artifact"
+                },
+                {
+                  "$ref": "#/$defs/Wand"
+                },
+                {
+                  "$ref": "#/$defs/HealthPotion"
+                },
+                {
+                  "$ref": "#/$defs/RevivingPotion"
+                },
+                {
+                  "$ref": "#/$defs/FuryPotion"
+                },
+                {
+                  "$ref": "#/$defs/Potion"
+                },
+                {
+                  "$ref": "#/$defs/Scroll"
+                },
+                {
+                  "$ref": "#/$defs/Gold"
+                },
+                {
+                  "$ref": "#/$defs/Food"
+                },
+                {
+                  "$ref": "#/$defs/MysteryMeat"
+                },
+                {
+                  "$ref": "#/$defs/Key"
+                },
+                {
+                  "$ref": "#/$defs/Seed"
+                },
+                {
+                  "$ref": "#/$defs/Stone"
+                },
+                {
+                  "$ref": "#/$defs/Boomerang"
+                },
+                {
+                  "$ref": "#/$defs/ThrowableDagger"
+                },
+                {
+                  "$ref": "#/$defs/Throwable"
+                },
+                {
+                  "$ref": "#/$defs/VelvetPouch"
+                },
+                {
+                  "$ref": "#/$defs/ScrollHolder"
+                },
+                {
+                  "$ref": "#/$defs/MagicalHolster"
+                },
+                {
+                  "$ref": "#/$defs/PotionBandolier"
+                },
+                {
+                  "$ref": "#/$defs/Bag"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "ring": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "armor": "#/$defs/Armor",
+                  "artifact": "#/$defs/Artifact",
+                  "bag": "#/$defs/Bag",
+                  "boomerang": "#/$defs/Boomerang",
+                  "bow": "#/$defs/Bow",
+                  "dagger": "#/$defs/Dagger",
+                  "food": "#/$defs/Food",
+                  "fury_potion": "#/$defs/FuryPotion",
+                  "gold": "#/$defs/Gold",
+                  "health_potion": "#/$defs/HealthPotion",
+                  "key": "#/$defs/Key",
+                  "magical_holster": "#/$defs/MagicalHolster",
+                  "melee_weapon": "#/$defs/MeleeWeapon",
+                  "missile_weapon": "#/$defs/MissileWeapon",
+                  "mystery_meat": "#/$defs/MysteryMeat",
+                  "potion": "#/$defs/Potion",
+                  "potion_bandolier": "#/$defs/PotionBandolier",
+                  "reviving_potion": "#/$defs/RevivingPotion",
+                  "ring": "#/$defs/Ring",
+                  "scroll": "#/$defs/Scroll",
+                  "scroll_holder": "#/$defs/ScrollHolder",
+                  "seed": "#/$defs/Seed",
+                  "staff": "#/$defs/Staff",
+                  "stone": "#/$defs/Stone",
+                  "throwable": "#/$defs/Throwable",
+                  "throwable_dagger": "#/$defs/ThrowableDagger",
+                  "velvet_pouch": "#/$defs/VelvetPouch",
+                  "wand": "#/$defs/Wand"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/MeleeWeapon"
+                },
+                {
+                  "$ref": "#/$defs/Dagger"
+                },
+                {
+                  "$ref": "#/$defs/Bow"
+                },
+                {
+                  "$ref": "#/$defs/Staff"
+                },
+                {
+                  "$ref": "#/$defs/MissileWeapon"
+                },
+                {
+                  "$ref": "#/$defs/Armor"
+                },
+                {
+                  "$ref": "#/$defs/Ring"
+                },
+                {
+                  "$ref": "#/$defs/Artifact"
+                },
+                {
+                  "$ref": "#/$defs/Wand"
+                },
+                {
+                  "$ref": "#/$defs/HealthPotion"
+                },
+                {
+                  "$ref": "#/$defs/RevivingPotion"
+                },
+                {
+                  "$ref": "#/$defs/FuryPotion"
+                },
+                {
+                  "$ref": "#/$defs/Potion"
+                },
+                {
+                  "$ref": "#/$defs/Scroll"
+                },
+                {
+                  "$ref": "#/$defs/Gold"
+                },
+                {
+                  "$ref": "#/$defs/Food"
+                },
+                {
+                  "$ref": "#/$defs/MysteryMeat"
+                },
+                {
+                  "$ref": "#/$defs/Key"
+                },
+                {
+                  "$ref": "#/$defs/Seed"
+                },
+                {
+                  "$ref": "#/$defs/Stone"
+                },
+                {
+                  "$ref": "#/$defs/Boomerang"
+                },
+                {
+                  "$ref": "#/$defs/ThrowableDagger"
+                },
+                {
+                  "$ref": "#/$defs/Throwable"
+                },
+                {
+                  "$ref": "#/$defs/VelvetPouch"
+                },
+                {
+                  "$ref": "#/$defs/ScrollHolder"
+                },
+                {
+                  "$ref": "#/$defs/MagicalHolster"
+                },
+                {
+                  "$ref": "#/$defs/PotionBandolier"
+                },
+                {
+                  "$ref": "#/$defs/Bag"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "type": "object"
+    },
+    "Boomerang": {
+      "properties": {
+        "kind": {
+          "const": "boomerang",
+          "default": "boomerang",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "default": "Boomerang",
+          "type": "string"
+        },
+        "type": {
+          "default": "throwable",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "damage": {
+          "default": 3,
+          "type": "integer"
+        },
+        "range": {
+          "default": 6,
+          "type": "integer"
+        },
+        "consumable": {
+          "default": false,
+          "type": "boolean"
+        },
+        "projectile_type": {
+          "default": "boomerang",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "Bow": {
+      "properties": {
+        "kind": {
+          "const": "bow",
+          "default": "bow",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "default": "Bow",
+          "type": "string"
+        },
+        "type": {
+          "default": "weapon",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "strength_requirement": {
+          "default": 10,
+          "type": "integer"
+        },
+        "damage": {
+          "default": 1,
+          "type": "integer"
+        },
+        "range": {
+          "default": 6,
+          "type": "integer"
+        },
+        "attack_cooldown": {
+          "default": 1.0,
+          "type": "number"
+        },
+        "enchantment": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "projectile_type": {
+          "default": "arrow",
+          "type": "string"
+        },
+        "surprise_damage_floor": {
+          "default": 0.0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "Dagger": {
+      "properties": {
+        "kind": {
+          "const": "dagger",
+          "default": "dagger",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "default": "Dagger",
+          "type": "string"
+        },
+        "type": {
+          "default": "weapon",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "strength_requirement": {
+          "default": 9,
+          "type": "integer"
+        },
+        "damage": {
+          "default": 2,
+          "type": "integer"
+        },
+        "range": {
+          "default": 1,
+          "type": "integer"
+        },
+        "attack_cooldown": {
+          "default": 1.5,
+          "type": "number"
+        },
+        "enchantment": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "projectile_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "surprise_damage_floor": {
+          "default": 0.75,
+          "type": "number"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "DropEntry": {
+      "properties": {
+        "item_kind": {
+          "type": "string"
+        },
+        "chance": {
+          "type": "number"
+        },
+        "max_global": {
+          "default": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "item_kind",
+        "chance"
+      ],
+      "type": "object"
+    },
+    "Effect": {
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "integer"
+        },
+        "remaining": {
+          "default": 0.0,
+          "type": "number"
+        },
+        "duration": {
+          "default": 0.0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "key",
+        "name",
+        "icon"
+      ],
+      "type": "object"
+    },
+    "Food": {
+      "properties": {
+        "kind": {
+          "const": "food",
+          "default": "food",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "default": "food",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "FuryPotion": {
+      "properties": {
+        "kind": {
+          "const": "fury_potion",
+          "default": "fury_potion",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "default": "Potion of Fury",
+          "type": "string"
+        },
+        "type": {
+          "default": "potion",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "effect": {
+          "default": "fury",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "Gold": {
+      "properties": {
+        "kind": {
+          "const": "gold",
+          "default": "gold",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "default": "gold",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "HealthPotion": {
+      "properties": {
+        "kind": {
+          "const": "health_potion",
+          "default": "health_potion",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "default": "Health Potion",
+          "type": "string"
+        },
+        "type": {
+          "default": "potion",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "effect": {
+          "default": "regen",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "Key": {
+      "properties": {
+        "kind": {
+          "const": "key",
+          "default": "key",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "default": "key",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "key_id": {
+          "default": "",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "MagicalHolster": {
+      "properties": {
+        "kind": {
+          "const": "magical_holster",
+          "default": "magical_holster",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "default": "Magical Holster",
+          "type": "string"
+        },
+        "type": {
+          "default": "bag",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": true,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "capacity": {
+          "default": 20,
+          "type": "integer"
+        },
+        "items": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "armor": "#/$defs/Armor",
+                "artifact": "#/$defs/Artifact",
+                "bag": "#/$defs/Bag",
+                "boomerang": "#/$defs/Boomerang",
+                "bow": "#/$defs/Bow",
+                "dagger": "#/$defs/Dagger",
+                "food": "#/$defs/Food",
+                "fury_potion": "#/$defs/FuryPotion",
+                "gold": "#/$defs/Gold",
+                "health_potion": "#/$defs/HealthPotion",
+                "key": "#/$defs/Key",
+                "magical_holster": "#/$defs/MagicalHolster",
+                "melee_weapon": "#/$defs/MeleeWeapon",
+                "missile_weapon": "#/$defs/MissileWeapon",
+                "mystery_meat": "#/$defs/MysteryMeat",
+                "potion": "#/$defs/Potion",
+                "potion_bandolier": "#/$defs/PotionBandolier",
+                "reviving_potion": "#/$defs/RevivingPotion",
+                "ring": "#/$defs/Ring",
+                "scroll": "#/$defs/Scroll",
+                "scroll_holder": "#/$defs/ScrollHolder",
+                "seed": "#/$defs/Seed",
+                "staff": "#/$defs/Staff",
+                "stone": "#/$defs/Stone",
+                "throwable": "#/$defs/Throwable",
+                "throwable_dagger": "#/$defs/ThrowableDagger",
+                "velvet_pouch": "#/$defs/VelvetPouch",
+                "wand": "#/$defs/Wand"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/MeleeWeapon"
+              },
+              {
+                "$ref": "#/$defs/Dagger"
+              },
+              {
+                "$ref": "#/$defs/Bow"
+              },
+              {
+                "$ref": "#/$defs/Staff"
+              },
+              {
+                "$ref": "#/$defs/MissileWeapon"
+              },
+              {
+                "$ref": "#/$defs/Armor"
+              },
+              {
+                "$ref": "#/$defs/Ring"
+              },
+              {
+                "$ref": "#/$defs/Artifact"
+              },
+              {
+                "$ref": "#/$defs/Wand"
+              },
+              {
+                "$ref": "#/$defs/HealthPotion"
+              },
+              {
+                "$ref": "#/$defs/RevivingPotion"
+              },
+              {
+                "$ref": "#/$defs/FuryPotion"
+              },
+              {
+                "$ref": "#/$defs/Potion"
+              },
+              {
+                "$ref": "#/$defs/Scroll"
+              },
+              {
+                "$ref": "#/$defs/Gold"
+              },
+              {
+                "$ref": "#/$defs/Food"
+              },
+              {
+                "$ref": "#/$defs/MysteryMeat"
+              },
+              {
+                "$ref": "#/$defs/Key"
+              },
+              {
+                "$ref": "#/$defs/Seed"
+              },
+              {
+                "$ref": "#/$defs/Stone"
+              },
+              {
+                "$ref": "#/$defs/Boomerang"
+              },
+              {
+                "$ref": "#/$defs/ThrowableDagger"
+              },
+              {
+                "$ref": "#/$defs/Throwable"
+              },
+              {
+                "$ref": "#/$defs/VelvetPouch"
+              },
+              {
+                "$ref": "#/$defs/ScrollHolder"
+              },
+              {
+                "$ref": "#/$defs/MagicalHolster"
+              },
+              {
+                "$ref": "#/$defs/PotionBandolier"
+              },
+              {
+                "$ref": "#/$defs/Bag"
+              }
+            ]
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "MeleeWeapon": {
+      "properties": {
+        "kind": {
+          "const": "melee_weapon",
+          "default": "melee_weapon",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "default": "weapon",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "strength_requirement": {
+          "default": 10,
+          "type": "integer"
+        },
+        "damage": {
+          "default": 1,
+          "type": "integer"
+        },
+        "range": {
+          "default": 1,
+          "type": "integer"
+        },
+        "attack_cooldown": {
+          "default": 1.0,
+          "type": "number"
+        },
+        "enchantment": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "projectile_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "surprise_damage_floor": {
+          "default": 0.0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "MissileWeapon": {
+      "properties": {
+        "kind": {
+          "const": "missile_weapon",
+          "default": "missile_weapon",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "default": "weapon",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "strength_requirement": {
+          "default": 10,
+          "type": "integer"
+        },
+        "damage": {
+          "default": 1,
+          "type": "integer"
+        },
+        "range": {
+          "default": 1,
+          "type": "integer"
+        },
+        "attack_cooldown": {
+          "default": 1.0,
+          "type": "number"
+        },
+        "enchantment": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "projectile_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "surprise_damage_floor": {
+          "default": 0.0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "Mob": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "default": "mob",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "pos": {
+          "$ref": "#/$defs/Position"
+        },
+        "hp": {
+          "type": "integer"
+        },
+        "max_hp": {
+          "type": "integer"
+        },
+        "attack": {
+          "default": 0,
+          "type": "integer"
+        },
+        "defense": {
+          "default": 0,
+          "type": "integer"
+        },
+        "speed": {
+          "default": 1.0,
+          "type": "number"
+        },
+        "is_alive": {
+          "default": true,
+          "type": "boolean"
+        },
+        "faction": {
+          "default": "dungeon",
+          "type": "string"
+        },
+        "last_attack_time": {
+          "default": 0.0,
+          "type": "number"
+        },
+        "attack_cooldown": {
+          "default": 3.0,
+          "type": "number"
+        },
+        "view_distance": {
+          "default": 8,
+          "type": "integer"
+        },
+        "attack_skill": {
+          "default": 10,
+          "type": "integer"
+        },
+        "defense_skill": {
+          "default": 5,
+          "type": "integer"
+        },
+        "damage_min": {
+          "default": 1,
+          "type": "integer"
+        },
+        "damage_max": {
+          "default": 4,
+          "type": "integer"
+        },
+        "dr_min": {
+          "default": 0,
+          "type": "integer"
+        },
+        "dr_max": {
+          "default": 0,
+          "type": "integer"
+        },
+        "max_lvl": {
+          "default": 5,
+          "type": "integer"
+        },
+        "defense_verb": {
+          "default": "dodged",
+          "type": "string"
+        },
+        "bleed_amount": {
+          "default": 0,
+          "type": "integer"
+        },
+        "bleed_turns": {
+          "default": 0,
+          "type": "integer"
+        },
+        "ooze_amount": {
+          "default": 0,
+          "type": "integer"
+        },
+        "shields": {
+          "items": {
+            "$ref": "#/$defs/Shield"
+          },
+          "type": "array"
+        },
+        "crit_damage_bonus": {
+          "default": 0.0,
+          "type": "number"
+        },
+        "grim_max_chance": {
+          "default": 0.0,
+          "type": "number"
+        },
+        "conserved_damage": {
+          "default": 0,
+          "type": "integer"
+        },
+        "has_fury": {
+          "default": false,
+          "type": "boolean"
+        },
+        "fury_turns_remaining": {
+          "default": 0,
+          "type": "integer"
+        },
+        "ai_state": {
+          "default": "idle",
+          "type": "string"
+        },
+        "target_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "difficulty": {
+          "default": "normal",
+          "type": "string"
+        },
+        "exp": {
+          "default": 1,
+          "type": "integer"
+        },
+        "loot_table": {
+          "items": {
+            "$ref": "#/$defs/DropEntry"
+          },
+          "type": "array"
+        },
+        "flying": {
+          "default": false,
+          "type": "boolean"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "attack_range": {
+          "default": 1,
+          "type": "integer"
+        },
+        "aggro_windup": {
+          "default": 1.0,
+          "type": "number"
+        },
+        "engaged": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "pos",
+        "hp",
+        "max_hp"
+      ],
+      "type": "object"
+    },
+    "MysteryMeat": {
+      "properties": {
+        "kind": {
+          "const": "mystery_meat",
+          "default": "mystery_meat",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "default": "Mystery Meat",
+          "type": "string"
+        },
+        "type": {
+          "default": "food",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "Player": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "default": "player",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "pos": {
+          "$ref": "#/$defs/Position"
+        },
+        "hp": {
+          "type": "integer"
+        },
+        "max_hp": {
+          "type": "integer"
+        },
+        "attack": {
+          "default": 0,
+          "type": "integer"
+        },
+        "defense": {
+          "default": 0,
+          "type": "integer"
+        },
+        "speed": {
+          "default": 1.0,
+          "type": "number"
+        },
+        "is_alive": {
+          "default": true,
+          "type": "boolean"
+        },
+        "faction": {
+          "default": "player",
+          "type": "string"
+        },
+        "last_attack_time": {
+          "default": 0.0,
+          "type": "number"
+        },
+        "attack_cooldown": {
+          "default": 1.0,
+          "type": "number"
+        },
+        "view_distance": {
+          "default": 8,
+          "type": "integer"
+        },
+        "attack_skill": {
+          "default": 10,
+          "type": "integer"
+        },
+        "defense_skill": {
+          "default": 5,
+          "type": "integer"
+        },
+        "damage_min": {
+          "default": 1,
+          "type": "integer"
+        },
+        "damage_max": {
+          "default": 4,
+          "type": "integer"
+        },
+        "dr_min": {
+          "default": 0,
+          "type": "integer"
+        },
+        "dr_max": {
+          "default": 0,
+          "type": "integer"
+        },
+        "max_lvl": {
+          "default": 5,
+          "type": "integer"
+        },
+        "defense_verb": {
+          "default": "dodged",
+          "type": "string"
+        },
+        "bleed_amount": {
+          "default": 0,
+          "type": "integer"
+        },
+        "bleed_turns": {
+          "default": 0,
+          "type": "integer"
+        },
+        "ooze_amount": {
+          "default": 0,
+          "type": "integer"
+        },
+        "shields": {
+          "items": {
+            "$ref": "#/$defs/Shield"
+          },
+          "type": "array"
+        },
+        "crit_damage_bonus": {
+          "default": 0.0,
+          "type": "number"
+        },
+        "grim_max_chance": {
+          "default": 0.0,
+          "type": "number"
+        },
+        "conserved_damage": {
+          "default": 0,
+          "type": "integer"
+        },
+        "has_fury": {
+          "default": false,
+          "type": "boolean"
+        },
+        "fury_turns_remaining": {
+          "default": 0,
+          "type": "integer"
+        },
+        "class_type": {
+          "default": "warrior",
+          "type": "string"
+        },
+        "experience": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level": {
+          "default": 1,
+          "type": "integer"
+        },
+        "active_effects": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Effect"
+          },
+          "type": "array"
+        },
+        "floor_id": {
+          "default": 1,
+          "type": "integer"
+        },
+        "strength": {
+          "default": 10,
+          "type": "integer"
+        },
+        "belongings": {
+          "$ref": "#/$defs/Belongings"
+        },
+        "quickslot": {
+          "$ref": "#/$defs/QuickSlot"
+        },
+        "gold": {
+          "default": 0,
+          "type": "integer"
+        },
+        "energy": {
+          "default": 0,
+          "type": "integer"
+        },
+        "websocket_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "is_downed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "death_processed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "heal_left": {
+          "default": 0.0,
+          "type": "number"
+        },
+        "heal_pct_per_tick": {
+          "default": 0.0,
+          "type": "number"
+        },
+        "heal_flat_per_tick": {
+          "default": 0.0,
+          "type": "number"
+        },
+        "heal_cooldown": {
+          "default": 0,
+          "type": "integer"
+        },
+        "room_heal_cooldown": {
+          "default": 0,
+          "type": "integer"
+        },
+        "path_queue": {
+          "default": [],
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "move_intent": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "last_auto_move_time": {
+          "default": 0.0,
+          "type": "number"
+        },
+        "is_admin": {
+          "default": false,
+          "type": "boolean"
+        },
+        "inventory": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "armor": "#/$defs/Armor",
+                "artifact": "#/$defs/Artifact",
+                "bag": "#/$defs/Bag",
+                "boomerang": "#/$defs/Boomerang",
+                "bow": "#/$defs/Bow",
+                "dagger": "#/$defs/Dagger",
+                "food": "#/$defs/Food",
+                "fury_potion": "#/$defs/FuryPotion",
+                "gold": "#/$defs/Gold",
+                "health_potion": "#/$defs/HealthPotion",
+                "key": "#/$defs/Key",
+                "magical_holster": "#/$defs/MagicalHolster",
+                "melee_weapon": "#/$defs/MeleeWeapon",
+                "missile_weapon": "#/$defs/MissileWeapon",
+                "mystery_meat": "#/$defs/MysteryMeat",
+                "potion": "#/$defs/Potion",
+                "potion_bandolier": "#/$defs/PotionBandolier",
+                "reviving_potion": "#/$defs/RevivingPotion",
+                "ring": "#/$defs/Ring",
+                "scroll": "#/$defs/Scroll",
+                "scroll_holder": "#/$defs/ScrollHolder",
+                "seed": "#/$defs/Seed",
+                "staff": "#/$defs/Staff",
+                "stone": "#/$defs/Stone",
+                "throwable": "#/$defs/Throwable",
+                "throwable_dagger": "#/$defs/ThrowableDagger",
+                "velvet_pouch": "#/$defs/VelvetPouch",
+                "wand": "#/$defs/Wand"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/MeleeWeapon"
+              },
+              {
+                "$ref": "#/$defs/Dagger"
+              },
+              {
+                "$ref": "#/$defs/Bow"
+              },
+              {
+                "$ref": "#/$defs/Staff"
+              },
+              {
+                "$ref": "#/$defs/MissileWeapon"
+              },
+              {
+                "$ref": "#/$defs/Armor"
+              },
+              {
+                "$ref": "#/$defs/Ring"
+              },
+              {
+                "$ref": "#/$defs/Artifact"
+              },
+              {
+                "$ref": "#/$defs/Wand"
+              },
+              {
+                "$ref": "#/$defs/HealthPotion"
+              },
+              {
+                "$ref": "#/$defs/RevivingPotion"
+              },
+              {
+                "$ref": "#/$defs/FuryPotion"
+              },
+              {
+                "$ref": "#/$defs/Potion"
+              },
+              {
+                "$ref": "#/$defs/Scroll"
+              },
+              {
+                "$ref": "#/$defs/Gold"
+              },
+              {
+                "$ref": "#/$defs/Food"
+              },
+              {
+                "$ref": "#/$defs/MysteryMeat"
+              },
+              {
+                "$ref": "#/$defs/Key"
+              },
+              {
+                "$ref": "#/$defs/Seed"
+              },
+              {
+                "$ref": "#/$defs/Stone"
+              },
+              {
+                "$ref": "#/$defs/Boomerang"
+              },
+              {
+                "$ref": "#/$defs/ThrowableDagger"
+              },
+              {
+                "$ref": "#/$defs/Throwable"
+              },
+              {
+                "$ref": "#/$defs/VelvetPouch"
+              },
+              {
+                "$ref": "#/$defs/ScrollHolder"
+              },
+              {
+                "$ref": "#/$defs/MagicalHolster"
+              },
+              {
+                "$ref": "#/$defs/PotionBandolier"
+              },
+              {
+                "$ref": "#/$defs/Bag"
+              }
+            ]
+          },
+          "readOnly": true,
+          "type": "array"
+        },
+        "equipped_weapon": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "armor": "#/$defs/Armor",
+                  "artifact": "#/$defs/Artifact",
+                  "bag": "#/$defs/Bag",
+                  "boomerang": "#/$defs/Boomerang",
+                  "bow": "#/$defs/Bow",
+                  "dagger": "#/$defs/Dagger",
+                  "food": "#/$defs/Food",
+                  "fury_potion": "#/$defs/FuryPotion",
+                  "gold": "#/$defs/Gold",
+                  "health_potion": "#/$defs/HealthPotion",
+                  "key": "#/$defs/Key",
+                  "magical_holster": "#/$defs/MagicalHolster",
+                  "melee_weapon": "#/$defs/MeleeWeapon",
+                  "missile_weapon": "#/$defs/MissileWeapon",
+                  "mystery_meat": "#/$defs/MysteryMeat",
+                  "potion": "#/$defs/Potion",
+                  "potion_bandolier": "#/$defs/PotionBandolier",
+                  "reviving_potion": "#/$defs/RevivingPotion",
+                  "ring": "#/$defs/Ring",
+                  "scroll": "#/$defs/Scroll",
+                  "scroll_holder": "#/$defs/ScrollHolder",
+                  "seed": "#/$defs/Seed",
+                  "staff": "#/$defs/Staff",
+                  "stone": "#/$defs/Stone",
+                  "throwable": "#/$defs/Throwable",
+                  "throwable_dagger": "#/$defs/ThrowableDagger",
+                  "velvet_pouch": "#/$defs/VelvetPouch",
+                  "wand": "#/$defs/Wand"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/MeleeWeapon"
+                },
+                {
+                  "$ref": "#/$defs/Dagger"
+                },
+                {
+                  "$ref": "#/$defs/Bow"
+                },
+                {
+                  "$ref": "#/$defs/Staff"
+                },
+                {
+                  "$ref": "#/$defs/MissileWeapon"
+                },
+                {
+                  "$ref": "#/$defs/Armor"
+                },
+                {
+                  "$ref": "#/$defs/Ring"
+                },
+                {
+                  "$ref": "#/$defs/Artifact"
+                },
+                {
+                  "$ref": "#/$defs/Wand"
+                },
+                {
+                  "$ref": "#/$defs/HealthPotion"
+                },
+                {
+                  "$ref": "#/$defs/RevivingPotion"
+                },
+                {
+                  "$ref": "#/$defs/FuryPotion"
+                },
+                {
+                  "$ref": "#/$defs/Potion"
+                },
+                {
+                  "$ref": "#/$defs/Scroll"
+                },
+                {
+                  "$ref": "#/$defs/Gold"
+                },
+                {
+                  "$ref": "#/$defs/Food"
+                },
+                {
+                  "$ref": "#/$defs/MysteryMeat"
+                },
+                {
+                  "$ref": "#/$defs/Key"
+                },
+                {
+                  "$ref": "#/$defs/Seed"
+                },
+                {
+                  "$ref": "#/$defs/Stone"
+                },
+                {
+                  "$ref": "#/$defs/Boomerang"
+                },
+                {
+                  "$ref": "#/$defs/ThrowableDagger"
+                },
+                {
+                  "$ref": "#/$defs/Throwable"
+                },
+                {
+                  "$ref": "#/$defs/VelvetPouch"
+                },
+                {
+                  "$ref": "#/$defs/ScrollHolder"
+                },
+                {
+                  "$ref": "#/$defs/MagicalHolster"
+                },
+                {
+                  "$ref": "#/$defs/PotionBandolier"
+                },
+                {
+                  "$ref": "#/$defs/Bag"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "readOnly": true
+        },
+        "equipped_wearable": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "armor": "#/$defs/Armor",
+                  "artifact": "#/$defs/Artifact",
+                  "bag": "#/$defs/Bag",
+                  "boomerang": "#/$defs/Boomerang",
+                  "bow": "#/$defs/Bow",
+                  "dagger": "#/$defs/Dagger",
+                  "food": "#/$defs/Food",
+                  "fury_potion": "#/$defs/FuryPotion",
+                  "gold": "#/$defs/Gold",
+                  "health_potion": "#/$defs/HealthPotion",
+                  "key": "#/$defs/Key",
+                  "magical_holster": "#/$defs/MagicalHolster",
+                  "melee_weapon": "#/$defs/MeleeWeapon",
+                  "missile_weapon": "#/$defs/MissileWeapon",
+                  "mystery_meat": "#/$defs/MysteryMeat",
+                  "potion": "#/$defs/Potion",
+                  "potion_bandolier": "#/$defs/PotionBandolier",
+                  "reviving_potion": "#/$defs/RevivingPotion",
+                  "ring": "#/$defs/Ring",
+                  "scroll": "#/$defs/Scroll",
+                  "scroll_holder": "#/$defs/ScrollHolder",
+                  "seed": "#/$defs/Seed",
+                  "staff": "#/$defs/Staff",
+                  "stone": "#/$defs/Stone",
+                  "throwable": "#/$defs/Throwable",
+                  "throwable_dagger": "#/$defs/ThrowableDagger",
+                  "velvet_pouch": "#/$defs/VelvetPouch",
+                  "wand": "#/$defs/Wand"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/MeleeWeapon"
+                },
+                {
+                  "$ref": "#/$defs/Dagger"
+                },
+                {
+                  "$ref": "#/$defs/Bow"
+                },
+                {
+                  "$ref": "#/$defs/Staff"
+                },
+                {
+                  "$ref": "#/$defs/MissileWeapon"
+                },
+                {
+                  "$ref": "#/$defs/Armor"
+                },
+                {
+                  "$ref": "#/$defs/Ring"
+                },
+                {
+                  "$ref": "#/$defs/Artifact"
+                },
+                {
+                  "$ref": "#/$defs/Wand"
+                },
+                {
+                  "$ref": "#/$defs/HealthPotion"
+                },
+                {
+                  "$ref": "#/$defs/RevivingPotion"
+                },
+                {
+                  "$ref": "#/$defs/FuryPotion"
+                },
+                {
+                  "$ref": "#/$defs/Potion"
+                },
+                {
+                  "$ref": "#/$defs/Scroll"
+                },
+                {
+                  "$ref": "#/$defs/Gold"
+                },
+                {
+                  "$ref": "#/$defs/Food"
+                },
+                {
+                  "$ref": "#/$defs/MysteryMeat"
+                },
+                {
+                  "$ref": "#/$defs/Key"
+                },
+                {
+                  "$ref": "#/$defs/Seed"
+                },
+                {
+                  "$ref": "#/$defs/Stone"
+                },
+                {
+                  "$ref": "#/$defs/Boomerang"
+                },
+                {
+                  "$ref": "#/$defs/ThrowableDagger"
+                },
+                {
+                  "$ref": "#/$defs/Throwable"
+                },
+                {
+                  "$ref": "#/$defs/VelvetPouch"
+                },
+                {
+                  "$ref": "#/$defs/ScrollHolder"
+                },
+                {
+                  "$ref": "#/$defs/MagicalHolster"
+                },
+                {
+                  "$ref": "#/$defs/PotionBandolier"
+                },
+                {
+                  "$ref": "#/$defs/Bag"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "readOnly": true
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "pos",
+        "hp",
+        "max_hp",
+        "inventory",
+        "equipped_weapon",
+        "equipped_wearable"
+      ],
+      "type": "object"
+    },
+    "Position": {
+      "properties": {
+        "x": {
+          "type": "integer"
+        },
+        "y": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "type": "object"
+    },
+    "Potion": {
+      "properties": {
+        "kind": {
+          "const": "potion",
+          "default": "potion",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "default": "potion",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "effect": {
+          "default": "",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "PotionBandolier": {
+      "properties": {
+        "kind": {
+          "const": "potion_bandolier",
+          "default": "potion_bandolier",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "default": "Potion Bandolier",
+          "type": "string"
+        },
+        "type": {
+          "default": "bag",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": true,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "capacity": {
+          "default": 20,
+          "type": "integer"
+        },
+        "items": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "armor": "#/$defs/Armor",
+                "artifact": "#/$defs/Artifact",
+                "bag": "#/$defs/Bag",
+                "boomerang": "#/$defs/Boomerang",
+                "bow": "#/$defs/Bow",
+                "dagger": "#/$defs/Dagger",
+                "food": "#/$defs/Food",
+                "fury_potion": "#/$defs/FuryPotion",
+                "gold": "#/$defs/Gold",
+                "health_potion": "#/$defs/HealthPotion",
+                "key": "#/$defs/Key",
+                "magical_holster": "#/$defs/MagicalHolster",
+                "melee_weapon": "#/$defs/MeleeWeapon",
+                "missile_weapon": "#/$defs/MissileWeapon",
+                "mystery_meat": "#/$defs/MysteryMeat",
+                "potion": "#/$defs/Potion",
+                "potion_bandolier": "#/$defs/PotionBandolier",
+                "reviving_potion": "#/$defs/RevivingPotion",
+                "ring": "#/$defs/Ring",
+                "scroll": "#/$defs/Scroll",
+                "scroll_holder": "#/$defs/ScrollHolder",
+                "seed": "#/$defs/Seed",
+                "staff": "#/$defs/Staff",
+                "stone": "#/$defs/Stone",
+                "throwable": "#/$defs/Throwable",
+                "throwable_dagger": "#/$defs/ThrowableDagger",
+                "velvet_pouch": "#/$defs/VelvetPouch",
+                "wand": "#/$defs/Wand"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/MeleeWeapon"
+              },
+              {
+                "$ref": "#/$defs/Dagger"
+              },
+              {
+                "$ref": "#/$defs/Bow"
+              },
+              {
+                "$ref": "#/$defs/Staff"
+              },
+              {
+                "$ref": "#/$defs/MissileWeapon"
+              },
+              {
+                "$ref": "#/$defs/Armor"
+              },
+              {
+                "$ref": "#/$defs/Ring"
+              },
+              {
+                "$ref": "#/$defs/Artifact"
+              },
+              {
+                "$ref": "#/$defs/Wand"
+              },
+              {
+                "$ref": "#/$defs/HealthPotion"
+              },
+              {
+                "$ref": "#/$defs/RevivingPotion"
+              },
+              {
+                "$ref": "#/$defs/FuryPotion"
+              },
+              {
+                "$ref": "#/$defs/Potion"
+              },
+              {
+                "$ref": "#/$defs/Scroll"
+              },
+              {
+                "$ref": "#/$defs/Gold"
+              },
+              {
+                "$ref": "#/$defs/Food"
+              },
+              {
+                "$ref": "#/$defs/MysteryMeat"
+              },
+              {
+                "$ref": "#/$defs/Key"
+              },
+              {
+                "$ref": "#/$defs/Seed"
+              },
+              {
+                "$ref": "#/$defs/Stone"
+              },
+              {
+                "$ref": "#/$defs/Boomerang"
+              },
+              {
+                "$ref": "#/$defs/ThrowableDagger"
+              },
+              {
+                "$ref": "#/$defs/Throwable"
+              },
+              {
+                "$ref": "#/$defs/VelvetPouch"
+              },
+              {
+                "$ref": "#/$defs/ScrollHolder"
+              },
+              {
+                "$ref": "#/$defs/MagicalHolster"
+              },
+              {
+                "$ref": "#/$defs/PotionBandolier"
+              },
+              {
+                "$ref": "#/$defs/Bag"
+              }
+            ]
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "QuickSlot": {
+      "properties": {
+        "slots": {
+          "items": {
+            "$ref": "#/$defs/QuickSlotEntry"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "QuickSlotEntry": {
+      "properties": {
+        "item_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "is_placeholder": {
+          "default": false,
+          "type": "boolean"
+        },
+        "placeholder_kind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "type": "object"
+    },
+    "RevivingPotion": {
+      "properties": {
+        "kind": {
+          "const": "reviving_potion",
+          "default": "reviving_potion",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "default": "Reviving Potion",
+          "type": "string"
+        },
+        "type": {
+          "default": "potion",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "effect": {
+          "default": "revive",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "Ring": {
+      "properties": {
+        "kind": {
+          "const": "ring",
+          "default": "ring",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "default": "ring",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "strength_requirement": {
+          "default": 10,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "Scroll": {
+      "properties": {
+        "kind": {
+          "const": "scroll",
+          "default": "scroll",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "default": "scroll",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "ScrollHolder": {
+      "properties": {
+        "kind": {
+          "const": "scroll_holder",
+          "default": "scroll_holder",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "default": "Scroll Holder",
+          "type": "string"
+        },
+        "type": {
+          "default": "bag",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": true,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "capacity": {
+          "default": 20,
+          "type": "integer"
+        },
+        "items": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "armor": "#/$defs/Armor",
+                "artifact": "#/$defs/Artifact",
+                "bag": "#/$defs/Bag",
+                "boomerang": "#/$defs/Boomerang",
+                "bow": "#/$defs/Bow",
+                "dagger": "#/$defs/Dagger",
+                "food": "#/$defs/Food",
+                "fury_potion": "#/$defs/FuryPotion",
+                "gold": "#/$defs/Gold",
+                "health_potion": "#/$defs/HealthPotion",
+                "key": "#/$defs/Key",
+                "magical_holster": "#/$defs/MagicalHolster",
+                "melee_weapon": "#/$defs/MeleeWeapon",
+                "missile_weapon": "#/$defs/MissileWeapon",
+                "mystery_meat": "#/$defs/MysteryMeat",
+                "potion": "#/$defs/Potion",
+                "potion_bandolier": "#/$defs/PotionBandolier",
+                "reviving_potion": "#/$defs/RevivingPotion",
+                "ring": "#/$defs/Ring",
+                "scroll": "#/$defs/Scroll",
+                "scroll_holder": "#/$defs/ScrollHolder",
+                "seed": "#/$defs/Seed",
+                "staff": "#/$defs/Staff",
+                "stone": "#/$defs/Stone",
+                "throwable": "#/$defs/Throwable",
+                "throwable_dagger": "#/$defs/ThrowableDagger",
+                "velvet_pouch": "#/$defs/VelvetPouch",
+                "wand": "#/$defs/Wand"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/MeleeWeapon"
+              },
+              {
+                "$ref": "#/$defs/Dagger"
+              },
+              {
+                "$ref": "#/$defs/Bow"
+              },
+              {
+                "$ref": "#/$defs/Staff"
+              },
+              {
+                "$ref": "#/$defs/MissileWeapon"
+              },
+              {
+                "$ref": "#/$defs/Armor"
+              },
+              {
+                "$ref": "#/$defs/Ring"
+              },
+              {
+                "$ref": "#/$defs/Artifact"
+              },
+              {
+                "$ref": "#/$defs/Wand"
+              },
+              {
+                "$ref": "#/$defs/HealthPotion"
+              },
+              {
+                "$ref": "#/$defs/RevivingPotion"
+              },
+              {
+                "$ref": "#/$defs/FuryPotion"
+              },
+              {
+                "$ref": "#/$defs/Potion"
+              },
+              {
+                "$ref": "#/$defs/Scroll"
+              },
+              {
+                "$ref": "#/$defs/Gold"
+              },
+              {
+                "$ref": "#/$defs/Food"
+              },
+              {
+                "$ref": "#/$defs/MysteryMeat"
+              },
+              {
+                "$ref": "#/$defs/Key"
+              },
+              {
+                "$ref": "#/$defs/Seed"
+              },
+              {
+                "$ref": "#/$defs/Stone"
+              },
+              {
+                "$ref": "#/$defs/Boomerang"
+              },
+              {
+                "$ref": "#/$defs/ThrowableDagger"
+              },
+              {
+                "$ref": "#/$defs/Throwable"
+              },
+              {
+                "$ref": "#/$defs/VelvetPouch"
+              },
+              {
+                "$ref": "#/$defs/ScrollHolder"
+              },
+              {
+                "$ref": "#/$defs/MagicalHolster"
+              },
+              {
+                "$ref": "#/$defs/PotionBandolier"
+              },
+              {
+                "$ref": "#/$defs/Bag"
+              }
+            ]
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "Seed": {
+      "properties": {
+        "kind": {
+          "const": "seed",
+          "default": "seed",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "default": "seed",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "Shield": {
+      "properties": {
+        "priority": {
+          "default": 0,
+          "type": "integer"
+        },
+        "amount": {
+          "default": 0,
+          "type": "integer"
+        },
+        "decay": {
+          "default": 1,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "Staff": {
+      "properties": {
+        "kind": {
+          "const": "staff",
+          "default": "staff",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "default": "Staff",
+          "type": "string"
+        },
+        "type": {
+          "default": "weapon",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "strength_requirement": {
+          "default": 10,
+          "type": "integer"
+        },
+        "damage": {
+          "default": 1,
+          "type": "integer"
+        },
+        "range": {
+          "default": 4,
+          "type": "integer"
+        },
+        "attack_cooldown": {
+          "default": 1.0,
+          "type": "number"
+        },
+        "enchantment": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "projectile_type": {
+          "default": "magic_bolt",
+          "type": "string"
+        },
+        "surprise_damage_floor": {
+          "default": 0.0,
+          "type": "number"
+        },
+        "magic_damage": {
+          "default": 0,
+          "type": "integer"
+        },
+        "charges": {
+          "default": 4,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "Stone": {
+      "properties": {
+        "kind": {
+          "const": "stone",
+          "default": "stone",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "default": "Stone",
+          "type": "string"
+        },
+        "type": {
+          "default": "throwable",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "damage": {
+          "default": 1,
+          "type": "integer"
+        },
+        "range": {
+          "default": 5,
+          "type": "integer"
+        },
+        "consumable": {
+          "default": true,
+          "type": "boolean"
+        },
+        "projectile_type": {
+          "default": "stone",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "Throwable": {
+      "properties": {
+        "kind": {
+          "const": "throwable",
+          "default": "throwable",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "default": "throwable",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "damage": {
+          "default": 1,
+          "type": "integer"
+        },
+        "range": {
+          "default": 5,
+          "type": "integer"
+        },
+        "consumable": {
+          "default": true,
+          "type": "boolean"
+        },
+        "projectile_type": {
+          "default": "users_projectile",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "ThrowableDagger": {
+      "properties": {
+        "kind": {
+          "const": "throwable_dagger",
+          "default": "throwable_dagger",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "default": "Throwable Dagger",
+          "type": "string"
+        },
+        "type": {
+          "default": "throwable",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "damage": {
+          "default": 4,
+          "type": "integer"
+        },
+        "range": {
+          "default": 4,
+          "type": "integer"
+        },
+        "consumable": {
+          "default": true,
+          "type": "boolean"
+        },
+        "projectile_type": {
+          "default": "dagger",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "VelvetPouch": {
+      "properties": {
+        "kind": {
+          "const": "velvet_pouch",
+          "default": "velvet_pouch",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "default": "Velvet Pouch",
+          "type": "string"
+        },
+        "type": {
+          "default": "bag",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": true,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "capacity": {
+          "default": 20,
+          "type": "integer"
+        },
+        "items": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "armor": "#/$defs/Armor",
+                "artifact": "#/$defs/Artifact",
+                "bag": "#/$defs/Bag",
+                "boomerang": "#/$defs/Boomerang",
+                "bow": "#/$defs/Bow",
+                "dagger": "#/$defs/Dagger",
+                "food": "#/$defs/Food",
+                "fury_potion": "#/$defs/FuryPotion",
+                "gold": "#/$defs/Gold",
+                "health_potion": "#/$defs/HealthPotion",
+                "key": "#/$defs/Key",
+                "magical_holster": "#/$defs/MagicalHolster",
+                "melee_weapon": "#/$defs/MeleeWeapon",
+                "missile_weapon": "#/$defs/MissileWeapon",
+                "mystery_meat": "#/$defs/MysteryMeat",
+                "potion": "#/$defs/Potion",
+                "potion_bandolier": "#/$defs/PotionBandolier",
+                "reviving_potion": "#/$defs/RevivingPotion",
+                "ring": "#/$defs/Ring",
+                "scroll": "#/$defs/Scroll",
+                "scroll_holder": "#/$defs/ScrollHolder",
+                "seed": "#/$defs/Seed",
+                "staff": "#/$defs/Staff",
+                "stone": "#/$defs/Stone",
+                "throwable": "#/$defs/Throwable",
+                "throwable_dagger": "#/$defs/ThrowableDagger",
+                "velvet_pouch": "#/$defs/VelvetPouch",
+                "wand": "#/$defs/Wand"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/MeleeWeapon"
+              },
+              {
+                "$ref": "#/$defs/Dagger"
+              },
+              {
+                "$ref": "#/$defs/Bow"
+              },
+              {
+                "$ref": "#/$defs/Staff"
+              },
+              {
+                "$ref": "#/$defs/MissileWeapon"
+              },
+              {
+                "$ref": "#/$defs/Armor"
+              },
+              {
+                "$ref": "#/$defs/Ring"
+              },
+              {
+                "$ref": "#/$defs/Artifact"
+              },
+              {
+                "$ref": "#/$defs/Wand"
+              },
+              {
+                "$ref": "#/$defs/HealthPotion"
+              },
+              {
+                "$ref": "#/$defs/RevivingPotion"
+              },
+              {
+                "$ref": "#/$defs/FuryPotion"
+              },
+              {
+                "$ref": "#/$defs/Potion"
+              },
+              {
+                "$ref": "#/$defs/Scroll"
+              },
+              {
+                "$ref": "#/$defs/Gold"
+              },
+              {
+                "$ref": "#/$defs/Food"
+              },
+              {
+                "$ref": "#/$defs/MysteryMeat"
+              },
+              {
+                "$ref": "#/$defs/Key"
+              },
+              {
+                "$ref": "#/$defs/Seed"
+              },
+              {
+                "$ref": "#/$defs/Stone"
+              },
+              {
+                "$ref": "#/$defs/Boomerang"
+              },
+              {
+                "$ref": "#/$defs/ThrowableDagger"
+              },
+              {
+                "$ref": "#/$defs/Throwable"
+              },
+              {
+                "$ref": "#/$defs/VelvetPouch"
+              },
+              {
+                "$ref": "#/$defs/ScrollHolder"
+              },
+              {
+                "$ref": "#/$defs/MagicalHolster"
+              },
+              {
+                "$ref": "#/$defs/PotionBandolier"
+              },
+              {
+                "$ref": "#/$defs/Bag"
+              }
+            ]
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "Wand": {
+      "properties": {
+        "kind": {
+          "const": "wand",
+          "default": "wand",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "default": "wand",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "damage": {
+          "default": 0,
+          "type": "integer"
+        },
+        "charges": {
+          "default": 2,
+          "type": "integer"
+        },
+        "max_charges": {
+          "default": 2,
+          "type": "integer"
+        },
+        "range": {
+          "default": 4,
+          "type": "integer"
+        },
+        "projectile_type": {
+          "default": "magic_bolt",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    }
+  },
+  "description": "Wrapper whose fields drag every referenced entity model into `$defs`.\n\nPlayer transitively pulls in Belongings, QuickSlot, Effect, Position, and the\nfull AnyItem discriminated union (every item variant), so listing Player + Mob\nhere is enough to emit the whole entity graph.",
+  "properties": {
+    "player": {
+      "$ref": "#/$defs/Player"
+    },
+    "mob": {
+      "$ref": "#/$defs/Mob"
+    }
+  },
+  "required": [
+    "player",
+    "mob"
+  ],
+  "type": "object"
+}
