@@ -91,8 +91,12 @@ def resolve_melee_attack(
     if not attacker.is_alive or not defender.is_alive:
         return result
 
+    # Invisible attacker: always surprise attack (auto-hit)
+    if getattr(attacker, "invisible", 0) > 0:
+        result["surprise"] = True
+        result["hit"] = True
     # Surprise attack: if defender can't see attacker, auto-hit
-    if is_in_los and not is_in_los(defender.pos, attacker.pos):
+    elif is_in_los and not is_in_los(defender.pos, attacker.pos):
         result["surprise"] = True
         result["hit"] = True
     else:
@@ -110,6 +114,12 @@ def resolve_melee_attack(
     dmg_roll = _roll_damage(attacker, result)
     dr_roll = random.randint(defender.get_dr_min(), defender.get_dr_max())
     raw_damage = max(0, dmg_roll - dr_roll)
+
+    # Invisibility dispel on attack
+    if getattr(attacker, "invisible", 0) > 0:
+        attacker.invisible = 0
+        attacker.remove_buff("invisibility")
+        attacker.remove_buff("preparation")
 
     # Pre-DR defense proc (glyphs, abilities)
     if hasattr(defender, "defense_proc") and raw_damage > 0:
@@ -159,7 +169,10 @@ def resolve_ranged_attack(
     if not attacker.is_alive or not defender.is_alive:
         return result
 
-    if is_in_los and not is_in_los(defender.pos, attacker.pos):
+    if getattr(attacker, "invisible", 0) > 0:
+        result["surprise"] = True
+        result["hit"] = True
+    elif is_in_los and not is_in_los(defender.pos, attacker.pos):
         result["surprise"] = True
         result["hit"] = True
     else:
@@ -177,6 +190,12 @@ def resolve_ranged_attack(
     dmg_roll = _roll_damage(attacker, result)
     dr_roll = random.randint(defender.get_dr_min(), defender.get_dr_max())
     raw_damage = max(0, dmg_roll - dr_roll)
+
+    # Invisibility dispel on attack
+    if getattr(attacker, "invisible", 0) > 0:
+        attacker.invisible = 0
+        attacker.remove_buff("invisibility")
+        attacker.remove_buff("preparation")
 
     # Pre-DR defense proc
     if hasattr(defender, "defense_proc") and raw_damage > 0:

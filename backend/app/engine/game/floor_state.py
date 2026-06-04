@@ -5,7 +5,7 @@ rooms, live mobs/items, door/trap metadata and derived terrain flag maps.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from app.engine.dungeon.generator import TrapInfo
 from app.engine.dungeon.terrain_flags import FloorFlagMaps, build_flag_maps
@@ -28,6 +28,8 @@ class FloorState:
     flags: Optional[FloorFlagMaps] = None
     respawn_counter: int = 0
     mob_limit: int = 0
+    plants: Dict[Tuple[int, int], Any] = field(default_factory=dict)
+    blob_areas: Dict[str, Any] = field(default_factory=dict)
 
     def rebuild_flags(self) -> None:
         self.flags = build_flag_maps(self.grid)

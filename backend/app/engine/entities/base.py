@@ -5,6 +5,9 @@ from typing import Annotated, ClassVar, Literal, Optional, List, Dict, Tuple, Un
 
 from pydantic import BaseModel, Field, computed_field
 
+from app.engine.entities.buffs import Buff, add_buff, remove_buff, has_buff, get_buff
+from app.engine.entities.subclasses import SubclassInfo, TalentInfo
+
 
 class EntityType:
     PLAYER = "player"
@@ -75,12 +78,54 @@ class Entity(BaseModel):
     has_fury: bool = False
     fury_turns_remaining: int = 0
 
+    # Stealth / invisibility
+    invisible: int = 0
+
+    # Generic buff system
+    buffs: List[Buff] = Field(default_factory=list)
+
+
+    def add_buff(self, buff_type: str, duration: float, level: int = 0, source_id: str = None, stack_mode: str = "replace") -> Buff:
+        result = add_buff(self.buffs, buff_type, duration, level, source_id, stack_mode)
+        if buff_type == "invisibility" or buff_type == "shadows":
+            self.invisible += 1
+        return result
+
+    def remove_buff(self, buff_type: str) -> Optional[Buff]:
+        result = remove_buff(self.buffs, buff_type)
+        if result and (result.type == "invisibility" or result.type == "shadows"):
+            self.invisible = max(0, self.invisible - 1)
+        return result
+
+    def has_buff(self, buff_type: str) -> bool:
+        return has_buff(self.buffs, buff_type)
+
+    def get_buff(self, buff_type: str) -> Optional[Buff]:
+        return get_buff(self.buffs, buff_type)
+
+    def get_stealth(self) -> float:
+        base = 0.0
+        obf = self.get_buff("obfuscation")
+        if obf:
+            base += 1 + obf.level / 3
+        prep = self.get_buff("preparation")
+        if prep:
+            base += 2
+        return base
 
     def get_dr_min(self) -> int:
-        return self.dr_min
+        base = self.dr_min
+        barkskin = self.get_buff("barkskin")
+        if barkskin:
+            base += barkskin.level
+        return base
 
     def get_dr_max(self) -> int:
-        return self.dr_max
+        base = self.dr_max
+        barkskin = self.get_buff("barkskin")
+        if barkskin:
+            base += barkskin.level * 2
+        return base
 
     def get_damage_min(self) -> int:
         return self.damage_min
@@ -340,11 +385,17 @@ class MissileWeapon(KindOfWeapon):
         return Action.THROW
 
 
+class ArmorEnchantment(BaseModel):
+    type: str = "none"
+    level: int = 0
+
+
 class Armor(EquipableItem):
     kind: Literal["armor"] = "armor"
     type: str = "wearable"
     category: ClassVar[str] = ItemCategory.ARMOR
     tier: int = 1
+    enchantment: ArmorEnchantment = Field(default_factory=ArmorEnchantment)
     DESC: ClassVar[str] = "Worn armor that absorbs a portion of incoming damage. Equip it for protection."
 
     def dr_min(self, upgrade_level: int = 0) -> int:
@@ -523,6 +574,7 @@ class Seed(ItemBase):
     type: str = "seed"
     category: ClassVar[str] = ItemCategory.SEED
     stackable: ClassVar[bool] = True
+    plant_type: str = "sungrass"
     DESC: ClassVar[str] = "A magical seed. Plant it to release its effect."
 
 
@@ -530,6 +582,21 @@ class MysteryMeat(Food):
     kind: Literal["mystery_meat"] = "mystery_meat"
     name: str = "Mystery Meat"
     DESC: ClassVar[str] = "Raw meat from a defeated creature. Eat it to restore some health — if you dare."
+
+
+class Dewdrop(ItemBase):
+    kind: Literal["dewdrop"] = "dewdrop"
+    name: str = "Dewdrop"
+    type: str = "dewdrop"
+    category: ClassVar[str] = ItemCategory.POTION
+    stackable: ClassVar[bool] = True
+    DESC: ClassVar[str] = "A drop of magical dew. It radiates healing energy."
+
+
+class Berry(Food):
+    kind: Literal["berry"] = "berry"
+    name: str = "Berry"
+    DESC: ClassVar[str] = "A sweet berry. Restores a small amount of food."
 
 
 class Scenery(ItemBase):
@@ -682,8 +749,8 @@ AnyItem = Annotated[
     Union[
         MeleeWeapon, Dagger, Bow, Staff, MissileWeapon,
         Armor, Ring, Artifact, Wand,
-        HealthPotion, RevivingPotion, FuryPotion, Potion, Scroll, Gold, Food, MysteryMeat, Key,
-        Seed, Stone, Boomerang, ThrowableDagger, Throwable,
+        HealthPotion, RevivingPotion, FuryPotion, Potion, Scroll, Gold, Food, MysteryMeat, Berry, Key,
+        Seed, Dewdrop, Stone, Boomerang, ThrowableDagger, Throwable,
         VelvetPouch, ScrollHolder, MagicalHolster, PotionBandolier, Bag,
     ],
     Field(discriminator="kind"),
@@ -872,6 +939,13 @@ class Player(Entity):
     move_intent: Optional[Tuple[int, int]] = None
     last_auto_move_time: float = 0.0
     is_admin: bool = False
+
+    # Subclass and talents
+    subclass_info: SubclassInfo = Field(default_factory=SubclassInfo)
+
+    @property
+    def talent_info(self):
+        return self.subclass_info.talent_info
 
     # Backward-compat views over Belongings so existing engine/UI code and the
     # current front-end snapshot keep working until the SPD-style UI lands.

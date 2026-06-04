@@ -32,6 +32,7 @@ export const BACKEND_TILE = {
   EMPTY_DECO: { id: 18, atlasIndex: atlasIndex(3, 0), seethrough: true },
   HIGH_GRASS: { id: 19, atlasIndex: null, seethrough: false },
   SECRET_DOOR: { id: 20, atlasIndex: atlasIndex(0, 5), seethrough: false },
+  FURROWED_GRASS: { id: 21, atlasIndex: null, seethrough: false },
 };
 
 export const toAtlasCoords = (index) => ({
@@ -52,6 +53,7 @@ export const TERRAIN_INDEX = {
 
   GRASS_CENTER: [atlasIndex(2, 4), atlasIndex(5, 4), atlasIndex(6, 4)],
   HIGH_GRASS_CENTER: [atlasIndex(10, 7), atlasIndex(13, 7)],
+  FURROWED_GRASS_CENTER: [atlasIndex(11, 7), atlasIndex(12, 7)],
   GRASS_EDGE: {
     tl: atlasIndex(1, 2),
     tr: atlasIndex(2, 2),
@@ -190,7 +192,8 @@ export const isDoorTile = (tile) =>
 export const isWaterTile = (tile) => tile === BACKEND_TILE.FLOOR_WATER.id;
 export const isGrassTile = (tile) =>
   tile === BACKEND_TILE.FLOOR_GRASS.id ||
-  tile === BACKEND_TILE.HIGH_GRASS.id;
+  tile === BACKEND_TILE.HIGH_GRASS.id ||
+  tile === BACKEND_TILE.FURROWED_GRASS.id;
 
 export const TRAP_VISUAL = {
   worn_dart: { color: 7, shape: 5 },

@@ -21,6 +21,7 @@ from app.engine.entities.base import (
 from app.engine.systems.combat import resolve_melee_attack, resolve_ranged_attack
 from app.engine.systems.loot import roll_drops
 from app.engine.game.constants import MAX_FLOOR_ID
+from app.engine.game.terrain_effects import press_cell
 
 
 class MovementCombatMixin:
@@ -169,6 +170,15 @@ class MovementCombatMixin:
         # Position changed: source cells and occupancy-based open doors moved,
         # so any cached shadowcasting is stale.
         self._invalidate_fov_cache()
+
+        # Terrain interaction (trample grass, trigger plants, etc.)
+        result = press_cell(floor, (entity.pos.x, entity.pos.y), entity)
+        if result["tile_changed"]:
+            self.add_event("MAP_PATCH", {"tiles": [{"x": entity.pos.x, "y": entity.pos.y, "tile": floor.grid[entity.pos.y][entity.pos.x]}]}, floor_id=floor_id)
+            self.add_event("PLAY_SOUND", {"sound": "STEP_GRASS"}, floor_id=floor_id, source_player_id=entity.id if isinstance(entity, Player) else None)
+        if result["triggered_plant"]:
+            self.add_event("PLAY_SOUND", {"sound": "PLANT_TRIGGER"}, floor_id=floor_id, source_player_id=entity.id if isinstance(entity, Player) else None)
+
         if isinstance(entity, Player):
             self.add_event("MOVE", {"entity": entity_id, "x": entity.pos.x, "y": entity.pos.y}, floor_id=floor_id)
 

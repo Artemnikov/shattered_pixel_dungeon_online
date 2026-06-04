@@ -10,6 +10,8 @@ from typing import List
 
 from app.engine.dungeon.generator import TileType
 from app.engine.entities.base import Difficulty, Effect, Player
+from app.engine.entities.buffs import process_buffs
+from app.engine.game.blobs import tick_foliage_blobs
 from app.engine.entities.mobs import Rat
 from app.engine.game.constants import (
     AUTO_MOVE_INTERVAL,
@@ -27,6 +29,22 @@ class TickMixin:
         # Occupancy (and thus open doors / FOV sources) may have changed since
         # the last tick; start each tick with fresh shadowcasting caches.
         self._invalidate_fov_cache()
+
+        # Process buffs on all entities (decrement timers, remove expired)
+        dt = 0.05  # assume 20Hz tick
+        for player in self.players.values():
+            removed = process_buffs(player.buffs, dt)
+            if "invisibility" in removed or "shadows" in removed:
+                player.invisible = max(0, player.invisible - 1)
+        for floor in self.floors.values():
+            for mob in floor.mobs.values():
+                if mob.is_alive:
+                    process_buffs(mob.buffs, dt)
+
+        # Tick foliage blob areas (grant Shadows buff to entities in foliage)
+        blob_events = tick_foliage_blobs(self.floors, self.players)
+        for ev in blob_events:
+            self.add_event(ev["type"], ev["data"])
 
         # Process any players that died since the last tick (from any source).
         for player in self.players.values():
@@ -90,6 +108,41 @@ class TickMixin:
                     continue
 
                 target_player = self._find_nearest_player(mob.pos, floor_id)
+                # Stealth/invisibility check: skip players who are invisible
+                if target_player and target_player.invisible > 0:
+                    # Also check if Shadows buff — if active, mob can't see the player at all
+                    target_player = None
+
+                # Sleeping mob detection: only wake if detection check passes
+                if target_player and getattr(mob, "ai_state", "") in ("idle", "sleeping"):
+                    dist = self._get_distance(mob.pos, target_player.pos)
+                    stealth = target_player.get_stealth()
+                    detect_chance = 1.0 / max(0.01, dist + stealth)
+                    # Silent Steps talent: cannot wake sleeping mobs from far away
+                    subclass_info = getattr(target_player, "subclass_info", None)
+                    if subclass_info:
+                        silent_level = subclass_info.talent_info.level("silent_steps")
+                        if silent_level > 0 and dist >= 4 - silent_level:
+                            detect_chance = 0.0
+                    if random.random() >= detect_chance:
+                        target_player = None
+                    else:
+                        mob.ai_state = "hunting"
+
+                # Wandering mob detection: easier to detect
+                if target_player and getattr(mob, "ai_state", "") == "wandering":
+                    dist = self._get_distance(mob.pos, target_player.pos)
+                    stealth = target_player.get_stealth()
+                    # Heightened Senses talent boosts stealth vs wandering mobs
+                    subclass_info = getattr(target_player, "subclass_info", None)
+                    if subclass_info:
+                        stealth += subclass_info.talent_info.level("heightened_senses") * 2
+                    detect_chance = 1.0 / max(0.01, dist / 2 + stealth)
+                    if random.random() >= detect_chance:
+                        target_player = None
+                    else:
+                        mob.ai_state = "hunting"
+
                 dist = self._get_distance(mob.pos, target_player.pos) if target_player else float("inf")
                 atk_range = getattr(mob, "attack_range", 1)
                 is_passive = getattr(mob, "ai_state", "") == "passive"
@@ -100,13 +153,7 @@ class TickMixin:
                         self.move_entity(mob.id, dx, dy)
                     continue
 
-                # First-strike windup: the moment a mob first reaches its target it
-                # must wait `aggro_windup` seconds before swinging, giving the player
-                # a beat to react instead of being hit on contact. We arm it by back-
-                # dating last_attack_time so the existing cooldown gate in
-                # move_entity blocks the strike for exactly the windup, then resumes
-                # the normal attack_cooldown cadence. Re-arms each time the mob loses
-                # and regains attack range.
+                # First-strike windup
                 in_attack_range = target_player is not None and dist <= atk_range
                 if in_attack_range:
                     if not mob.engaged:

@@ -10,7 +10,8 @@ before dispatch, so handlers can assume the action is legal for the item.
 """
 from typing import Optional
 
-from app.engine.entities.base import Action, Position, Player
+from app.engine.dungeon.constants import TileType
+from app.engine.entities.base import Action, Position, Player, Seed
 
 
 def _floor_drop(game, player, item) -> None:
@@ -75,8 +76,51 @@ def action_read(game, player, item, tx=None, ty=None) -> None:
     game.add_event("READ", {"player": player.id, "item": item.id}, floor_id=player.floor_id)
 
 
+def action_plant(game, player, item, tx=None, ty=None) -> None:
+    if tx is None or ty is None:
+        return
+    floor = game._get_or_create_floor(player.floor_id)
+    if not (0 <= tx < floor.width and 0 <= ty < floor.height):
+        return
+    tile = floor.grid[ty][tx]
+    valid_terrains = [
+        TileType.FLOOR_GRASS, TileType.HIGH_GRASS, TileType.FURROWED_GRASS,
+        TileType.FLOOR, TileType.EMPTY_DECO,
+    ]
+    if tile not in valid_terrains:
+        return  # can't plant here
+    floor.grid[ty][tx] = TileType.FLOOR_GRASS
+    from app.engine.game.terrain_effects import _plant_seed_at
+    _plant_seed_at(floor, (tx, ty), item.plant_type)
+    removed = player.belongings.backpack.detach(item.id)
+    if removed is not None and player.belongings.get_item(item.id) is None:
+        player.quickslot.convert_to_placeholder(removed)
+    game.add_event("MAP_PATCH", {"tiles": [{"x": tx, "y": ty, "tile": TileType.FLOOR_GRASS}]}, floor_id=player.floor_id)
+    # Warden bonus: surrounding cells become FURROWED_GRASS
+    subclass_info = getattr(player, "subclass_info", None)
+    if subclass_info and subclass_info.subclass == "warden":
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                if dx == 0 and dy == 0:
+                    continue
+                nx, ny = tx + dx, ty + dy
+                if 0 <= nx < floor.width and 0 <= ny < floor.height:
+                    if floor.grid[ny][nx] != TileType.WALL and floor.grid[ny][nx] != TileType.VOID:
+                        floor.grid[ny][nx] = TileType.FURROWED_GRASS
+        floor.rebuild_flags()
+        patches = [{"x": tx + dx, "y": ty + dy, "tile": floor.grid[ty + dy][tx + dx]}
+                    for dx in (-1, 0, 1) for dy in (-1, 0, 1)
+                    if 0 <= tx + dx < floor.width and 0 <= ty + dy < floor.height]
+        game.add_event("MAP_PATCH", {"tiles": patches}, floor_id=player.floor_id)
+    floor.rebuild_flags()
+
+
 def action_throw(game, player, item, tx=None, ty=None) -> None:
     if tx is None or ty is None:
+        return
+    # Seeds are planted, not thrown as items
+    if isinstance(item, Seed):
+        action_plant(game, player, item, tx, ty)
         return
     game.perform_ranged_attack(player.id, item.id, tx, ty)
 

@@ -60,10 +60,13 @@ def test_normal_ai_chases_in_los():
     player = game.add_player("p1", "Player")
     player.pos = Position(x=1, y=1)
     
-    # Mob far away but in LOS (open floor)
+    # Mob far away but in LOS (open floor). Mark it as already hunting so the
+    # stealth notice roll (idle/sleeping mobs must detect first) is bypassed and
+    # we exercise the deterministic chase logic.
     mob = list(game.mobs.values())[0]
     mob.pos = Position(x=5, y=1)
-    
+    mob.ai_state = "hunting"
+
     game.update_tick()
     # Should move closer to (1,1)
     assert mob.pos.x < 5, "Normal mob should move towards player in LOS"
@@ -110,7 +113,8 @@ def test_hard_ai_hunts():
     
     mob = list(game.mobs.values())[0]
     mob.pos = Position(x=4, y=2)
-    
+    mob.ai_state = "hunting"  # already detected; test pathfinding, not the notice roll
+
     game.update_tick()
     # Should move along path (e.g. up or down around the wall)
     assert (mob.pos.x != 4 or mob.pos.y != 2), "Hard mob should move"

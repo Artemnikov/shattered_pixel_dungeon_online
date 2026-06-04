@@ -145,5 +145,21 @@ export const getSewerTerrainInstructions = (grid, x, y, tile, openDoors = new Se
     return instructions;
   }
 
+  if (tile === BACKEND_TILE.FURROWED_GRASS.id) {
+    const instructions = [{ srcIndex: getFloorBase(x, y), quadrant: QUADRANT.FULL }];
+    instructions.push(
+      ...getTerrainQuadrants(
+        grid,
+        x,
+        y,
+        isGrassTile,
+        TERRAIN_INDEX.FURROWED_GRASS_CENTER,
+        TERRAIN_INDEX.GRASS_EDGE,
+        31
+      )
+    );
+    return instructions;
+  }
+
   return [];
 };

@@ -74,19 +74,34 @@ class VisionMixin:
         dist = getattr(entity, "view_distance", 8)
         return max(0, min(dist, shadowcaster.MAX_DISTANCE))
 
-    def _effective_blocking(self, floor: "FloorState") -> List[bool]:
-        """Flat (y*w+x) LOS-blocking map with open doors cleared.
+    def _effective_blocking(self, floor: "FloorState", viewer_id: Optional[str] = None) -> List[bool]:
+        """Flat (y*w+x) LOS-blocking map with open doors cleared and Warden
+        exception for high grass.
 
         SPD bakes door open-state into losBlocking; here doors are statically
         LOS-blocking in flags and "open" when occupied (_is_door_open), so we
-        derive the effective map per tick and memoise it."""
-        cached = self._blocking_cache.get(floor.floor_id)
+        derive the effective map per tick and memoise it.
+
+        If `viewer_id` is a Warden, HIGH_GRASS and FURROWED_GRASS cells do not
+        block LOS."""
+        cache_key = (floor.floor_id, viewer_id or "")
+        cached = self._blocking_cache.get(cache_key)
         if cached is not None:
             return cached
 
         w, h = floor.width, floor.height
         los = floor.flags.los_blocking if floor.flags else None
         blocking = [False] * (w * h)
+
+        # Check if viewer is a Warden (sees through high grass)
+        is_warden = False
+        if viewer_id:
+            viewer = self.players.get(viewer_id)
+            if viewer:
+                subclass_info = getattr(viewer, "subclass_info", None)
+                if subclass_info and subclass_info.subclass == "warden":
+                    is_warden = True
+
         for y in range(h):
             row = los[y] if los else None
             grid_row = floor.grid[y]
@@ -95,25 +110,28 @@ class VisionMixin:
                 block = row[x] if row else True
                 if block and grid_row[x] == TileType.DOOR and self._is_door_open(floor, x, y):
                     block = False
+                # Warden sees through high/furrowed grass
+                if block and is_warden and grid_row[x] in (TileType.HIGH_GRASS, TileType.FURROWED_GRASS):
+                    block = False
                 blocking[base + x] = block
 
-        self._blocking_cache[floor.floor_id] = blocking
+        self._blocking_cache[cache_key] = blocking
         return blocking
 
-    def _fov_from(self, src: Position, floor: "FloorState", distance: int) -> List[bool]:
+    def _fov_from(self, src: Position, floor: "FloorState", distance: int, viewer_id: Optional[str] = None) -> List[bool]:
         """Shadowcast FOV (flat bool list) from `src` on `floor`, cached per tick."""
-        key = (floor.floor_id, src.x, src.y, distance)
-        cached = self._fov_cache.get(key)
+        cache_key = (floor.floor_id, src.x, src.y, distance, viewer_id or "")
+        cached = self._fov_cache.get(cache_key)
         if cached is not None:
             return cached
 
-        blocking = self._effective_blocking(floor)
+        blocking = self._effective_blocking(floor, viewer_id=viewer_id)
         fov = shadowcaster.compute_fov(blocking, floor.width, floor.height, src.x, src.y, distance)
-        self._fov_cache[key] = fov
+        self._fov_cache[cache_key] = fov
         return fov
 
     def _is_in_los(self, p1: Position, p2: Position, floor_id: Optional[int] = None,
-                   distance: Optional[int] = None) -> bool:
+                   distance: Optional[int] = None, viewer_id: Optional[str] = None) -> bool:
         """True iff p2 lies within p1's shadowcast field of view.
 
         Unified LOS: vision, mob sight, event audibility, and ranged targeting
@@ -129,7 +147,7 @@ class VisionMixin:
         if distance is None:
             distance = shadowcaster.MAX_DISTANCE
 
-        fov = self._fov_from(p1, floor, distance)
+        fov = self._fov_from(p1, floor, distance, viewer_id=viewer_id)
         return fov[p2.y * floor.width + p2.x]
 
     def _get_next_step_to(self, start: Position, target: Position, floor_id: Optional[int] = None) -> Optional[tuple]:
@@ -198,14 +216,14 @@ class VisionMixin:
                 break
         return []
 
-    def get_visible_tiles(self, pos: Position, radius: int = 8, floor_id: Optional[int] = None) -> List[Tuple[int, int]]:
+    def get_visible_tiles(self, pos: Position, radius: int = 8, floor_id: Optional[int] = None, viewer_id: Optional[str] = None) -> List[Tuple[int, int]]:
         """Tiles visible from `pos` within `radius`, via recursive shadowcasting
         (matches SPD). The circular cutoff comes from the shadowcaster's ROUNDING
         table, not a separate dist_sq test."""
         floor = self._get_or_create_floor(floor_id or self.depth)
 
         distance = max(0, min(radius, shadowcaster.MAX_DISTANCE))
-        fov = self._fov_from(pos, floor, distance)
+        fov = self._fov_from(pos, floor, distance, viewer_id=viewer_id)
 
         w, h = floor.width, floor.height
         visible = []

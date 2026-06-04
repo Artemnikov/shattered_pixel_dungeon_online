@@ -20,6 +20,7 @@ const TILE_NAMES = {
   18: 'Floor',
   19: 'High grass',
   20: 'Wall',
+  21: 'Furrowed grass',
 };
 
 // Logical tile of an animated entity: prefer its server destination (targetPos),

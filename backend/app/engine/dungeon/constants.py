@@ -17,6 +17,7 @@ class TileType:
     EMPTY_DECO = 18
     HIGH_GRASS = 19
     SECRET_DOOR = 20
+    FURROWED_GRASS = 21
 
 
 class RoomKind:
