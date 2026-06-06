@@ -65,7 +65,7 @@ class MovementCombatMixin:
 
         target_entity = None
         for p in self._players_on_floor(floor_id):
-            if p.id != entity_id and p.pos.x == new_x and p.pos.y == new_y:
+            if p.id != entity_id and p.is_alive and p.pos.x == new_x and p.pos.y == new_y:
                 target_entity = p
                 break
 
@@ -80,7 +80,6 @@ class MovementCombatMixin:
                 isinstance(entity, Player)
                 and isinstance(target_entity, Player)
                 and target_entity.is_downed
-                and target_entity.is_alive
                 and entity.faction == target_entity.faction
             ):
                 revive_potion_idx = next(
