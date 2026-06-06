@@ -28,6 +28,9 @@ import type {
   FuryPotion,
   Potion,
   Scroll,
+  WornShortsword,
+  BrokenSeal,
+  ScrollOfRage,
   Gold,
   Food,
   MysteryMeat,
@@ -55,18 +58,21 @@ export type Vec2 = [number, number];
 export type GeneratedItem =
   | MeleeWeapon
   | Dagger
+  | WornShortsword
   | Bow
   | Staff
   | MissileWeapon
   | Armor
   | Ring
   | Artifact
+  | BrokenSeal
   | Wand
   | HealthPotion
   | RevivingPotion
   | FuryPotion
   | Potion
   | Scroll
+  | ScrollOfRage
   | Gold
   | Food
   | MysteryMeat
@@ -259,6 +265,41 @@ export interface LevelUpEvent {
   data: { player: string };
 }
 
+export interface SubclassChosenEvent {
+  type: 'SUBCLASS_CHOSEN';
+  data: { player: string; subclass: string };
+}
+
+export interface TalentUpgradedEvent {
+  type: 'TALENT_UPGRADED';
+  data: { player: string; talent: string; level: number };
+}
+
+export interface ComboUpdateEvent {
+  type: 'COMBO_UPDATE';
+  data: { player: string; count: number };
+}
+
+export interface ComboMoveUnlockedEvent {
+  type: 'COMBO_MOVE_UNLOCKED';
+  data: { player: string; move: string };
+}
+
+export interface BerserkActivatedEvent {
+  type: 'BERSERK_ACTIVATED';
+  data: { player: string };
+}
+
+export interface RageChangedEvent {
+  type: 'RAGE_CHANGED';
+  data: { player: string; power: number };
+}
+
+export interface AffixSealEvent {
+  type: 'AFFIX_SEAL';
+  data: { player: string; armor: string };
+}
+
 /** Every event the server can place in `STATE_UPDATE.events`. */
 export type GameEvent =
   | AttackEvent
@@ -280,7 +321,14 @@ export type GameEvent =
   | StairsUpEvent
   | ReviveEvent
   | UnlockEvent
-  | LevelUpEvent;
+  | LevelUpEvent
+  | SubclassChosenEvent
+  | TalentUpgradedEvent
+  | ComboUpdateEvent
+  | ComboMoveUnlockedEvent
+  | BerserkActivatedEvent
+  | RageChangedEvent
+  | AffixSealEvent;
 
 export type GameEventType = GameEvent['type'];
 
@@ -349,4 +397,8 @@ export type ClientMessage =
   | { type: 'RANGED_ATTACK'; item_id: string; target_x: number; target_y: number }
   | { type: 'CHANGE_DIFFICULTY'; difficulty: Difficulty }
   | { type: 'SEARCH' }
-  | { type: 'WAIT' };
+  | { type: 'WAIT' }
+  | { type: 'CHOOSE_SUBCLASS'; subclass: string }
+  | { type: 'UPGRADE_TALENT'; talent: string }
+  | { type: 'USE_ARMOR_ABILITY'; ability: string; target_x?: number; target_y?: number }
+  | { type: 'TRIGGER_BERSERK' };

@@ -13,6 +13,7 @@ from app.engine.entities.base import (
     Armor,
     Belongings,
     Bow,
+    BrokenSeal,
     CharacterClass,
     Dagger,
     Faction,
@@ -20,8 +21,11 @@ from app.engine.entities.base import (
     Player,
     Position,
     QuickSlot,
+    ScrollOfRage,
     Staff,
+    Stone,
     Weapon,
+    WornShortsword,
 )
 from app.engine.game.constants import MAX_FLOOR_ID
 from app.engine.game.floor_state import FloorState
@@ -39,13 +43,8 @@ class PlayersMixin:
         belongings = Belongings()
 
         if class_type == CharacterClass.WARRIOR:
-            belongings.weapon = Weapon(
+            belongings.weapon = WornShortsword(
                 id=str(uuid.uuid4()),
-                name="Shortsword",
-                damage=3,
-                range=1,
-                strength_requirement=10,
-                attack_cooldown=3.0,
             )
             belongings.armor = Armor(
                 id=str(uuid.uuid4()),
@@ -53,6 +52,16 @@ class PlayersMixin:
                 tier=1,
                 strength_requirement=10,
             )
+            belongings.artifact = BrokenSeal(
+                id=str(uuid.uuid4()),
+            )
+            belongings.backpack.collect(Stone(
+                id=str(uuid.uuid4()),
+                quantity=3,
+            ))
+            belongings.backpack.collect(ScrollOfRage(
+                id=str(uuid.uuid4()),
+            ))
 
         elif class_type == CharacterClass.MAGE:
             belongings.weapon = Staff(

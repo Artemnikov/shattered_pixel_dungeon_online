@@ -145,6 +145,46 @@ class LevelUpData(_EventData):
 
 
 # event "type" -> payload model. Used by the opt-in dev validation hook.
+class LevelUpData(_EventData):
+    player: str
+
+
+class SubclassChosenData(_EventData):
+    player: str
+    subclass: str
+
+
+class TalentUpgradedData(_EventData):
+    player: str
+    talent: str
+    level: int
+
+
+class ComboUpdateData(_EventData):
+    player: str
+    count: int
+
+
+class ComboMoveUnlockedData(_EventData):
+    player: str
+    move: str
+
+
+class BerserkActivatedData(_EventData):
+    player: str
+
+
+class RageChangedData(_EventData):
+    player: str
+    power: float
+
+
+class AffixSealData(_EventData):
+    player: str
+    armor: str
+
+
+# event "type" -> payload model. Used by the opt-in dev validation hook.
 EVENT_MODELS = {
     "ATTACK": AttackData,
     "MISS": MissData,
@@ -166,4 +206,11 @@ EVENT_MODELS = {
     "REVIVE": ReviveData,
     "UNLOCK": UnlockData,
     "LEVEL_UP": LevelUpData,
+    "SUBCLASS_CHOSEN": SubclassChosenData,
+    "TALENT_UPGRADED": TalentUpgradedData,
+    "COMBO_UPDATE": ComboUpdateData,
+    "COMBO_MOVE_UNLOCKED": ComboMoveUnlockedData,
+    "BERSERK_ACTIVATED": BerserkActivatedData,
+    "RAGE_CHANGED": RageChangedData,
+    "AFFIX_SEAL": AffixSealData,
 }

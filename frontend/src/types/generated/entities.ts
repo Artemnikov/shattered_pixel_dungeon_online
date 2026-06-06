@@ -48,6 +48,8 @@ export interface Player {
   conserved_damage?: number;
   has_fury?: boolean;
   fury_turns_remaining?: number;
+  invisible?: number;
+  buffs?: Buff[];
   class_type?: string;
   experience?: number;
   level?: number;
@@ -70,26 +72,40 @@ export interface Player {
   move_intent?: [unknown, unknown] | null;
   last_auto_move_time?: number;
   is_admin?: boolean;
+  subclass_info?: SubclassInfo;
+  berserk_power?: number;
+  berserk_active?: boolean;
+  berserk_cooldown?: number;
+  combo_count?: number;
+  combo_timer?: number;
+  armor_charge?: number;
+  armor_ability?: string;
+  seal_affixed?: boolean;
   inventory: (
     | MeleeWeapon
     | Dagger
+    | WornShortsword
     | Bow
     | Staff
     | MissileWeapon
     | Armor
     | Ring
     | Artifact
+    | BrokenSeal
     | Wand
     | HealthPotion
     | RevivingPotion
     | FuryPotion
     | Potion
     | Scroll
+    | ScrollOfRage
     | Gold
     | Food
     | MysteryMeat
+    | Berry
     | Key
     | Seed
+    | Dewdrop
     | Stone
     | Boomerang
     | ThrowableDagger
@@ -104,23 +120,28 @@ export interface Player {
     | (
         | MeleeWeapon
         | Dagger
+        | WornShortsword
         | Bow
         | Staff
         | MissileWeapon
         | Armor
         | Ring
         | Artifact
+        | BrokenSeal
         | Wand
         | HealthPotion
         | RevivingPotion
         | FuryPotion
         | Potion
         | Scroll
+        | ScrollOfRage
         | Gold
         | Food
         | MysteryMeat
+        | Berry
         | Key
         | Seed
+        | Dewdrop
         | Stone
         | Boomerang
         | ThrowableDagger
@@ -136,23 +157,28 @@ export interface Player {
     | (
         | MeleeWeapon
         | Dagger
+        | WornShortsword
         | Bow
         | Staff
         | MissileWeapon
         | Armor
         | Ring
         | Artifact
+        | BrokenSeal
         | Wand
         | HealthPotion
         | RevivingPotion
         | FuryPotion
         | Potion
         | Scroll
+        | ScrollOfRage
         | Gold
         | Food
         | MysteryMeat
+        | Berry
         | Key
         | Seed
+        | Dewdrop
         | Stone
         | Boomerang
         | ThrowableDagger
@@ -173,6 +199,16 @@ export interface Shield {
   priority?: number;
   amount?: number;
   decay?: number;
+  name?: string;
+}
+export interface Buff {
+  id: string;
+  type: string;
+  remaining?: number;
+  level?: number;
+  source_id?: string | null;
+  interval?: number;
+  stack_mode?: string;
 }
 export interface Effect {
   key: string;
@@ -187,23 +223,28 @@ export interface Belongings {
     | (
         | MeleeWeapon
         | Dagger
+        | WornShortsword
         | Bow
         | Staff
         | MissileWeapon
         | Armor
         | Ring
         | Artifact
+        | BrokenSeal
         | Wand
         | HealthPotion
         | RevivingPotion
         | FuryPotion
         | Potion
         | Scroll
+        | ScrollOfRage
         | Gold
         | Food
         | MysteryMeat
+        | Berry
         | Key
         | Seed
+        | Dewdrop
         | Stone
         | Boomerang
         | ThrowableDagger
@@ -219,23 +260,28 @@ export interface Belongings {
     | (
         | MeleeWeapon
         | Dagger
+        | WornShortsword
         | Bow
         | Staff
         | MissileWeapon
         | Armor
         | Ring
         | Artifact
+        | BrokenSeal
         | Wand
         | HealthPotion
         | RevivingPotion
         | FuryPotion
         | Potion
         | Scroll
+        | ScrollOfRage
         | Gold
         | Food
         | MysteryMeat
+        | Berry
         | Key
         | Seed
+        | Dewdrop
         | Stone
         | Boomerang
         | ThrowableDagger
@@ -251,23 +297,28 @@ export interface Belongings {
     | (
         | MeleeWeapon
         | Dagger
+        | WornShortsword
         | Bow
         | Staff
         | MissileWeapon
         | Armor
         | Ring
         | Artifact
+        | BrokenSeal
         | Wand
         | HealthPotion
         | RevivingPotion
         | FuryPotion
         | Potion
         | Scroll
+        | ScrollOfRage
         | Gold
         | Food
         | MysteryMeat
+        | Berry
         | Key
         | Seed
+        | Dewdrop
         | Stone
         | Boomerang
         | ThrowableDagger
@@ -283,23 +334,28 @@ export interface Belongings {
     | (
         | MeleeWeapon
         | Dagger
+        | WornShortsword
         | Bow
         | Staff
         | MissileWeapon
         | Armor
         | Ring
         | Artifact
+        | BrokenSeal
         | Wand
         | HealthPotion
         | RevivingPotion
         | FuryPotion
         | Potion
         | Scroll
+        | ScrollOfRage
         | Gold
         | Food
         | MysteryMeat
+        | Berry
         | Key
         | Seed
+        | Dewdrop
         | Stone
         | Boomerang
         | ThrowableDagger
@@ -315,23 +371,28 @@ export interface Belongings {
     | (
         | MeleeWeapon
         | Dagger
+        | WornShortsword
         | Bow
         | Staff
         | MissileWeapon
         | Armor
         | Ring
         | Artifact
+        | BrokenSeal
         | Wand
         | HealthPotion
         | RevivingPotion
         | FuryPotion
         | Potion
         | Scroll
+        | ScrollOfRage
         | Gold
         | Food
         | MysteryMeat
+        | Berry
         | Key
         | Seed
+        | Dewdrop
         | Stone
         | Boomerang
         | ThrowableDagger
@@ -361,23 +422,28 @@ export interface Bag {
   items?: (
     | MeleeWeapon
     | Dagger
+    | WornShortsword
     | Bow
     | Staff
     | MissileWeapon
     | Armor
     | Ring
     | Artifact
+    | BrokenSeal
     | Wand
     | HealthPotion
     | RevivingPotion
     | FuryPotion
     | Potion
     | Scroll
+    | ScrollOfRage
     | Gold
     | Food
     | MysteryMeat
+    | Berry
     | Key
     | Seed
+    | Dewdrop
     | Stone
     | Boomerang
     | ThrowableDagger
@@ -412,6 +478,27 @@ export interface MeleeWeapon {
 }
 export interface Dagger {
   kind?: "dagger";
+  id: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  strength_requirement?: number;
+  damage?: number;
+  range?: number;
+  attack_cooldown?: number;
+  enchantment?: string | null;
+  projectile_type?: string | null;
+  surprise_damage_floor?: number;
+}
+export interface WornShortsword {
+  kind?: "worn_shortsword";
   id: string;
   name?: string;
   type?: string;
@@ -511,6 +598,11 @@ export interface Armor {
   kept_though_lost?: boolean;
   strength_requirement?: number;
   tier?: number;
+  enchantment?: ArmorEnchantment;
+}
+export interface ArmorEnchantment {
+  type?: string;
+  level?: number;
 }
 export interface Ring {
   kind?: "ring";
@@ -531,6 +623,23 @@ export interface Artifact {
   kind?: "artifact";
   id: string;
   name: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  strength_requirement?: number;
+  charge?: number;
+  charge_cap?: number;
+}
+export interface BrokenSeal {
+  kind?: "broken_seal";
+  id: string;
+  name?: string;
   type?: string;
   pos?: Position | null;
   quantity?: number;
@@ -637,6 +746,20 @@ export interface Scroll {
   unique?: boolean;
   kept_though_lost?: boolean;
 }
+export interface ScrollOfRage {
+  kind?: "scroll_of_rage";
+  id: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+}
 export interface Gold {
   kind?: "gold";
   id: string;
@@ -679,6 +802,20 @@ export interface MysteryMeat {
   unique?: boolean;
   kept_though_lost?: boolean;
 }
+export interface Berry {
+  kind?: "berry";
+  id: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+}
 export interface Key {
   kind?: "key";
   id: string;
@@ -698,6 +835,21 @@ export interface Seed {
   kind?: "seed";
   id: string;
   name: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  plant_type?: string;
+}
+export interface Dewdrop {
+  kind?: "dewdrop";
+  id: string;
+  name?: string;
   type?: string;
   pos?: Position | null;
   quantity?: number;
@@ -797,23 +949,28 @@ export interface VelvetPouch {
   items?: (
     | MeleeWeapon
     | Dagger
+    | WornShortsword
     | Bow
     | Staff
     | MissileWeapon
     | Armor
     | Ring
     | Artifact
+    | BrokenSeal
     | Wand
     | HealthPotion
     | RevivingPotion
     | FuryPotion
     | Potion
     | Scroll
+    | ScrollOfRage
     | Gold
     | Food
     | MysteryMeat
+    | Berry
     | Key
     | Seed
+    | Dewdrop
     | Stone
     | Boomerang
     | ThrowableDagger
@@ -842,23 +999,28 @@ export interface ScrollHolder {
   items?: (
     | MeleeWeapon
     | Dagger
+    | WornShortsword
     | Bow
     | Staff
     | MissileWeapon
     | Armor
     | Ring
     | Artifact
+    | BrokenSeal
     | Wand
     | HealthPotion
     | RevivingPotion
     | FuryPotion
     | Potion
     | Scroll
+    | ScrollOfRage
     | Gold
     | Food
     | MysteryMeat
+    | Berry
     | Key
     | Seed
+    | Dewdrop
     | Stone
     | Boomerang
     | ThrowableDagger
@@ -887,23 +1049,28 @@ export interface MagicalHolster {
   items?: (
     | MeleeWeapon
     | Dagger
+    | WornShortsword
     | Bow
     | Staff
     | MissileWeapon
     | Armor
     | Ring
     | Artifact
+    | BrokenSeal
     | Wand
     | HealthPotion
     | RevivingPotion
     | FuryPotion
     | Potion
     | Scroll
+    | ScrollOfRage
     | Gold
     | Food
     | MysteryMeat
+    | Berry
     | Key
     | Seed
+    | Dewdrop
     | Stone
     | Boomerang
     | ThrowableDagger
@@ -932,23 +1099,28 @@ export interface PotionBandolier {
   items?: (
     | MeleeWeapon
     | Dagger
+    | WornShortsword
     | Bow
     | Staff
     | MissileWeapon
     | Armor
     | Ring
     | Artifact
+    | BrokenSeal
     | Wand
     | HealthPotion
     | RevivingPotion
     | FuryPotion
     | Potion
     | Scroll
+    | ScrollOfRage
     | Gold
     | Food
     | MysteryMeat
+    | Berry
     | Key
     | Seed
+    | Dewdrop
     | Stone
     | Boomerang
     | ThrowableDagger
@@ -967,6 +1139,15 @@ export interface QuickSlotEntry {
   item_id?: string | null;
   is_placeholder?: boolean;
   placeholder_kind?: string | null;
+}
+export interface SubclassInfo {
+  subclass?: string | null;
+  talent_info?: TalentInfo;
+}
+export interface TalentInfo {
+  talents?: {
+    [k: string]: number;
+  };
 }
 export interface Mob {
   id: string;
@@ -1000,6 +1181,8 @@ export interface Mob {
   conserved_damage?: number;
   has_fury?: boolean;
   fury_turns_remaining?: number;
+  invisible?: number;
+  buffs?: Buff[];
   ai_state?: string;
   target_id?: string | null;
   difficulty?: string;

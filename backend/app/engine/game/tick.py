@@ -88,6 +88,40 @@ class TickMixin:
             self._apply_heal_tick(player)
             self._apply_room_heal_tick(player)
             self._apply_passive_regen(player)
+
+            # Warrior shield from Broken Seal (artifact slot)
+            seal = player.belongings.artifact
+            has_seal = seal is not None and getattr(seal, "kind", "") == "broken_seal"
+            if player.belongings.armor is not None and has_seal:
+                existing = player.get_shield("warrior_shield")
+                if existing:
+                    existing.amount = min(6, existing.amount + 1)
+                else:
+                    player.add_shield("warrior_shield", 2, priority=2, decay=600)
+
+            # Armor charge generation (2 per tick, cap 100)
+            if player.armor_charge < 100:
+                player.armor_charge = min(100, player.armor_charge + 2)
+
+            # Berserk decay
+            if player.berserk_active:
+                hp_ratio = player.hp / max(player.get_total_max_hp(), 1)
+                decay = 0.05 * (hp_ratio ** 2)
+                player.berserk_power = max(0.0, player.berserk_power - decay)
+                if player.berserk_power <= 0:
+                    player.berserk_active = False
+                    player.berserk_cooldown = 200
+
+            # Combo timer decay
+            if player.combo_count > 0:
+                player.combo_timer -= dt
+                if player.combo_timer <= 0:
+                    player.combo_count = 0
+                    player.combo_timer = 0.0
+
+            if player.berserk_cooldown > 0:
+                player.berserk_cooldown -= 1
+
             player.decay_shields()
             if player.has_fury:
                 player.fury_turns_remaining -= 1
@@ -249,9 +283,6 @@ class TickMixin:
         floor.mobs[mob.id] = mob
 
     def _sync_effects(self, player: Player):
-        # Derive the generic active_effects list from current state. Currently the
-        # only active effect is the regen/healing buff (icon 44 = BuffIndicator.HEALING).
-        # `duration` tracks the largest pool seen so the client can show progress.
         existing = {e.key: e for e in player.active_effects}
         effects = []
         if player.heal_left > 0:
@@ -260,6 +291,22 @@ class TickMixin:
             effects.append(Effect(
                 key="regen", name="Healing", icon=44,
                 remaining=player.heal_left, duration=duration,
+            ))
+        if player.berserk_active:
+            effects.append(Effect(
+                key="berserk", name="Berserk", icon=13,
+                remaining=player.berserk_power, duration=1.0,
+            ))
+        from app.engine.entities.buffs import has_buff
+        if has_buff(player.buffs, "endure"):
+            effects.append(Effect(
+                key="endure", name="Endure", icon=6,
+                remaining=1.0, duration=1.0,
+            ))
+        if player.has_fury:
+            effects.append(Effect(
+                key="fury", name="Fury", icon=5,
+                remaining=float(player.fury_turns_remaining), duration=10.0,
             ))
         player.active_effects = effects
 

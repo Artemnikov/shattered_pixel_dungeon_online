@@ -69,10 +69,29 @@ def action_drink(game, player, item, tx=None, ty=None) -> None:
         game.add_event("DRINK", {"player": player.id, "type": "fury"}, floor_id=player.floor_id, source_player_id=player.id)
 
 
+def action_affix(game, player, item, tx=None, ty=None) -> None:
+    armor = player.belongings.armor
+    if armor is None:
+        return
+    if item.cursed and item.cursed_known:
+        return
+    armor.level += max(1, item.level + 1)
+    armor.level_known = True
+    player.belongings.artifact = None
+    player.quickslot.clear_item(item.id)
+    player.seal_affixed = True
+    game.add_event("AFFIX_SEAL", {"player": player.id, "armor": armor.id}, floor_id=player.floor_id, source_player_id=player.id)
+
+
 def action_read(game, player, item, tx=None, ty=None) -> None:
-    # Scroll effects aren't implemented yet (flags+mechanics-only pass); reading
-    # at least identifies the scroll type for the party.
     game.identify_kind(item)
+    effect = getattr(item, "kind", "")
+    if effect == "scroll_of_rage":
+        player.has_fury = True
+        player.fury_turns_remaining = 15
+        removed = player.belongings.backpack.detach(item.id)
+        if removed is not None and player.belongings.get_item(item.id) is None:
+            player.quickslot.convert_to_placeholder(removed)
     game.add_event("READ", {"player": player.id, "item": item.id}, floor_id=player.floor_id)
 
 
@@ -144,6 +163,8 @@ ITEM_ACTION_DISPATCH = {
     Action.READ: action_read,
     Action.THROW: action_throw,
     Action.ZAP: action_zap,
+    Action.AFFIX: action_affix,
     Action.EAT: action_noop,
     Action.OPEN: action_noop,
+    Action.INFO: action_noop,
 }

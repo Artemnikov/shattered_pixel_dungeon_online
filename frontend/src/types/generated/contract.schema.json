@@ -63,12 +63,28 @@
         "tier": {
           "default": 1,
           "type": "integer"
+        },
+        "enchantment": {
+          "$ref": "#/$defs/ArmorEnchantment"
         }
       },
       "required": [
         "id",
         "name"
       ],
+      "type": "object"
+    },
+    "ArmorEnchantment": {
+      "properties": {
+        "type": {
+          "default": "none",
+          "type": "string"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        }
+      },
       "type": "object"
     },
     "Artifact": {
@@ -213,9 +229,12 @@
                 "armor": "#/$defs/Armor",
                 "artifact": "#/$defs/Artifact",
                 "bag": "#/$defs/Bag",
+                "berry": "#/$defs/Berry",
                 "boomerang": "#/$defs/Boomerang",
                 "bow": "#/$defs/Bow",
+                "broken_seal": "#/$defs/BrokenSeal",
                 "dagger": "#/$defs/Dagger",
+                "dewdrop": "#/$defs/Dewdrop",
                 "food": "#/$defs/Food",
                 "fury_potion": "#/$defs/FuryPotion",
                 "gold": "#/$defs/Gold",
@@ -231,13 +250,15 @@
                 "ring": "#/$defs/Ring",
                 "scroll": "#/$defs/Scroll",
                 "scroll_holder": "#/$defs/ScrollHolder",
+                "scroll_of_rage": "#/$defs/ScrollOfRage",
                 "seed": "#/$defs/Seed",
                 "staff": "#/$defs/Staff",
                 "stone": "#/$defs/Stone",
                 "throwable": "#/$defs/Throwable",
                 "throwable_dagger": "#/$defs/ThrowableDagger",
                 "velvet_pouch": "#/$defs/VelvetPouch",
-                "wand": "#/$defs/Wand"
+                "wand": "#/$defs/Wand",
+                "worn_shortsword": "#/$defs/WornShortsword"
               },
               "propertyName": "kind"
             },
@@ -247,6 +268,9 @@
               },
               {
                 "$ref": "#/$defs/Dagger"
+              },
+              {
+                "$ref": "#/$defs/WornShortsword"
               },
               {
                 "$ref": "#/$defs/Bow"
@@ -267,6 +291,9 @@
                 "$ref": "#/$defs/Artifact"
               },
               {
+                "$ref": "#/$defs/BrokenSeal"
+              },
+              {
                 "$ref": "#/$defs/Wand"
               },
               {
@@ -285,6 +312,9 @@
                 "$ref": "#/$defs/Scroll"
               },
               {
+                "$ref": "#/$defs/ScrollOfRage"
+              },
+              {
                 "$ref": "#/$defs/Gold"
               },
               {
@@ -294,10 +324,16 @@
                 "$ref": "#/$defs/MysteryMeat"
               },
               {
+                "$ref": "#/$defs/Berry"
+              },
+              {
                 "$ref": "#/$defs/Key"
               },
               {
                 "$ref": "#/$defs/Seed"
+              },
+              {
+                "$ref": "#/$defs/Dewdrop"
               },
               {
                 "$ref": "#/$defs/Stone"
@@ -350,9 +386,12 @@
                   "armor": "#/$defs/Armor",
                   "artifact": "#/$defs/Artifact",
                   "bag": "#/$defs/Bag",
+                  "berry": "#/$defs/Berry",
                   "boomerang": "#/$defs/Boomerang",
                   "bow": "#/$defs/Bow",
+                  "broken_seal": "#/$defs/BrokenSeal",
                   "dagger": "#/$defs/Dagger",
+                  "dewdrop": "#/$defs/Dewdrop",
                   "food": "#/$defs/Food",
                   "fury_potion": "#/$defs/FuryPotion",
                   "gold": "#/$defs/Gold",
@@ -368,13 +407,15 @@
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_rage": "#/$defs/ScrollOfRage",
                   "seed": "#/$defs/Seed",
                   "staff": "#/$defs/Staff",
                   "stone": "#/$defs/Stone",
                   "throwable": "#/$defs/Throwable",
                   "throwable_dagger": "#/$defs/ThrowableDagger",
                   "velvet_pouch": "#/$defs/VelvetPouch",
-                  "wand": "#/$defs/Wand"
+                  "wand": "#/$defs/Wand",
+                  "worn_shortsword": "#/$defs/WornShortsword"
                 },
                 "propertyName": "kind"
               },
@@ -384,6 +425,9 @@
                 },
                 {
                   "$ref": "#/$defs/Dagger"
+                },
+                {
+                  "$ref": "#/$defs/WornShortsword"
                 },
                 {
                   "$ref": "#/$defs/Bow"
@@ -404,6 +448,9 @@
                   "$ref": "#/$defs/Artifact"
                 },
                 {
+                  "$ref": "#/$defs/BrokenSeal"
+                },
+                {
                   "$ref": "#/$defs/Wand"
                 },
                 {
@@ -422,6 +469,9 @@
                   "$ref": "#/$defs/Scroll"
                 },
                 {
+                  "$ref": "#/$defs/ScrollOfRage"
+                },
+                {
                   "$ref": "#/$defs/Gold"
                 },
                 {
@@ -431,10 +481,16 @@
                   "$ref": "#/$defs/MysteryMeat"
                 },
                 {
+                  "$ref": "#/$defs/Berry"
+                },
+                {
                   "$ref": "#/$defs/Key"
                 },
                 {
                   "$ref": "#/$defs/Seed"
+                },
+                {
+                  "$ref": "#/$defs/Dewdrop"
                 },
                 {
                   "$ref": "#/$defs/Stone"
@@ -479,9 +535,12 @@
                   "armor": "#/$defs/Armor",
                   "artifact": "#/$defs/Artifact",
                   "bag": "#/$defs/Bag",
+                  "berry": "#/$defs/Berry",
                   "boomerang": "#/$defs/Boomerang",
                   "bow": "#/$defs/Bow",
+                  "broken_seal": "#/$defs/BrokenSeal",
                   "dagger": "#/$defs/Dagger",
+                  "dewdrop": "#/$defs/Dewdrop",
                   "food": "#/$defs/Food",
                   "fury_potion": "#/$defs/FuryPotion",
                   "gold": "#/$defs/Gold",
@@ -497,13 +556,15 @@
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_rage": "#/$defs/ScrollOfRage",
                   "seed": "#/$defs/Seed",
                   "staff": "#/$defs/Staff",
                   "stone": "#/$defs/Stone",
                   "throwable": "#/$defs/Throwable",
                   "throwable_dagger": "#/$defs/ThrowableDagger",
                   "velvet_pouch": "#/$defs/VelvetPouch",
-                  "wand": "#/$defs/Wand"
+                  "wand": "#/$defs/Wand",
+                  "worn_shortsword": "#/$defs/WornShortsword"
                 },
                 "propertyName": "kind"
               },
@@ -513,6 +574,9 @@
                 },
                 {
                   "$ref": "#/$defs/Dagger"
+                },
+                {
+                  "$ref": "#/$defs/WornShortsword"
                 },
                 {
                   "$ref": "#/$defs/Bow"
@@ -533,6 +597,9 @@
                   "$ref": "#/$defs/Artifact"
                 },
                 {
+                  "$ref": "#/$defs/BrokenSeal"
+                },
+                {
                   "$ref": "#/$defs/Wand"
                 },
                 {
@@ -551,6 +618,9 @@
                   "$ref": "#/$defs/Scroll"
                 },
                 {
+                  "$ref": "#/$defs/ScrollOfRage"
+                },
+                {
                   "$ref": "#/$defs/Gold"
                 },
                 {
@@ -560,10 +630,16 @@
                   "$ref": "#/$defs/MysteryMeat"
                 },
                 {
+                  "$ref": "#/$defs/Berry"
+                },
+                {
                   "$ref": "#/$defs/Key"
                 },
                 {
                   "$ref": "#/$defs/Seed"
+                },
+                {
+                  "$ref": "#/$defs/Dewdrop"
                 },
                 {
                   "$ref": "#/$defs/Stone"
@@ -608,9 +684,12 @@
                   "armor": "#/$defs/Armor",
                   "artifact": "#/$defs/Artifact",
                   "bag": "#/$defs/Bag",
+                  "berry": "#/$defs/Berry",
                   "boomerang": "#/$defs/Boomerang",
                   "bow": "#/$defs/Bow",
+                  "broken_seal": "#/$defs/BrokenSeal",
                   "dagger": "#/$defs/Dagger",
+                  "dewdrop": "#/$defs/Dewdrop",
                   "food": "#/$defs/Food",
                   "fury_potion": "#/$defs/FuryPotion",
                   "gold": "#/$defs/Gold",
@@ -626,13 +705,15 @@
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_rage": "#/$defs/ScrollOfRage",
                   "seed": "#/$defs/Seed",
                   "staff": "#/$defs/Staff",
                   "stone": "#/$defs/Stone",
                   "throwable": "#/$defs/Throwable",
                   "throwable_dagger": "#/$defs/ThrowableDagger",
                   "velvet_pouch": "#/$defs/VelvetPouch",
-                  "wand": "#/$defs/Wand"
+                  "wand": "#/$defs/Wand",
+                  "worn_shortsword": "#/$defs/WornShortsword"
                 },
                 "propertyName": "kind"
               },
@@ -642,6 +723,9 @@
                 },
                 {
                   "$ref": "#/$defs/Dagger"
+                },
+                {
+                  "$ref": "#/$defs/WornShortsword"
                 },
                 {
                   "$ref": "#/$defs/Bow"
@@ -662,6 +746,9 @@
                   "$ref": "#/$defs/Artifact"
                 },
                 {
+                  "$ref": "#/$defs/BrokenSeal"
+                },
+                {
                   "$ref": "#/$defs/Wand"
                 },
                 {
@@ -680,6 +767,9 @@
                   "$ref": "#/$defs/Scroll"
                 },
                 {
+                  "$ref": "#/$defs/ScrollOfRage"
+                },
+                {
                   "$ref": "#/$defs/Gold"
                 },
                 {
@@ -689,10 +779,16 @@
                   "$ref": "#/$defs/MysteryMeat"
                 },
                 {
+                  "$ref": "#/$defs/Berry"
+                },
+                {
                   "$ref": "#/$defs/Key"
                 },
                 {
                   "$ref": "#/$defs/Seed"
+                },
+                {
+                  "$ref": "#/$defs/Dewdrop"
                 },
                 {
                   "$ref": "#/$defs/Stone"
@@ -737,9 +833,12 @@
                   "armor": "#/$defs/Armor",
                   "artifact": "#/$defs/Artifact",
                   "bag": "#/$defs/Bag",
+                  "berry": "#/$defs/Berry",
                   "boomerang": "#/$defs/Boomerang",
                   "bow": "#/$defs/Bow",
+                  "broken_seal": "#/$defs/BrokenSeal",
                   "dagger": "#/$defs/Dagger",
+                  "dewdrop": "#/$defs/Dewdrop",
                   "food": "#/$defs/Food",
                   "fury_potion": "#/$defs/FuryPotion",
                   "gold": "#/$defs/Gold",
@@ -755,13 +854,15 @@
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_rage": "#/$defs/ScrollOfRage",
                   "seed": "#/$defs/Seed",
                   "staff": "#/$defs/Staff",
                   "stone": "#/$defs/Stone",
                   "throwable": "#/$defs/Throwable",
                   "throwable_dagger": "#/$defs/ThrowableDagger",
                   "velvet_pouch": "#/$defs/VelvetPouch",
-                  "wand": "#/$defs/Wand"
+                  "wand": "#/$defs/Wand",
+                  "worn_shortsword": "#/$defs/WornShortsword"
                 },
                 "propertyName": "kind"
               },
@@ -771,6 +872,9 @@
                 },
                 {
                   "$ref": "#/$defs/Dagger"
+                },
+                {
+                  "$ref": "#/$defs/WornShortsword"
                 },
                 {
                   "$ref": "#/$defs/Bow"
@@ -791,6 +895,9 @@
                   "$ref": "#/$defs/Artifact"
                 },
                 {
+                  "$ref": "#/$defs/BrokenSeal"
+                },
+                {
                   "$ref": "#/$defs/Wand"
                 },
                 {
@@ -809,6 +916,9 @@
                   "$ref": "#/$defs/Scroll"
                 },
                 {
+                  "$ref": "#/$defs/ScrollOfRage"
+                },
+                {
                   "$ref": "#/$defs/Gold"
                 },
                 {
@@ -818,10 +928,16 @@
                   "$ref": "#/$defs/MysteryMeat"
                 },
                 {
+                  "$ref": "#/$defs/Berry"
+                },
+                {
                   "$ref": "#/$defs/Key"
                 },
                 {
                   "$ref": "#/$defs/Seed"
+                },
+                {
+                  "$ref": "#/$defs/Dewdrop"
                 },
                 {
                   "$ref": "#/$defs/Stone"
@@ -866,9 +982,12 @@
                   "armor": "#/$defs/Armor",
                   "artifact": "#/$defs/Artifact",
                   "bag": "#/$defs/Bag",
+                  "berry": "#/$defs/Berry",
                   "boomerang": "#/$defs/Boomerang",
                   "bow": "#/$defs/Bow",
+                  "broken_seal": "#/$defs/BrokenSeal",
                   "dagger": "#/$defs/Dagger",
+                  "dewdrop": "#/$defs/Dewdrop",
                   "food": "#/$defs/Food",
                   "fury_potion": "#/$defs/FuryPotion",
                   "gold": "#/$defs/Gold",
@@ -884,13 +1003,15 @@
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_rage": "#/$defs/ScrollOfRage",
                   "seed": "#/$defs/Seed",
                   "staff": "#/$defs/Staff",
                   "stone": "#/$defs/Stone",
                   "throwable": "#/$defs/Throwable",
                   "throwable_dagger": "#/$defs/ThrowableDagger",
                   "velvet_pouch": "#/$defs/VelvetPouch",
-                  "wand": "#/$defs/Wand"
+                  "wand": "#/$defs/Wand",
+                  "worn_shortsword": "#/$defs/WornShortsword"
                 },
                 "propertyName": "kind"
               },
@@ -900,6 +1021,9 @@
                 },
                 {
                   "$ref": "#/$defs/Dagger"
+                },
+                {
+                  "$ref": "#/$defs/WornShortsword"
                 },
                 {
                   "$ref": "#/$defs/Bow"
@@ -920,6 +1044,9 @@
                   "$ref": "#/$defs/Artifact"
                 },
                 {
+                  "$ref": "#/$defs/BrokenSeal"
+                },
+                {
                   "$ref": "#/$defs/Wand"
                 },
                 {
@@ -938,6 +1065,9 @@
                   "$ref": "#/$defs/Scroll"
                 },
                 {
+                  "$ref": "#/$defs/ScrollOfRage"
+                },
+                {
                   "$ref": "#/$defs/Gold"
                 },
                 {
@@ -947,10 +1077,16 @@
                   "$ref": "#/$defs/MysteryMeat"
                 },
                 {
+                  "$ref": "#/$defs/Berry"
+                },
+                {
                   "$ref": "#/$defs/Key"
                 },
                 {
                   "$ref": "#/$defs/Seed"
+                },
+                {
+                  "$ref": "#/$defs/Dewdrop"
                 },
                 {
                   "$ref": "#/$defs/Stone"
@@ -988,6 +1124,69 @@
           "default": null
         }
       },
+      "type": "object"
+    },
+    "Berry": {
+      "properties": {
+        "kind": {
+          "const": "berry",
+          "default": "berry",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "default": "Berry",
+          "type": "string"
+        },
+        "type": {
+          "default": "food",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id"
+      ],
       "type": "object"
     },
     "Boomerang": {
@@ -1167,6 +1366,123 @@
       ],
       "type": "object"
     },
+    "BrokenSeal": {
+      "properties": {
+        "kind": {
+          "const": "broken_seal",
+          "default": "broken_seal",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "default": "Broken Seal",
+          "type": "string"
+        },
+        "type": {
+          "default": "artifact",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "strength_requirement": {
+          "default": 10,
+          "type": "integer"
+        },
+        "charge": {
+          "default": 0,
+          "type": "integer"
+        },
+        "charge_cap": {
+          "default": 100,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "Buff": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "remaining": {
+          "default": 0.0,
+          "type": "number"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "source_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "interval": {
+          "default": 1.0,
+          "type": "number"
+        },
+        "stack_mode": {
+          "default": "replace",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "type": "object"
+    },
     "Dagger": {
       "properties": {
         "kind": {
@@ -1265,6 +1581,69 @@
         "surprise_damage_floor": {
           "default": 0.75,
           "type": "number"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "Dewdrop": {
+      "properties": {
+        "kind": {
+          "const": "dewdrop",
+          "default": "dewdrop",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "default": "Dewdrop",
+          "type": "string"
+        },
+        "type": {
+          "default": "dewdrop",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "required": [
@@ -1713,9 +2092,12 @@
                 "armor": "#/$defs/Armor",
                 "artifact": "#/$defs/Artifact",
                 "bag": "#/$defs/Bag",
+                "berry": "#/$defs/Berry",
                 "boomerang": "#/$defs/Boomerang",
                 "bow": "#/$defs/Bow",
+                "broken_seal": "#/$defs/BrokenSeal",
                 "dagger": "#/$defs/Dagger",
+                "dewdrop": "#/$defs/Dewdrop",
                 "food": "#/$defs/Food",
                 "fury_potion": "#/$defs/FuryPotion",
                 "gold": "#/$defs/Gold",
@@ -1731,13 +2113,15 @@
                 "ring": "#/$defs/Ring",
                 "scroll": "#/$defs/Scroll",
                 "scroll_holder": "#/$defs/ScrollHolder",
+                "scroll_of_rage": "#/$defs/ScrollOfRage",
                 "seed": "#/$defs/Seed",
                 "staff": "#/$defs/Staff",
                 "stone": "#/$defs/Stone",
                 "throwable": "#/$defs/Throwable",
                 "throwable_dagger": "#/$defs/ThrowableDagger",
                 "velvet_pouch": "#/$defs/VelvetPouch",
-                "wand": "#/$defs/Wand"
+                "wand": "#/$defs/Wand",
+                "worn_shortsword": "#/$defs/WornShortsword"
               },
               "propertyName": "kind"
             },
@@ -1747,6 +2131,9 @@
               },
               {
                 "$ref": "#/$defs/Dagger"
+              },
+              {
+                "$ref": "#/$defs/WornShortsword"
               },
               {
                 "$ref": "#/$defs/Bow"
@@ -1767,6 +2154,9 @@
                 "$ref": "#/$defs/Artifact"
               },
               {
+                "$ref": "#/$defs/BrokenSeal"
+              },
+              {
                 "$ref": "#/$defs/Wand"
               },
               {
@@ -1785,6 +2175,9 @@
                 "$ref": "#/$defs/Scroll"
               },
               {
+                "$ref": "#/$defs/ScrollOfRage"
+              },
+              {
                 "$ref": "#/$defs/Gold"
               },
               {
@@ -1794,10 +2187,16 @@
                 "$ref": "#/$defs/MysteryMeat"
               },
               {
+                "$ref": "#/$defs/Berry"
+              },
+              {
                 "$ref": "#/$defs/Key"
               },
               {
                 "$ref": "#/$defs/Seed"
+              },
+              {
+                "$ref": "#/$defs/Dewdrop"
               },
               {
                 "$ref": "#/$defs/Stone"
@@ -2169,6 +2568,16 @@
           "default": 0,
           "type": "integer"
         },
+        "invisible": {
+          "default": 0,
+          "type": "integer"
+        },
+        "buffs": {
+          "items": {
+            "$ref": "#/$defs/Buff"
+          },
+          "type": "array"
+        },
         "ai_state": {
           "default": "idle",
           "type": "string"
@@ -2416,6 +2825,16 @@
           "default": 0,
           "type": "integer"
         },
+        "invisible": {
+          "default": 0,
+          "type": "integer"
+        },
+        "buffs": {
+          "items": {
+            "$ref": "#/$defs/Buff"
+          },
+          "type": "array"
+        },
         "class_type": {
           "default": "warrior",
           "type": "string"
@@ -2542,6 +2961,41 @@
           "default": false,
           "type": "boolean"
         },
+        "subclass_info": {
+          "$ref": "#/$defs/SubclassInfo"
+        },
+        "berserk_power": {
+          "default": 0.0,
+          "type": "number"
+        },
+        "berserk_active": {
+          "default": false,
+          "type": "boolean"
+        },
+        "berserk_cooldown": {
+          "default": 0,
+          "type": "integer"
+        },
+        "combo_count": {
+          "default": 0,
+          "type": "integer"
+        },
+        "combo_timer": {
+          "default": 0.0,
+          "type": "number"
+        },
+        "armor_charge": {
+          "default": 0,
+          "type": "integer"
+        },
+        "armor_ability": {
+          "default": "",
+          "type": "string"
+        },
+        "seal_affixed": {
+          "default": false,
+          "type": "boolean"
+        },
         "inventory": {
           "items": {
             "discriminator": {
@@ -2549,9 +3003,12 @@
                 "armor": "#/$defs/Armor",
                 "artifact": "#/$defs/Artifact",
                 "bag": "#/$defs/Bag",
+                "berry": "#/$defs/Berry",
                 "boomerang": "#/$defs/Boomerang",
                 "bow": "#/$defs/Bow",
+                "broken_seal": "#/$defs/BrokenSeal",
                 "dagger": "#/$defs/Dagger",
+                "dewdrop": "#/$defs/Dewdrop",
                 "food": "#/$defs/Food",
                 "fury_potion": "#/$defs/FuryPotion",
                 "gold": "#/$defs/Gold",
@@ -2567,13 +3024,15 @@
                 "ring": "#/$defs/Ring",
                 "scroll": "#/$defs/Scroll",
                 "scroll_holder": "#/$defs/ScrollHolder",
+                "scroll_of_rage": "#/$defs/ScrollOfRage",
                 "seed": "#/$defs/Seed",
                 "staff": "#/$defs/Staff",
                 "stone": "#/$defs/Stone",
                 "throwable": "#/$defs/Throwable",
                 "throwable_dagger": "#/$defs/ThrowableDagger",
                 "velvet_pouch": "#/$defs/VelvetPouch",
-                "wand": "#/$defs/Wand"
+                "wand": "#/$defs/Wand",
+                "worn_shortsword": "#/$defs/WornShortsword"
               },
               "propertyName": "kind"
             },
@@ -2583,6 +3042,9 @@
               },
               {
                 "$ref": "#/$defs/Dagger"
+              },
+              {
+                "$ref": "#/$defs/WornShortsword"
               },
               {
                 "$ref": "#/$defs/Bow"
@@ -2603,6 +3065,9 @@
                 "$ref": "#/$defs/Artifact"
               },
               {
+                "$ref": "#/$defs/BrokenSeal"
+              },
+              {
                 "$ref": "#/$defs/Wand"
               },
               {
@@ -2621,6 +3086,9 @@
                 "$ref": "#/$defs/Scroll"
               },
               {
+                "$ref": "#/$defs/ScrollOfRage"
+              },
+              {
                 "$ref": "#/$defs/Gold"
               },
               {
@@ -2630,10 +3098,16 @@
                 "$ref": "#/$defs/MysteryMeat"
               },
               {
+                "$ref": "#/$defs/Berry"
+              },
+              {
                 "$ref": "#/$defs/Key"
               },
               {
                 "$ref": "#/$defs/Seed"
+              },
+              {
+                "$ref": "#/$defs/Dewdrop"
               },
               {
                 "$ref": "#/$defs/Stone"
@@ -2675,9 +3149,12 @@
                   "armor": "#/$defs/Armor",
                   "artifact": "#/$defs/Artifact",
                   "bag": "#/$defs/Bag",
+                  "berry": "#/$defs/Berry",
                   "boomerang": "#/$defs/Boomerang",
                   "bow": "#/$defs/Bow",
+                  "broken_seal": "#/$defs/BrokenSeal",
                   "dagger": "#/$defs/Dagger",
+                  "dewdrop": "#/$defs/Dewdrop",
                   "food": "#/$defs/Food",
                   "fury_potion": "#/$defs/FuryPotion",
                   "gold": "#/$defs/Gold",
@@ -2693,13 +3170,15 @@
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_rage": "#/$defs/ScrollOfRage",
                   "seed": "#/$defs/Seed",
                   "staff": "#/$defs/Staff",
                   "stone": "#/$defs/Stone",
                   "throwable": "#/$defs/Throwable",
                   "throwable_dagger": "#/$defs/ThrowableDagger",
                   "velvet_pouch": "#/$defs/VelvetPouch",
-                  "wand": "#/$defs/Wand"
+                  "wand": "#/$defs/Wand",
+                  "worn_shortsword": "#/$defs/WornShortsword"
                 },
                 "propertyName": "kind"
               },
@@ -2709,6 +3188,9 @@
                 },
                 {
                   "$ref": "#/$defs/Dagger"
+                },
+                {
+                  "$ref": "#/$defs/WornShortsword"
                 },
                 {
                   "$ref": "#/$defs/Bow"
@@ -2729,6 +3211,9 @@
                   "$ref": "#/$defs/Artifact"
                 },
                 {
+                  "$ref": "#/$defs/BrokenSeal"
+                },
+                {
                   "$ref": "#/$defs/Wand"
                 },
                 {
@@ -2747,6 +3232,9 @@
                   "$ref": "#/$defs/Scroll"
                 },
                 {
+                  "$ref": "#/$defs/ScrollOfRage"
+                },
+                {
                   "$ref": "#/$defs/Gold"
                 },
                 {
@@ -2756,10 +3244,16 @@
                   "$ref": "#/$defs/MysteryMeat"
                 },
                 {
+                  "$ref": "#/$defs/Berry"
+                },
+                {
                   "$ref": "#/$defs/Key"
                 },
                 {
                   "$ref": "#/$defs/Seed"
+                },
+                {
+                  "$ref": "#/$defs/Dewdrop"
                 },
                 {
                   "$ref": "#/$defs/Stone"
@@ -2804,9 +3298,12 @@
                   "armor": "#/$defs/Armor",
                   "artifact": "#/$defs/Artifact",
                   "bag": "#/$defs/Bag",
+                  "berry": "#/$defs/Berry",
                   "boomerang": "#/$defs/Boomerang",
                   "bow": "#/$defs/Bow",
+                  "broken_seal": "#/$defs/BrokenSeal",
                   "dagger": "#/$defs/Dagger",
+                  "dewdrop": "#/$defs/Dewdrop",
                   "food": "#/$defs/Food",
                   "fury_potion": "#/$defs/FuryPotion",
                   "gold": "#/$defs/Gold",
@@ -2822,13 +3319,15 @@
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_rage": "#/$defs/ScrollOfRage",
                   "seed": "#/$defs/Seed",
                   "staff": "#/$defs/Staff",
                   "stone": "#/$defs/Stone",
                   "throwable": "#/$defs/Throwable",
                   "throwable_dagger": "#/$defs/ThrowableDagger",
                   "velvet_pouch": "#/$defs/VelvetPouch",
-                  "wand": "#/$defs/Wand"
+                  "wand": "#/$defs/Wand",
+                  "worn_shortsword": "#/$defs/WornShortsword"
                 },
                 "propertyName": "kind"
               },
@@ -2838,6 +3337,9 @@
                 },
                 {
                   "$ref": "#/$defs/Dagger"
+                },
+                {
+                  "$ref": "#/$defs/WornShortsword"
                 },
                 {
                   "$ref": "#/$defs/Bow"
@@ -2858,6 +3360,9 @@
                   "$ref": "#/$defs/Artifact"
                 },
                 {
+                  "$ref": "#/$defs/BrokenSeal"
+                },
+                {
                   "$ref": "#/$defs/Wand"
                 },
                 {
@@ -2876,6 +3381,9 @@
                   "$ref": "#/$defs/Scroll"
                 },
                 {
+                  "$ref": "#/$defs/ScrollOfRage"
+                },
+                {
                   "$ref": "#/$defs/Gold"
                 },
                 {
@@ -2885,10 +3393,16 @@
                   "$ref": "#/$defs/MysteryMeat"
                 },
                 {
+                  "$ref": "#/$defs/Berry"
+                },
+                {
                   "$ref": "#/$defs/Key"
                 },
                 {
                   "$ref": "#/$defs/Seed"
+                },
+                {
+                  "$ref": "#/$defs/Dewdrop"
                 },
                 {
                   "$ref": "#/$defs/Stone"
@@ -3088,9 +3602,12 @@
                 "armor": "#/$defs/Armor",
                 "artifact": "#/$defs/Artifact",
                 "bag": "#/$defs/Bag",
+                "berry": "#/$defs/Berry",
                 "boomerang": "#/$defs/Boomerang",
                 "bow": "#/$defs/Bow",
+                "broken_seal": "#/$defs/BrokenSeal",
                 "dagger": "#/$defs/Dagger",
+                "dewdrop": "#/$defs/Dewdrop",
                 "food": "#/$defs/Food",
                 "fury_potion": "#/$defs/FuryPotion",
                 "gold": "#/$defs/Gold",
@@ -3106,13 +3623,15 @@
                 "ring": "#/$defs/Ring",
                 "scroll": "#/$defs/Scroll",
                 "scroll_holder": "#/$defs/ScrollHolder",
+                "scroll_of_rage": "#/$defs/ScrollOfRage",
                 "seed": "#/$defs/Seed",
                 "staff": "#/$defs/Staff",
                 "stone": "#/$defs/Stone",
                 "throwable": "#/$defs/Throwable",
                 "throwable_dagger": "#/$defs/ThrowableDagger",
                 "velvet_pouch": "#/$defs/VelvetPouch",
-                "wand": "#/$defs/Wand"
+                "wand": "#/$defs/Wand",
+                "worn_shortsword": "#/$defs/WornShortsword"
               },
               "propertyName": "kind"
             },
@@ -3122,6 +3641,9 @@
               },
               {
                 "$ref": "#/$defs/Dagger"
+              },
+              {
+                "$ref": "#/$defs/WornShortsword"
               },
               {
                 "$ref": "#/$defs/Bow"
@@ -3142,6 +3664,9 @@
                 "$ref": "#/$defs/Artifact"
               },
               {
+                "$ref": "#/$defs/BrokenSeal"
+              },
+              {
                 "$ref": "#/$defs/Wand"
               },
               {
@@ -3160,6 +3685,9 @@
                 "$ref": "#/$defs/Scroll"
               },
               {
+                "$ref": "#/$defs/ScrollOfRage"
+              },
+              {
                 "$ref": "#/$defs/Gold"
               },
               {
@@ -3169,10 +3697,16 @@
                 "$ref": "#/$defs/MysteryMeat"
               },
               {
+                "$ref": "#/$defs/Berry"
+              },
+              {
                 "$ref": "#/$defs/Key"
               },
               {
                 "$ref": "#/$defs/Seed"
+              },
+              {
+                "$ref": "#/$defs/Dewdrop"
               },
               {
                 "$ref": "#/$defs/Stone"
@@ -3518,9 +4052,12 @@
                 "armor": "#/$defs/Armor",
                 "artifact": "#/$defs/Artifact",
                 "bag": "#/$defs/Bag",
+                "berry": "#/$defs/Berry",
                 "boomerang": "#/$defs/Boomerang",
                 "bow": "#/$defs/Bow",
+                "broken_seal": "#/$defs/BrokenSeal",
                 "dagger": "#/$defs/Dagger",
+                "dewdrop": "#/$defs/Dewdrop",
                 "food": "#/$defs/Food",
                 "fury_potion": "#/$defs/FuryPotion",
                 "gold": "#/$defs/Gold",
@@ -3536,13 +4073,15 @@
                 "ring": "#/$defs/Ring",
                 "scroll": "#/$defs/Scroll",
                 "scroll_holder": "#/$defs/ScrollHolder",
+                "scroll_of_rage": "#/$defs/ScrollOfRage",
                 "seed": "#/$defs/Seed",
                 "staff": "#/$defs/Staff",
                 "stone": "#/$defs/Stone",
                 "throwable": "#/$defs/Throwable",
                 "throwable_dagger": "#/$defs/ThrowableDagger",
                 "velvet_pouch": "#/$defs/VelvetPouch",
-                "wand": "#/$defs/Wand"
+                "wand": "#/$defs/Wand",
+                "worn_shortsword": "#/$defs/WornShortsword"
               },
               "propertyName": "kind"
             },
@@ -3552,6 +4091,9 @@
               },
               {
                 "$ref": "#/$defs/Dagger"
+              },
+              {
+                "$ref": "#/$defs/WornShortsword"
               },
               {
                 "$ref": "#/$defs/Bow"
@@ -3572,6 +4114,9 @@
                 "$ref": "#/$defs/Artifact"
               },
               {
+                "$ref": "#/$defs/BrokenSeal"
+              },
+              {
                 "$ref": "#/$defs/Wand"
               },
               {
@@ -3590,6 +4135,9 @@
                 "$ref": "#/$defs/Scroll"
               },
               {
+                "$ref": "#/$defs/ScrollOfRage"
+              },
+              {
                 "$ref": "#/$defs/Gold"
               },
               {
@@ -3599,10 +4147,16 @@
                 "$ref": "#/$defs/MysteryMeat"
               },
               {
+                "$ref": "#/$defs/Berry"
+              },
+              {
                 "$ref": "#/$defs/Key"
               },
               {
                 "$ref": "#/$defs/Seed"
+              },
+              {
+                "$ref": "#/$defs/Dewdrop"
               },
               {
                 "$ref": "#/$defs/Stone"
@@ -3634,6 +4188,69 @@
             ]
           },
           "type": "array"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "ScrollOfRage": {
+      "properties": {
+        "kind": {
+          "const": "scroll_of_rage",
+          "default": "scroll_of_rage",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "default": "Scroll of Rage",
+          "type": "string"
+        },
+        "type": {
+          "default": "scroll",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "required": [
@@ -3696,6 +4313,10 @@
         "kept_though_lost": {
           "default": false,
           "type": "boolean"
+        },
+        "plant_type": {
+          "default": "sungrass",
+          "type": "string"
         }
       },
       "required": [
@@ -3717,6 +4338,10 @@
         "decay": {
           "default": 1,
           "type": "integer"
+        },
+        "name": {
+          "default": "",
+          "type": "string"
         }
       },
       "type": "object"
@@ -3904,6 +4529,36 @@
       "required": [
         "id"
       ],
+      "type": "object"
+    },
+    "SubclassInfo": {
+      "properties": {
+        "subclass": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "talent_info": {
+          "$ref": "#/$defs/TalentInfo"
+        }
+      },
+      "type": "object"
+    },
+    "TalentInfo": {
+      "properties": {
+        "talents": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "type": "object"
+        }
+      },
       "type": "object"
     },
     "Throwable": {
@@ -4132,9 +4787,12 @@
                 "armor": "#/$defs/Armor",
                 "artifact": "#/$defs/Artifact",
                 "bag": "#/$defs/Bag",
+                "berry": "#/$defs/Berry",
                 "boomerang": "#/$defs/Boomerang",
                 "bow": "#/$defs/Bow",
+                "broken_seal": "#/$defs/BrokenSeal",
                 "dagger": "#/$defs/Dagger",
+                "dewdrop": "#/$defs/Dewdrop",
                 "food": "#/$defs/Food",
                 "fury_potion": "#/$defs/FuryPotion",
                 "gold": "#/$defs/Gold",
@@ -4150,13 +4808,15 @@
                 "ring": "#/$defs/Ring",
                 "scroll": "#/$defs/Scroll",
                 "scroll_holder": "#/$defs/ScrollHolder",
+                "scroll_of_rage": "#/$defs/ScrollOfRage",
                 "seed": "#/$defs/Seed",
                 "staff": "#/$defs/Staff",
                 "stone": "#/$defs/Stone",
                 "throwable": "#/$defs/Throwable",
                 "throwable_dagger": "#/$defs/ThrowableDagger",
                 "velvet_pouch": "#/$defs/VelvetPouch",
-                "wand": "#/$defs/Wand"
+                "wand": "#/$defs/Wand",
+                "worn_shortsword": "#/$defs/WornShortsword"
               },
               "propertyName": "kind"
             },
@@ -4166,6 +4826,9 @@
               },
               {
                 "$ref": "#/$defs/Dagger"
+              },
+              {
+                "$ref": "#/$defs/WornShortsword"
               },
               {
                 "$ref": "#/$defs/Bow"
@@ -4186,6 +4849,9 @@
                 "$ref": "#/$defs/Artifact"
               },
               {
+                "$ref": "#/$defs/BrokenSeal"
+              },
+              {
                 "$ref": "#/$defs/Wand"
               },
               {
@@ -4204,6 +4870,9 @@
                 "$ref": "#/$defs/Scroll"
               },
               {
+                "$ref": "#/$defs/ScrollOfRage"
+              },
+              {
                 "$ref": "#/$defs/Gold"
               },
               {
@@ -4213,10 +4882,16 @@
                 "$ref": "#/$defs/MysteryMeat"
               },
               {
+                "$ref": "#/$defs/Berry"
+              },
+              {
                 "$ref": "#/$defs/Key"
               },
               {
                 "$ref": "#/$defs/Seed"
+              },
+              {
+                "$ref": "#/$defs/Dewdrop"
               },
               {
                 "$ref": "#/$defs/Stone"
@@ -4335,6 +5010,111 @@
       "required": [
         "id",
         "name"
+      ],
+      "type": "object"
+    },
+    "WornShortsword": {
+      "properties": {
+        "kind": {
+          "const": "worn_shortsword",
+          "default": "worn_shortsword",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "default": "Worn Shortsword",
+          "type": "string"
+        },
+        "type": {
+          "default": "weapon",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "strength_requirement": {
+          "default": 10,
+          "type": "integer"
+        },
+        "damage": {
+          "default": 2,
+          "type": "integer"
+        },
+        "range": {
+          "default": 1,
+          "type": "integer"
+        },
+        "attack_cooldown": {
+          "default": 1.2,
+          "type": "number"
+        },
+        "enchantment": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "projectile_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "surprise_damage_floor": {
+          "default": 0.0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "id"
       ],
       "type": "object"
     }

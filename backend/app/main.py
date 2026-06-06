@@ -290,12 +290,19 @@ async def game_websocket(websocket: WebSocket, game_id: str, class_type: str = "
                 game.search(player_id)
 
             elif isinstance(message, msg.Wait):
-                # WAIT no longer triggers a reveal. The reveal/search action is now
-                # exclusively the examine-mode flow on the magnifying-glass button, so
-                # tapping your own character (which sends WAIT) must not search. There
-                # is no turn-based wait mechanic in this real-time engine yet, so this
-                # is intentionally a no-op.
                 pass
+
+            elif isinstance(message, msg.ChooseSubclass):
+                game.choose_subclass(player_id, message.subclass)
+
+            elif isinstance(message, msg.UpgradeTalent):
+                game.upgrade_talent(player_id, message.talent)
+
+            elif isinstance(message, msg.UseArmorAbility):
+                game.use_armor_ability(player_id, message.ability, message.target_x, message.target_y)
+
+            elif isinstance(message, msg.TriggerBerserk):
+                game.trigger_berserk(player_id)
 
     except WebSocketDisconnect:
         # Keep the hero alive for the reconnect grace window (see reaper); the

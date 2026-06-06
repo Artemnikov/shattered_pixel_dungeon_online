@@ -142,6 +142,16 @@ class MovementCombatMixin:
                         if target_entity.hp / target_entity.get_total_max_hp() <= 0.3:
                             self.add_event("PLAY_SOUND", {"sound": "HEALTH_WARN"}, player_id=target_entity.id)
 
+                # Warrior subclass: combo / berserk events after successful damage
+                if isinstance(entity, Player) and dmg > 0:
+                    if entity.subclass_info.subclass == "gladiator":
+                        self.add_event("COMBO_UPDATE", {"player": entity.id, "count": entity.combo_count}, floor_id=floor_id, source_player_id=entity.id)
+                        if entity.combo_count in (2, 4, 6, 8, 10):
+                            moves = {2: "clobber", 4: "slam", 6: "parry", 8: "crush", 10: "fury"}
+                            self.add_event("COMBO_MOVE_UNLOCKED", {"player": entity.id, "move": moves[entity.combo_count]}, floor_id=floor_id, source_player_id=entity.id)
+                    if entity.subclass_info.subclass == "berserker":
+                        self.add_event("RAGE_CHANGED", {"player": entity.id, "power": entity.berserk_power}, floor_id=floor_id, source_player_id=entity.id)
+
                 if not target_entity.is_alive:
                     self.add_event("DEATH", {"target": target_entity.id}, floor_id=floor_id)
                     if isinstance(entity, Player) and isinstance(target_entity, MobEntity):

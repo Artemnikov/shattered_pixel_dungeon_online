@@ -27,7 +27,7 @@ def _roll_damage(attacker: "Entity", result: dict) -> int:
 
 
 def _apply_post_dr_multipliers(raw_damage: int, attacker: "Entity", defender: "Entity", result: dict) -> int:
-    """Apply post-DR multipliers: crit bonus, Fury, Vulnerable."""
+    """Apply post-DR multipliers: crit bonus, Fury, Vulnerable, Berserk."""
     effective = raw_damage
 
     if result.get("surprise") and attacker.crit_damage_bonus > 0:
@@ -35,6 +35,11 @@ def _apply_post_dr_multipliers(raw_damage: int, attacker: "Entity", defender: "E
 
     if attacker.has_fury:
         effective = int(effective * 1.5)
+
+    berserk_power = getattr(attacker, "berserk_power", 0.0)
+    berserk_active = getattr(attacker, "berserk_active", False)
+    if berserk_active and berserk_power > 0:
+        effective = int(effective * (1.0 + berserk_power * 0.5))
 
     vuln = getattr(defender, "vulnerable", 0)
     if vuln > 0:

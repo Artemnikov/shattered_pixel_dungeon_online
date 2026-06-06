@@ -101,6 +101,27 @@ class Wait(_ClientMessageBase):
     type: Literal["WAIT"]
 
 
+class ChooseSubclass(_ClientMessageBase):
+    type: Literal["CHOOSE_SUBCLASS"]
+    subclass: str
+
+
+class UpgradeTalent(_ClientMessageBase):
+    type: Literal["UPGRADE_TALENT"]
+    talent: str
+
+
+class UseArmorAbility(_ClientMessageBase):
+    type: Literal["USE_ARMOR_ABILITY"]
+    ability: str
+    target_x: Optional[int] = None
+    target_y: Optional[int] = None
+
+
+class TriggerBerserk(_ClientMessageBase):
+    type: Literal["TRIGGER_BERSERK"]
+
+
 ClientMessage = Annotated[
     Union[
         Ping,
@@ -118,6 +139,10 @@ ClientMessage = Annotated[
         ChangeDifficulty,
         Search,
         Wait,
+        ChooseSubclass,
+        UpgradeTalent,
+        UseArmorAbility,
+        TriggerBerserk,
     ],
     Field(discriminator="type"),
 ]

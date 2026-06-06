@@ -34,6 +34,7 @@ from app.engine.game.constants import (
     SEWERS_MAX_FLOOR,
 )
 from app.engine.game.floor_state import FloorState
+from app.engine.game.armor_abilities import ArmorAbilitiesMixin
 from app.engine.game.events import EventsMixin
 from app.engine.game.floors import FloorAccessMixin
 from app.engine.game.generation import GenerationMixin
@@ -41,6 +42,7 @@ from app.engine.game.items import ItemsMixin
 from app.engine.game.movement import MovementCombatMixin
 from app.engine.game.players import PlayersMixin
 from app.engine.game.serialization import SerializationMixin
+from app.engine.game.talents import TalentsMixin
 from app.engine.game.tick import TickMixin
 from app.engine.game.vision import VisionMixin
 from app.engine.game.world import WorldInteractionMixin
@@ -55,6 +57,8 @@ class GameInstance(
     MovementCombatMixin,
     ItemsMixin,
     TickMixin,
+    ArmorAbilitiesMixin,
+    TalentsMixin,
     VisionMixin,
     SerializationMixin,
 ):

@@ -28,6 +28,7 @@ class Shield(BaseModel):
     priority: int = 0
     amount: int = 0
     decay: int = 1  # min(1, amount/decay) removed per tick
+    name: str = ""  # logical id for identifying a specific shield
 
 
 class Entity(BaseModel):
@@ -159,6 +160,18 @@ class Entity(BaseModel):
         self.shields = active
         return remaining
 
+    def get_shield(self, name: str) -> Optional[Shield]:
+        return next((s for s in self.shields if s.name == name), None)
+
+    def add_shield(self, name: str, amount: int, priority: int = 0, decay: int = 1) -> Shield:
+        existing = self.get_shield(name)
+        if existing:
+            existing.amount += amount
+            return existing
+        s = Shield(name=name, amount=amount, priority=priority, decay=decay)
+        self.shields.append(s)
+        return s
+
     def decay_shields(self):
         active = []
         for s in self.shields:
@@ -226,6 +239,8 @@ class Action:
     ZAP = "ZAP"
     EAT = "EAT"
     OPEN = "OPEN"
+    AFFIX = "AFFIX"
+    INFO = "INFO"
 
 # Actions that require the player to pick a target cell before resolving.
 TARGETED_ACTIONS = {Action.THROW, Action.ZAP}
@@ -240,7 +255,7 @@ class ItemBase(BaseModel):
     # concrete leaf). `type` is the legacy front-end category string kept for
     # backward-compat until the SPD-style UI lands.
     kind: Literal["item"] = "item"
-    id: str
+    id: str = ""
     name: str
     type: str = "item"
     pos: Optional[Position] = None
@@ -356,6 +371,15 @@ class Dagger(MeleeWeapon):
     strength_requirement: int = 9
     surprise_damage_floor: float = 0.75
     DESC: ClassVar[str] = "A quick dagger. Surprise attacks deal more consistent damage."
+
+
+class WornShortsword(MeleeWeapon):
+    kind: Literal["worn_shortsword"] = "worn_shortsword"
+    name: str = "Worn Shortsword"
+    damage: int = 2
+    attack_cooldown: float = 1.2
+    strength_requirement: int = 10
+    DESC: ClassVar[str] = "A basic shortsword, somewhat the worse for wear. All warriors start with one."
 
 
 class Bow(KindOfWeapon):
@@ -523,6 +547,33 @@ class Key(ItemBase):
     category: ClassVar[str] = ItemCategory.KEY
     key_id: str = ""
     DESC: ClassVar[str] = "A key that unlocks a matching door or chest somewhere on this floor."
+
+
+class BrokenSeal(Artifact):
+    kind: Literal["broken_seal"] = "broken_seal"
+    name: str = "Broken Seal"
+    charge: int = 0
+    charge_cap: int = 100
+    DESC: ClassVar[str] = "A broken seal from the warrior's armor. It can be affixed to armor to provide shielding as you fight."
+
+    def actions(self, player: Optional["Player"] = None) -> List[str]:
+        base = super().actions(player)
+        equipped = bool(player and player.belongings.is_equipped(self.id))
+        if not equipped:
+            return base
+        has_armor = bool(player and player.belongings.armor is not None)
+        if has_armor:
+            return [Action.AFFIX, Action.UNEQUIP] + base
+        return [Action.UNEQUIP] + base
+
+
+class ScrollOfRage(Scroll):
+    kind: Literal["scroll_of_rage"] = "scroll_of_rage"
+    name: str = "Scroll of Rage"
+    DESC: ClassVar[str] = "A scroll that fills you with fury. Read it in the heat of battle to deliver devastating attacks."
+
+    def actions(self, player: Optional["Player"] = None) -> List[str]:
+        return [Action.READ, Action.THROW, Action.DROP]
 
 
 class Throwable(ItemBase):
@@ -747,9 +798,9 @@ class PotionBandolier(Bag):
 # for clean outbound dumps + a stable client contract.
 AnyItem = Annotated[
     Union[
-        MeleeWeapon, Dagger, Bow, Staff, MissileWeapon,
-        Armor, Ring, Artifact, Wand,
-        HealthPotion, RevivingPotion, FuryPotion, Potion, Scroll, Gold, Food, MysteryMeat, Berry, Key,
+        MeleeWeapon, Dagger, WornShortsword, Bow, Staff, MissileWeapon,
+        Armor, Ring, Artifact, BrokenSeal, Wand,
+        HealthPotion, RevivingPotion, FuryPotion, Potion, Scroll, ScrollOfRage, Gold, Food, MysteryMeat, Berry, Key,
         Seed, Dewdrop, Stone, Boomerang, ThrowableDagger, Throwable,
         VelvetPouch, ScrollHolder, MagicalHolster, PotionBandolier, Bag,
     ],
@@ -934,14 +985,30 @@ class Player(Entity):
     # Throttles the passive +10/s healing while standing in a floor's entrance room.
     room_heal_cooldown: int = 0
     path_queue: List[Tuple[int, int]] = []
-    # Held keyboard direction; the update tick steps the player at AUTO_MOVE_INTERVAL
-    # while this is set, mirroring tap-to-path pacing. None when no key is held.
     move_intent: Optional[Tuple[int, int]] = None
     last_auto_move_time: float = 0.0
     is_admin: bool = False
 
     # Subclass and talents
     subclass_info: SubclassInfo = Field(default_factory=SubclassInfo)
+
+    # Berserker rage (0.0 – 1.0 + endless_rage bonus)
+    berserk_power: float = 0.0
+    berserk_active: bool = False
+    berserk_cooldown: int = 0
+
+    # Gladiator combo
+    combo_count: int = 0
+    combo_timer: float = 0.0
+
+    # Armor ability charge (0–100, shared resource for Leap/Shockwave/Endure)
+    armor_charge: int = 0
+
+    # Armor ability selected by player (Leap/Shockwave/Endure), set via talent
+    armor_ability: str = ""
+
+    # Broken Seal was affixed to armor (permanently consumed)
+    seal_affixed: bool = False
 
     @property
     def talent_info(self):
@@ -1069,6 +1136,23 @@ class Player(Entity):
                 self.belongings.backpack.collect(cur)
                 return True
         return False
+
+    def attack_proc(self, target) -> None:
+        if self.subclass_info.subclass == "berserker":
+            from app.engine.entities.buffs import add_buff
+            endless_level = self.subclass_info.talent_info.level("endless_rage")
+            max_power = 1.0 + 0.1667 * endless_level
+            power_gain = 0.05
+            self.berserk_power = min(max_power, self.berserk_power + power_gain)
+        if self.subclass_info.subclass == "gladiator":
+            self.combo_count += 1
+            self.combo_timer = 5.0
+
+    def defense_proc(self, raw_damage: int, attacker, floor_mobs: dict, tile_x: int, tile_y: int) -> int:
+        from app.engine.entities.buffs import has_buff
+        if has_buff(self.buffs, "endure"):
+            raw_damage = max(0, raw_damage - int(raw_damage * 0.3))
+        return raw_damage
 
     MAX_LEVEL: ClassVar[int] = 30
 
