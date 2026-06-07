@@ -262,7 +262,24 @@ export interface UnlockEvent {
 
 export interface LevelUpEvent {
   type: 'LEVEL_UP';
-  data: { player: string };
+  data: {
+    player: string;
+    level: number;
+    tier_unlocked?: number | null;
+    talent_points?: Record<string, number>;
+    can_choose_subclass: boolean;
+    can_choose_armor_ability: boolean;
+  };
+}
+
+export interface SubclassChoiceAvailableEvent {
+  type: 'SUBCLASS_CHOICE_AVAILABLE';
+  data: { player: string; options: string[] };
+}
+
+export interface ArmorAbilityChoiceAvailableEvent {
+  type: 'ARMOR_ABILITY_CHOICE_AVAILABLE';
+  data: { player: string; options: string[] };
 }
 
 export interface SubclassChosenEvent {
@@ -356,7 +373,9 @@ export type GameEvent =
   | StealthEvent
   | DeathMarkEvent
   | ShadowCloneEvent
-  | ShieldEvent;
+  | ShieldEvent
+  | SubclassChoiceAvailableEvent
+  | ArmorAbilityChoiceAvailableEvent;
 
 export type GameEventType = GameEvent['type'];
 

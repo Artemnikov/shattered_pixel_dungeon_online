@@ -73,6 +73,10 @@ def _roll_damage(attacker: "Entity", result: dict, prep: Optional[dict] = None) 
         if sp is not None and sp.level("sucker_punch") > 0:
             dmg_roll += random.randint(sp.level("sucker_punch"), 2)
 
+    # Talent flat damage bonus (rampage stacks, etc.)
+    talent_bonus = getattr(attacker, "get_talent_damage_bonus", lambda: 0)()
+    dmg_roll += talent_bonus
+
     # Kinetic conserved damage
     if attacker.conserved_damage > 0:
         dmg_roll += attacker.conserved_damage
@@ -81,7 +85,50 @@ def _roll_damage(attacker: "Entity", result: dict, prep: Optional[dict] = None) 
     return dmg_roll
 
 
-def _apply_post_dr_multipliers(raw_damage: int, attacker: "Entity", defender: "Entity", result: dict) -> int:
+def _apply_talent_multipliers(effective: int, attacker: "Entity", defender: "Entity", result: dict, is_ranged: bool = False) -> int:
+    """Apply talent-based post-DR damage modifiers."""
+    ti = getattr(attacker, "talent_info", None)
+    if ti is None:
+        return effective
+
+    # Risk Reward (warrior T4 berserker): +dmg based on missing HP
+    rr = ti.level("risk_reward")
+    if rr > 0:
+        hp_ratio = attacker.hp / max(attacker.get_total_max_hp(), 1)
+        mult = 1.0 + rr * 0.1 * (1 - hp_ratio)
+        effective = int(effective * mult)
+
+    # Deadly Followup (warrior T4 gladiator): +dmg based on combo count
+    df = ti.level("deadly_followup")
+    if df > 0:
+        combo = getattr(attacker, "combo_count", 0)
+        if combo > 0:
+            mult = 1.0 + df * 0.04 * combo
+            effective = int(effective * mult)
+
+    # Lethal Hit (warrior T2 gladiator): bonus at high combo
+    lh = ti.level("lethal_hit")
+    if lh > 0:
+        combo = getattr(attacker, "combo_count", 0)
+        if combo >= 4:
+            effective = int(effective * (1.0 + lh * 0.1))
+
+    # Followup Strike (huntress T1): +dmg on melee after ranged hit
+    if not is_ranged:
+        fs = ti.level("followup_strike")
+        if fs > 0 and getattr(attacker, "_last_action", None) == "ranged":
+            effective = int(effective * (1.0 + fs * 0.17))
+
+    # Point Blank (huntress T3): extra ranged damage at close range
+    if is_ranged:
+        pb = ti.level("point_blank")
+        if pb > 0:
+            effective = int(effective * (1.0 + pb * 0.25))
+
+    return effective
+
+
+def _apply_post_dr_multipliers(raw_damage: int, attacker: "Entity", defender: "Entity", result: dict, is_ranged: bool = False) -> int:
     """Apply post-DR multipliers: crit bonus, Fury, Vulnerable, Berserk."""
     effective = raw_damage
 
@@ -95,6 +142,8 @@ def _apply_post_dr_multipliers(raw_damage: int, attacker: "Entity", defender: "E
     berserk_active = getattr(attacker, "berserk_active", False)
     if berserk_active and berserk_power > 0:
         effective = int(effective * (1.0 + berserk_power * 0.5))
+
+    effective = _apply_talent_multipliers(effective, attacker, defender, result, is_ranged)
 
     vuln = getattr(defender, "vulnerable", 0)
     if vuln > 0:
@@ -198,8 +247,8 @@ def resolve_melee_attack(
         if raw_damage <= 0:
             return result
 
-    # Post-DR multipliers
-    effective_damage = _apply_post_dr_multipliers(raw_damage, attacker, defender, result)
+    # Post-DR multipliers (melee = not ranged)
+    effective_damage = _apply_post_dr_multipliers(raw_damage, attacker, defender, result, is_ranged=False)
     if prep is not None:
         effective_damage = int(effective_damage * prep["dmg_mult"])
 
@@ -273,8 +322,8 @@ def resolve_ranged_attack(
         if raw_damage <= 0:
             return result
 
-    # Post-DR multipliers
-    effective_damage = _apply_post_dr_multipliers(raw_damage, attacker, defender, result)
+    # Post-DR multipliers (ranged)
+    effective_damage = _apply_post_dr_multipliers(raw_damage, attacker, defender, result, is_ranged=True)
 
     hp_before = defender.hp
     actual_damage = defender.take_damage(max(0, effective_damage))

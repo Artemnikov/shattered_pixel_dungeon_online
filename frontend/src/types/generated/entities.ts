@@ -1178,6 +1178,7 @@ export interface QuickSlotEntry {
 export interface SubclassInfo {
   subclass?: string | null;
   talent_info?: TalentInfo;
+  talent_points?: Record<string, number>;
 }
 export interface TalentInfo {
   talents?: {

@@ -75,7 +75,7 @@ class AudioManager {
         }
     }
 
-    play(soundName) {
+    play(soundName, rate = 1.0) {
         if (!this.enabled) return;
         this.masterGain.gain.value = effectiveSfxVolume();
         if (this.audioCtx.state === 'suspended') {
@@ -83,7 +83,7 @@ class AudioManager {
         }
 
         if (this.loadedSounds[soundName]) {
-            this.playSoundBuffer(this.loadedSounds[soundName]);
+            this.playSoundBuffer(this.loadedSounds[soundName], rate);
             return;
         }
 

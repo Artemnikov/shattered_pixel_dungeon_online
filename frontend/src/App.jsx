@@ -8,6 +8,7 @@ import cursorControllerUrl from './assets/cursors/cursor_controller.png';
 
 import { TILE_SIZE } from './constants';
 import useAudioUnlock from './audio/useAudioUnlock';
+import AudioManager from './audio/AudioManager';
 import useMusicByDepth from './audio/useMusicByDepth';
 import useAssetImages from './rendering/useAssetImages';
 import useGameRenderer from './rendering/useGameRenderer';
@@ -17,6 +18,7 @@ import useCanvasControls from './input/useCanvasControls';
 import { resolveTapAction } from './input/resolveTap';
 import { describeCell } from './input/describeCell';
 import useDebugApi from './dev/useDebugApi';
+import { getApiBaseUrl } from './config/urls';
 
 import StatusPane from './ui/StatusPane';
 import Toolbar from './ui/Toolbar';
@@ -29,6 +31,14 @@ import RightClickMenu from './ui/RightClickMenu';
 import LoadingOverlay from './ui/LoadingOverlay';
 import GameOverScreen from './ui/GameOverScreen';
 import GameMenu from './ui/GameMenu';
+import TalentPane from './ui/TalentPane';
+import SubclassChoice from './ui/SubclassChoice';
+import ArmorAbilityChoice from './ui/ArmorAbilityChoice';
+import AbilityButton from './ui/AbilityButton';
+import BerserkButton from './ui/BerserkButton';
+import PrepStrikeButton from './ui/PrepStrikeButton';
+import ComboDisplay from './ui/ComboDisplay';
+import LevelUpBanner from './ui/LevelUpBanner';
 
 // Live viewport position of an inspect-popup anchor (a world tile, or a mob we follow
 // by its renderPos). Returns { left, top, below } or null when the popup should hide
@@ -110,6 +120,17 @@ function App() {
   const [radialOpen, setRadialOpen] = useState(false);
   const [swappedQuickslots, setSwappedQuickslots] = useState(false);
   const [gameMenuOpen, setGameMenuOpen] = useState(false);
+  const [showTalentPane, setShowTalentPane] = useState(false);
+  const [talentDefs, setTalentDefs] = useState(null);
+  const [talentDefsLoading, setTalentDefsLoading] = useState(false);
+  const [talentDefsError, setTalentDefsError] = useState(null);
+  const [talentPoints, setTalentPoints] = useState({});
+  const [showSubclassChoice, setShowSubclassChoice] = useState(false);
+  const [subclassOptions, setSubclassOptions] = useState([]);
+  const [showArmorAbilityChoice, setShowArmorAbilityChoice] = useState(false);
+  const [armorAbilityOptions, setArmorAbilityOptions] = useState([]);
+  const [showLevelUpBanner, setShowLevelUpBanner] = useState(false);
+  const [levelUpData, setLevelUpData] = useState({});
 
   // --- shared refs ---
   const canvasRef = useRef(null);
@@ -121,6 +142,8 @@ function App() {
   // Latest targeting-tap resolver, shared with the touch handler (canvas has
   // touch-action:none, so taps don't fire onClick — see resolveTargetingTap).
   const onTargetTapRef = useRef(null);
+  const onOpenTalentsRef = useRef(() => setShowTalentPane(v => !v));
+  useEffect(() => { onOpenTalentsRef.current = () => setShowTalentPane(v => !v); }, []);
   // Examine-mode state + tap resolver, shared with the touch handler (same pattern
   // as targeting, since the canvas has touch-action:none so taps don't fire onClick).
   const examineModeRef = useRef(false);
@@ -190,6 +213,32 @@ function App() {
     return () => document.removeEventListener('fullscreenchange', handler);
   }, []);
 
+  // Sync talentPoints from myStats (updated every STATE_UPDATE)
+  useEffect(() => {
+    if (myStats.talentPoints) setTalentPoints(myStats.talentPoints);
+  }, [myStats.talentPoints]);
+
+  // Fetch talent definitions when class or game state changes
+  useEffect(() => {
+    if (gameState !== 'PLAYING') return;
+    const classType = myStats.classType || selectedClass;
+    setTalentDefsLoading(true);
+    setTalentDefsError(null);
+    fetch(`${getApiBaseUrl()}/api/talents/${classType}`)
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then(data => {
+        setTalentDefs(data);
+        setTalentDefsLoading(false);
+      })
+      .catch(e => {
+        setTalentDefsError(e.message);
+        setTalentDefsLoading(false);
+      });
+  }, [gameState, selectedClass, myStats.classType]);
+
   useDebugApi({
     gridRef, entitiesRef, visionRef, openDoorsRef,
     myPlayerIdRef, panOffsetRef, cameraLerpRef, zoomRef, depthRef,
@@ -211,6 +260,32 @@ function App() {
     setGrid, setDepth, setMyPlayerId, setInventory,
     setEquippedItems, setMyStats, setDifficulty,
     setGold, setEnergy, setBelongings, setQuickslot,
+    onLevelUp: (data) => {
+      if (data.talent_points) setTalentPoints(data.talent_points);
+      setLevelUpData(data);
+      setShowLevelUpBanner(true);
+    },
+    onSubclassChoiceAvailable: (data) => {
+      setSubclassOptions(data.options);
+      setShowSubclassChoice(true);
+    },
+    onArmorAbilityChoiceAvailable: (data) => {
+      setArmorAbilityOptions(data.options);
+      setShowArmorAbilityChoice(true);
+    },
+    onTalentUpgraded: ({ talent }) => {
+      if (!talentDefs) return;
+      for (const [tierKey, tierData] of Object.entries(talentDefs.tiers)) {
+        if (tierData.talents.some(tt => tt.id === talent)) {
+          setTalentPoints(prev => ({
+            ...prev,
+            [tierKey]: Math.max(0, (prev[tierKey] || 0) - 1),
+          }));
+          AudioManager.play('LEVELUP', 1.2);
+          return;
+        }
+      }
+    },
   });
 
   const { hasDraggedRef } = useCanvasControls({
@@ -256,6 +331,18 @@ function App() {
   const resolveTargetingTap = (tileX, tileY) => {
     const tm = targetingModeRef.current;
     console.log('resolveTargetingTap', { tm, tileX, tileY });
+    // Ability targeting
+    if (tm && typeof tm === 'object' && tm.ability) {
+      send({ type: 'USE_ARMOR_ABILITY', ability: tm.ability, target_x: tileX, target_y: tileY });
+      setTargetingMode(false);
+      return;
+    }
+    // Preparation strike targeting
+    if (tm && typeof tm === 'object' && tm.prepStrike) {
+      send({ type: 'PREPARATION_STRIKE', target_x: tileX, target_y: tileY });
+      setTargetingMode(false);
+      return;
+    }
     // New SPD-style path: an item action awaiting a target cell.
     if (tm && typeof tm === 'object' && tm.action) {
       console.log('Sending EXECUTE_ITEM_ACTION', { item_id: tm.itemId, action: tm.action, target_x: tileX, target_y: tileY });
@@ -282,6 +369,24 @@ function App() {
       return;
     }
     send({ type: 'EXECUTE_ITEM_ACTION', item_id: itemId, action, target_x: tx, target_y: ty });
+  };
+
+  const TARGETED_ABILITIES = ['heroic_leap', 'smoke_bomb', 'death_mark'];
+
+  const sendUseAbility = (ability) => {
+    if (TARGETED_ABILITIES.includes(ability)) {
+      setTargetingMode({ ability });
+      return;
+    }
+    send({ type: 'USE_ARMOR_ABILITY', ability });
+  };
+
+  const sendTriggerBerserk = () => {
+    send({ type: 'TRIGGER_BERSERK' });
+  };
+
+  const sendPrepStrike = () => {
+    setTargetingMode({ prepStrike: true });
   };
   const handleQuickBag = () => setShowQuickBag(true);
   const handleSwap = () => setSwappedQuickslots(v => !v);
@@ -331,11 +436,27 @@ function App() {
     }
   };
 
+  const sendUpgradeTalent = (talent) => send({ type: 'UPGRADE_TALENT', talent });
+  const handleChooseSubclass = (subclass) => {
+    send({ type: 'CHOOSE_SUBCLASS', subclass });
+    setShowTalentPane(false);
+  };
+  const handleChooseArmorAbility = (abilityTalentId) => {
+    sendUpgradeTalent(abilityTalentId);
+    setShowTalentPane(false);
+  };
+
   const handleEscape = () => {
     if (examineModeRef.current || targetingModeRef.current) {
       setExamineMode(false);
       setTargetingMode(false);
       clearInspect();
+    } else if (showSubclassChoice) {
+      setShowSubclassChoice(false);
+    } else if (showArmorAbilityChoice) {
+      setShowArmorAbilityChoice(false);
+    } else if (showTalentPane) {
+      setShowTalentPane(false);
     } else if (!gameMenuOpenRef.current) {
       setGameMenuOpen(true);
     }
@@ -529,6 +650,7 @@ function App() {
     quickslot, itemsById,
     onRadialSelect: handleRadialSelect,
     gameMenuOpenRef,
+    onOpenTalents: () => setShowTalentPane(v => !v),
   });
 
   // Reset transient game state on death so a fresh run starts clean (no stale
@@ -685,6 +807,25 @@ function App() {
           onSlotDoubleClick={handleToolbarDoubleClick}
           onSwap={handleSwap}
         />
+        <AbilityButton
+          armorAbility={myStats.armorAbility || null}
+          armorCharge={myStats.armorCharge || 0}
+          onUseAbility={sendUseAbility}
+        />
+        <BerserkButton
+          berserkPower={myStats.berserkPower || 0}
+          onTriggerBerserk={sendTriggerBerserk}
+        />
+        <PrepStrikeButton
+          subclass={myStats.subclass}
+          invisible={myStats.invisible || 0}
+          prepSeconds={myStats.prepSeconds || 0}
+          onPrepStrike={sendPrepStrike}
+        />
+        <ComboDisplay
+          subclass={myStats.subclass}
+          comboCount={myStats.comboCount || 0}
+        />
         {showInventory && (isDesktop ? (
           <InventoryPane
             belongings={belongings}
@@ -753,6 +894,66 @@ function App() {
           size={isDesktop ? 200 : 140}
           onSelect={(idx) => { handleToolbarClick(toolbarItems[idx], idx); }}
           onClose={() => setRadialOpen(false)}
+        />
+      )}
+
+      {showSubclassChoice && (
+        <SubclassChoice
+          options={subclassOptions}
+          onChoose={(sc) => {
+            handleChooseSubclass(sc);
+            setShowSubclassChoice(false);
+          }}
+          onSkip={() => setShowSubclassChoice(false)}
+        />
+      )}
+
+      {showArmorAbilityChoice && (
+        <ArmorAbilityChoice
+          options={armorAbilityOptions}
+          abilitySelectors={talentDefs?.ability_selectors || {}}
+          onChoose={(tid) => {
+            handleChooseArmorAbility(tid);
+            setShowArmorAbilityChoice(false);
+          }}
+          onSkip={() => setShowArmorAbilityChoice(false)}
+        />
+      )}
+
+      {showLevelUpBanner && levelUpData && gameState === 'PLAYING' && (
+        <LevelUpBanner
+          level={levelUpData.level}
+          tierUnlocked={levelUpData.tier_unlocked}
+          talentPoints={talentPoints}
+          canChooseSubclass={levelUpData.can_choose_subclass}
+          canChooseArmorAbility={levelUpData.can_choose_armor_ability}
+          onOpenTalents={() => {
+            setShowTalentPane(true);
+            onOpenTalentsRef.current();
+          }}
+          onDismiss={() => setShowLevelUpBanner(false)}
+        />
+      )}
+
+      {showTalentPane && (
+        <TalentPane
+          talentDefs={talentDefs}
+          talentLevels={myStats.talentLevels || {}}
+          talentPoints={talentPoints}
+          level={myStats.level || 1}
+          subclass={myStats.subclass || null}
+          armorAbility={myStats.armorAbility || null}
+          abilityTier4={talentDefs?.ability_tier4 || {}}
+          onUpgradeTalent={sendUpgradeTalent}
+          onChooseSubclass={handleChooseSubclass}
+          onChooseArmorAbility={handleChooseArmorAbility}
+          onClose={() => {
+            setShowSubclassChoice(false);
+            setShowArmorAbilityChoice(false);
+            setShowTalentPane(false);
+          }}
+          loading={talentDefsLoading}
+          error={talentDefsError}
         />
       )}
 

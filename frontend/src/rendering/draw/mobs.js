@@ -19,6 +19,9 @@ import {
 // (x=(col+0.5)*16-w/2, y=(row+1)*16-h), scaled 2x -> 24x30 at offset (+4,+2).
 const GNOLL_DEST = { dx: 4, dy: 2, dw: 24, dh: 30 };
 
+// Track previous ai_state per mob to detect sleeping→hunting transitions.
+const prevAiState = {};
+
 export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef, dyingMobsRef }) {
   const now = performance.now();
 
@@ -94,6 +97,35 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     ctx.fillRect(x + 4, y - 4, mobHpBarWidth, 3);
     ctx.fillStyle = '#e74c3c';
     ctx.fillRect(x + 4, y - 4, mobHpBarWidth * mobHpPercent, 3);
+
+    // Sleeping indicator: "Zzz" float above sleeping mobs
+    if (mob.ai_state === 'sleeping') {
+      ctx.font = `${TILE_SIZE * 0.4}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+      ctx.lineWidth = 2;
+      const zzz = '💤 Zzz';
+      ctx.strokeText(zzz, x + TILE_SIZE / 2, y - 6);
+      ctx.fillStyle = '#aac';
+      ctx.fillText(zzz, x + TILE_SIZE / 2, y - 6);
+    }
+
+    // Alert indicator: "!" when mob transitions to hunting
+    const prev = prevAiState[mob.id];
+    if (prev && prev !== 'hunting' && mob.ai_state === 'hunting') {
+      const cx = x + TILE_SIZE / 2;
+      const cy = y - 8;
+      ctx.font = `bold ${TILE_SIZE * 0.6}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 3;
+      ctx.strokeText('!', cx, cy + 4);
+      ctx.fillStyle = '#ff0';
+      ctx.fillText('!', cx, cy + 4);
+    }
+    prevAiState[mob.id] = mob.ai_state;
   });
 
   Object.entries(dyingMobsRef.current).forEach(([id, mob]) => {

@@ -108,18 +108,25 @@ class TickMixin:
             moved = bool(player.move_intent or player.path_queue)
             self.tick_rogue(player, dt, moved=moved)
 
-            # Berserk decay
+            # Berserk decay (berserk_duration talent slows decay)
             if player.berserk_active:
                 hp_ratio = player.hp / max(player.get_total_max_hp(), 1)
                 decay = 0.05 * (hp_ratio ** 2)
+                bd = player.subclass_info.talent_info.level("berserk_duration")
+                if bd > 0:
+                    decay *= 1.0 - bd * 0.15
                 player.berserk_power = max(0.0, player.berserk_power - decay)
                 if player.berserk_power <= 0:
                     player.berserk_active = False
                     player.berserk_cooldown = 200
 
-            # Combo timer decay
+            # Combo timer decay (slow_combo talent slows decay)
             if player.combo_count > 0:
-                player.combo_timer -= dt
+                combo_dt = dt
+                sc = player.subclass_info.talent_info.level("slow_combo")
+                if sc > 0:
+                    combo_dt *= 1.0 - sc * 0.15
+                player.combo_timer -= combo_dt
                 if player.combo_timer <= 0:
                     player.combo_count = 0
                     player.combo_timer = 0.0

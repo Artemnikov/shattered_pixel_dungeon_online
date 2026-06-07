@@ -142,11 +142,11 @@ class UnlockData(_EventData):
 
 class LevelUpData(_EventData):
     player: str
-
-
-# event "type" -> payload model. Used by the opt-in dev validation hook.
-class LevelUpData(_EventData):
-    player: str
+    level: int = 0
+    tier_unlocked: Optional[int] = None
+    talent_points: Optional[dict] = None
+    can_choose_subclass: bool = False
+    can_choose_armor_ability: bool = False
 
 
 class SubclassChosenData(_EventData):
@@ -158,6 +158,16 @@ class TalentUpgradedData(_EventData):
     player: str
     talent: str
     level: int
+
+
+class SubclassChoiceAvailableData(_EventData):
+    player: str
+    options: List[str]
+
+
+class ArmorAbilityChoiceAvailableData(_EventData):
+    player: str
+    options: List[str]
 
 
 class ComboUpdateData(_EventData):
@@ -208,6 +218,8 @@ EVENT_MODELS = {
     "LEVEL_UP": LevelUpData,
     "SUBCLASS_CHOSEN": SubclassChosenData,
     "TALENT_UPGRADED": TalentUpgradedData,
+    "SUBCLASS_CHOICE_AVAILABLE": SubclassChoiceAvailableData,
+    "ARMOR_ABILITY_CHOICE_AVAILABLE": ArmorAbilityChoiceAvailableData,
     "COMBO_UPDATE": ComboUpdateData,
     "COMBO_MOVE_UNLOCKED": ComboMoveUnlockedData,
     "BERSERK_ACTIVATED": BerserkActivatedData,

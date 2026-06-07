@@ -72,6 +72,10 @@ class VisionMixin:
         Level.updateFieldOfView's viewDist scaling). Clamped to the
         shadowcaster's supported range; missing field defaults to SPD's 8."""
         dist = getattr(entity, "view_distance", 8)
+        # Farsight talent: check for dynamic override
+        get_view = getattr(entity, "get_view_distance", None)
+        if get_view:
+            dist = get_view()
         return max(0, min(dist, shadowcaster.MAX_DISTANCE))
 
     def _effective_blocking(self, floor: "FloorState", viewer_id: Optional[str] = None) -> List[bool]:

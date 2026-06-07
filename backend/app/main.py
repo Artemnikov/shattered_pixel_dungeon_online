@@ -3,7 +3,8 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from typing import List, Dict, Tuple
+from fastapi.middleware.cors import CORSMiddleware
+from typing import List, Dict, Tuple, Optional
 import asyncio
 import logging
 import time
@@ -23,6 +24,16 @@ from app.schemas import messages as msg
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Online Pixel Dungeon API")
+
+# Allow cross-origin requests from the frontend (different port in development,
+# different domain in production).
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # How long a disconnected player's hero is kept alive in the world so the client
 # can reconnect (same session) and resume the same run. After this, the reaper
@@ -197,6 +208,84 @@ manager = ConnectionManager()
 @app.get("/")
 async def root():
     return {"message": "Online Pixel Dungeon Server is running"}
+
+
+@app.get("/api/talents/{class_type}")
+async def get_talents(class_type: str):
+    from app.engine.entities.subclasses import (
+        TALENT_DEFS, TALENT_CLASS_REQ, ABILITY_TALENTS, TIER_UNLOCK_LEVELS,
+        TIER_MAX_POINTS, CLASS_SUBCLASSES,
+    )
+    from app.engine.entities.base import CharacterClass
+
+    valid = {CharacterClass.WARRIOR, CharacterClass.MAGE, CharacterClass.ROGUE, CharacterClass.HUNTRESS}
+    if class_type not in valid:
+        return {"error": f"Unknown class: {class_type}"}, 404
+
+    # Talents belong to a class if they're in TALENT_CLASS_REQ for that class,
+    # OR their subclass_req is one of the class's subclass options.
+    own_subclasses = set(CLASS_SUBCLASSES.get(class_type, ()))
+
+    def _belongs_to_class(tid: str, sreq: Optional[str]) -> bool:
+        if TALENT_CLASS_REQ.get(tid) == class_type:
+            return True
+        if sreq is not None and sreq in own_subclasses:
+            return True
+        return False
+
+    tiers: dict = {}
+
+    for talent_id, (max_pts, tier, subclass_req) in TALENT_DEFS.items():
+        if not _belongs_to_class(talent_id, subclass_req):
+            continue
+
+        entry = {
+            "id": talent_id,
+            "max_pts": max_pts,
+            "tier": tier,
+            "subclass": subclass_req,
+            "is_ability_selector": talent_id in ABILITY_TALENTS,
+        }
+
+        if talent_id in ABILITY_TALENTS:
+            entry["unlocks_ability"] = ABILITY_TALENTS[talent_id]
+
+        tier_key = str(tier)
+        if tier_key not in tiers:
+            tiers[tier_key] = {
+                "unlock_level": TIER_UNLOCK_LEVELS.get(tier, 99),
+                "max_total_points": TIER_MAX_POINTS.get(tier, 0),
+                "talents": [],
+            }
+        tiers[tier_key]["talents"].append(entry)
+
+    # Build ability → T4 talents map (only for ability-gated T4 talents, i.e.
+    # those with subclass_req=None). Subclass-gated T4 talents appear in the
+    # tier list with their subclass field and are NOT duplicated here.
+    ability_to_talents: dict = {}
+    for tid, (_, t, sreq) in TALENT_DEFS.items():
+        if t != 4 or sreq is not None or not _belongs_to_class(tid, sreq):
+            continue
+        for ability_tid, ability in ABILITY_TALENTS.items():
+            _, _, asr = TALENT_DEFS.get(ability_tid, (0, 0, None))
+            a_req = TALENT_CLASS_REQ.get(ability_tid)
+            if a_req == class_type or (asr and asr in own_subclasses):
+                ability_to_talents.setdefault(ability, []).append(tid)
+                break
+
+    ability_selectors: dict = {}
+    for tid, ability in ABILITY_TALENTS.items():
+        _, _, sreq = TALENT_DEFS.get(tid, (0, 0, None))
+        if _belongs_to_class(tid, sreq):
+            ability_selectors[tid] = ability
+
+    return {
+        "class": class_type,
+        "subclasses": list(own_subclasses),
+        "tiers": {k: tiers[k] for k in sorted(tiers.keys(), key=int)},
+        "ability_selectors": ability_selectors,
+        "ability_tier4": ability_to_talents,
+    }
 
 @app.websocket("/ws/game/{game_id}")
 async def game_websocket(websocket: WebSocket, game_id: str, class_type: str = "warrior", difficulty: str = "normal", name: str = None, admin_secret: str = "", session: str = None):

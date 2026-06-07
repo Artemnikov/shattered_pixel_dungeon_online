@@ -1044,10 +1044,15 @@ class Player(Entity):
     berserk_power: float = 0.0
     berserk_active: bool = False
     berserk_cooldown: int = 0
+    # Rampage (warrior T4 berserker): kill-stack damage bonus
+    rampage_stacks: int = 0
+    # Last action type (for followup strike tracking)
+    _last_action: str = ""
 
     # Gladiator combo
     combo_count: int = 0
     combo_timer: float = 0.0
+    combo_max: int = 10  # enhanced by talents
 
     # Armor ability charge (0–100, shared resource for Leap/Shockwave/Endure)
     armor_charge: int = 0
@@ -1104,6 +1109,16 @@ class Player(Entity):
         if self.is_downed:
             return 0
 
+        # Enraged Catalyst (warrior T2 berserker): gain berserk power on damage taken
+        if self.subclass_info.subclass == "berserker":
+            ec = self.subclass_info.talent_info.level("enraged_catalyst")
+            if ec > 0:
+                from app.engine.entities.buffs import add_buff as _add_buff
+                endless_level = self.subclass_info.talent_info.level("endless_rage")
+                max_power = 1.0 + 0.1667 * endless_level
+                power_gain = (amount / max(self.get_total_max_hp() * 4, 1)) * (1 + ec * 0.5)
+                self.berserk_power = min(max_power, self.berserk_power + power_gain)
+
         self.hp -= amount
         if self.hp <= 0:
             self.hp = 0
@@ -1118,15 +1133,18 @@ class Player(Entity):
 
     def get_damage_min(self) -> int:
         w = self.belongings.weapon
-        if isinstance(w, KindOfWeapon):
-            return w.damage
-        return self.damage_min
+        base = w.damage if isinstance(w, KindOfWeapon) else self.damage_min
+        # Sub-Atk (warrior T3): flat +1 per point if subclass is chosen
+        if self.subclass_info.subclass is not None:
+            base += self.subclass_info.talent_info.level("sub_atk")
+        return base
 
     def get_damage_max(self) -> int:
         w = self.belongings.weapon
-        if isinstance(w, KindOfWeapon):
-            return w.damage
-        return self.damage_max
+        base = w.damage if isinstance(w, KindOfWeapon) else self.damage_max
+        if self.subclass_info.subclass is not None:
+            base += self.subclass_info.talent_info.level("sub_atk")
+        return base
 
     def get_surprise_damage_floor(self) -> float:
         w = self.belongings.weapon
@@ -1139,6 +1157,10 @@ class Player(Entity):
         if a is not None and isinstance(a, Armor):
             base = a.dr_min(a.level)
             deficit = max(0, a.strength_requirement - self.strength)
+            # Light Armor (warrior T1): reduce STR penalty
+            la = self.subclass_info.talent_info.level("light_armor")
+            if la > 0:
+                deficit = max(0, deficit - la)
             return max(0, base - 2 * deficit)
         return 0
 
@@ -1147,16 +1169,27 @@ class Player(Entity):
         if a is not None and isinstance(a, Armor):
             base = a.dr_max(a.level)
             deficit = max(0, a.strength_requirement - self.strength)
+            la = self.subclass_info.talent_info.level("light_armor")
+            if la > 0:
+                deficit = max(0, deficit - la)
             return max(0, base - 2 * deficit)
         return 0
 
     def get_effective_defense_skill(self) -> int:
+        base = self.defense_skill
         a = self.belongings.armor
         if a is not None:
             deficit = max(0, a.strength_requirement - self.strength)
+            # Light Armor (warrior T1): reduce STR penalty
+            la = self.subclass_info.talent_info.level("light_armor")
+            if la > 0:
+                deficit = max(0, deficit - la)
             if deficit > 0:
-                return int(self.defense_skill / (1.5 ** deficit))
-        return self.defense_skill
+                base = int(base / (1.5 ** deficit))
+        # Sub-Def (warrior T3): flat +2 per point if subclass chosen
+        if self.subclass_info.subclass is not None:
+            base += 2 * self.subclass_info.talent_info.level("sub_def")
+        return base
 
     def set_heal(self, amount: float, percent_per_tick: float, flat_per_tick: float):
         # Multiple healing sources don't stack; they combine the best of each
@@ -1165,6 +1198,13 @@ class Player(Entity):
         self.heal_pct_per_tick = max(self.heal_pct_per_tick, percent_per_tick)
         self.heal_flat_per_tick = max(self.heal_flat_per_tick, flat_per_tick)
         self.heal_cooldown = 0  # first tick applies immediately
+
+    def get_view_distance(self) -> int:
+        base = self.view_distance
+        fs = self.subclass_info.talent_info.level("farsight")
+        if fs > 0:
+            base += fs * 2
+        return base
 
     def get_total_max_hp(self) -> int:
         return self.max_hp
@@ -1202,6 +1242,16 @@ class Player(Entity):
                 return True
         return False
 
+    def get_talent_damage_bonus(self) -> float:
+        """Return a flat damage bonus from talents (added to damage roll)."""
+        bonus = 0
+
+        # Rampage (warrior T4 berserker): +1 damage per stack
+        if self.subclass_info.subclass == "berserker":
+            bonus += self.rampage_stacks
+
+        return bonus
+
     def attack_proc(self, target) -> None:
         if self.subclass_info.subclass == "berserker":
             from app.engine.entities.buffs import add_buff
@@ -1209,14 +1259,45 @@ class Player(Entity):
             max_power = 1.0 + 0.1667 * endless_level
             power_gain = 0.05
             self.berserk_power = min(max_power, self.berserk_power + power_gain)
+            # Rampage: decaying stack gain
+            if self.rampage_stacks > 0:
+                self.rampage_stacks = max(0, self.rampage_stacks - 1)
         if self.subclass_info.subclass == "gladiator":
-            self.combo_count += 1
+            # Combo cap from talents
+            self.combo_max = 10
+            ec = self.subclass_info.talent_info.level("enhanced_combo")
+            if ec > 0:
+                self.combo_max += 2 * ec
+            sc = self.subclass_info.talent_info.level("savage_capacity")
+            if sc > 0:
+                self.combo_max += 2 * sc
+            self.combo_count = min(self.combo_count + 1, self.combo_max)
             self.combo_timer = 5.0
+            # Combo Shield (gladiator T2): shield per combo
+            cs = self.subclass_info.talent_info.level("combo_shield")
+            if cs > 0 and self.combo_count >= 3:
+                shield_amt = cs * (self.combo_count // 3)
+                if shield_amt > 0:
+                    self.add_shield("combo_shield", shield_amt, priority=1, decay=600)
 
     def defense_proc(self, raw_damage: int, attacker, floor_mobs: dict, tile_x: int, tile_y: int) -> int:
         from app.engine.entities.buffs import has_buff
         if has_buff(self.buffs, "endure"):
             raw_damage = max(0, raw_damage - int(raw_damage * 0.3))
+
+        # Iron Will (warrior T1): DR based on missing HP%
+        iw = self.subclass_info.talent_info.level("iron_will")
+        if iw > 0:
+            hp_ratio = self.hp / max(self.get_total_max_hp(), 1)
+            dr_pct = iw * 0.05 * (1 - hp_ratio)
+            raw_damage = max(0, raw_damage - int(raw_damage * dr_pct))
+
+        # Protective Shadows (rogue T1): DR while invisible
+        ps = self.subclass_info.talent_info.level("protective_shadows")
+        if ps > 0 and self.invisible > 0:
+            dr_pct = 0.08 * ps
+            raw_damage = max(0, raw_damage - int(raw_damage * dr_pct))
+
         return raw_damage
 
     MAX_LEVEL: ClassVar[int] = 30

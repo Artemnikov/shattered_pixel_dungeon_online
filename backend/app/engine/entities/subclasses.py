@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Set
 
 from pydantic import BaseModel, Field
 
@@ -10,12 +10,19 @@ class Subclass:
     # Rogue
     ASSASSIN = "assassin"
     FREERUNNER = "freerunner"
+    # Mage
+    BATTLEMAGE = "battlemage"
+    WARLOCK = "warlock"
+    # Huntress
+    SNIPER = "sniper"
 
 
 # Which subclasses each hero class may choose at level 6.
 CLASS_SUBCLASSES: Dict[str, tuple[str, ...]] = {
     "warrior": (Subclass.BERSERKER, Subclass.GLADIATOR),
     "rogue": (Subclass.ASSASSIN, Subclass.FREERUNNER),
+    "mage": (Subclass.BATTLEMAGE, Subclass.WARLOCK),
+    "huntress": (Subclass.SNIPER, Subclass.WARDEN),
 }
 
 
@@ -27,6 +34,14 @@ class ArmorAbilityType:
     SMOKE_BOMB = "smoke_bomb"
     DEATH_MARK = "death_mark"
     SHADOW_CLONE = "shadow_clone"
+    # Mage
+    ELEMENTAL_BLAST = "elemental_blast"
+    WILD_MAGIC = "wild_magic"
+    WARP_BEACON = "warp_beacon"
+    # Huntress
+    SPECTRAL_BLADES = "spectral_blades"
+    NATURES_POWER = "natures_power"
+    SPIRIT_HAWK = "spirit_hawk"
 
 
 class Talent:
@@ -114,6 +129,86 @@ class Talent:
     CLONED_ARMOR = "cloned_armor"
     PERFECT_COPY = "perfect_copy"
 
+    # ===================== MAGE =====================
+    # Tier 1 (level 2)
+    EMPOWERING_MEAL = "empowering_meal"
+    SCHOLARS_INTUITION = "scholars_intuition"
+    LINGERING_MAGIC = "lingering_magic"
+    BACKUP_BARRIER = "backup_barrier"
+    # Tier 2 (level 7)
+    ENERGIZING_MEAL = "energizing_meal"
+    INSCRIBED_POWER = "inscribed_power"
+    WAND_PRESERVATION = "wand_preservation"
+    ARCANE_VISION = "arcane_vision"
+    SHIELD_BATTERY = "shield_battery"
+    # Tier 3 (level 13) — class
+    DESPERATE_POWER = "desperate_power"
+    ALLY_WARP = "ally_warp"
+    # Tier 3 — Battlemage
+    EMPOWERED_STRIKE = "empowered_strike"
+    MYSTICAL_CHARGE = "mystical_charge"
+    EXCESS_CHARGE = "excess_charge"
+    # Tier 3 — Warlock
+    SOUL_EATER = "soul_eater"
+    SOUL_SIPHON = "soul_siphon"
+    NECROMANCERS_MINIONS = "necromancers_minions"
+    # Tier 3 — armor ability selection
+    ELEMENTAL_BLAST_ABILITY = "elemental_blast_talent"
+    WILD_MAGIC_ABILITY = "wild_magic_talent"
+    WARP_BEACON_ABILITY = "warp_beacon_talent"
+    # Tier 4 (level 21) — Elemental Blast
+    BLAST_RADIUS = "blast_radius"
+    ELEMENTAL_POWER_TALENT = "elemental_power_talent"
+    REACTIVE_BARRIER = "reactive_barrier"
+    # Tier 4 — Wild Magic
+    WILD_POWER = "wild_power"
+    FIRE_EVERYTHING = "fire_everything"
+    CONSERVED_MAGIC = "conserved_magic"
+    # Tier 4 — Warp Beacon
+    TELEFRAG = "telefrag"
+    REMOTE_BEACON = "remote_beacon"
+    LONGRANGE_WARP = "longrange_warp"
+
+    # ===================== HUNTRESS =====================
+    # Tier 1 (level 2)
+    NATURES_BOUNTY = "natures_bounty"
+    SURVIVALISTS_INTUITION = "survivalists_intuition"
+    FOLLOWUP_STRIKE = "followup_strike"
+    NATURES_AID = "natures_aid"
+    # Tier 2 (level 7)
+    INVIGORATING_MEAL = "invigorating_meal"
+    LIQUID_NATURE = "liquid_nature"
+    REJUVENATING_STEPS = "rejuvenating_steps"
+    HEIGHTENED_SENSES = "heightened_senses"
+    DURABLE_PROJECTILES = "durable_projectiles"
+    # Tier 3 (level 13) — class
+    POINT_BLANK = "point_blank"
+    SEER_SHOT = "seer_shot"
+    # Tier 3 — Sniper
+    FARSIGHT = "farsight"
+    SHARED_ENCHANTMENT = "shared_enchantment"
+    SHARED_UPGRADES = "shared_upgrades"
+    # Tier 3 — Warden
+    DURABLE_TIPS = "durable_tips"
+    BARKSKIN = "barkskin"
+    SHIELDING_DEW = "shielding_dew"
+    # Tier 3 — armor ability selection
+    SPECTRAL_BLADES_ABILITY = "spectral_blades_talent"
+    NATURES_POWER_ABILITY = "natures_power_talent"
+    SPIRIT_HAWK_ABILITY = "spirit_hawk_talent"
+    # Tier 4 (level 21) — Spectral Blades
+    FAN_OF_BLADES = "fan_of_blades"
+    PROJECTING_BLADES = "projecting_blades"
+    SPIRIT_BLADES = "spirit_blades"
+    # Tier 4 — Natures Power
+    GROWING_POWER = "growing_power"
+    NATURES_WRATH = "natures_wrath"
+    WILD_MOMENTUM = "wild_momentum"
+    # Tier 4 — Spirit Hawk
+    EAGLE_EYE = "eagle_eye"
+    GO_FOR_THE_EYES = "go_for_the_eyes"
+    SWIFT_SPIRIT = "swift_spirit"
+
 
 # Maps talent name → (max_points, tier, subclass_required_or_None)
 TALENT_DEFS: Dict[str, tuple[int, int, Optional[str]]] = {
@@ -191,6 +286,86 @@ TALENT_DEFS: Dict[str, tuple[int, int, Optional[str]]] = {
     Talent.SHADOW_BLADE: (4, 4, None),
     Talent.CLONED_ARMOR: (4, 4, None),
     Talent.PERFECT_COPY: (4, 4, None),
+
+    # ===================== MAGE =====================
+    # Tier 1
+    Talent.EMPOWERING_MEAL: (2, 1, None),
+    Talent.SCHOLARS_INTUITION: (2, 1, None),
+    Talent.LINGERING_MAGIC: (2, 1, None),
+    Talent.BACKUP_BARRIER: (2, 1, None),
+    # Tier 2
+    Talent.ENERGIZING_MEAL: (2, 2, None),
+    Talent.INSCRIBED_POWER: (2, 2, None),
+    Talent.WAND_PRESERVATION: (2, 2, None),
+    Talent.ARCANE_VISION: (2, 2, None),
+    Talent.SHIELD_BATTERY: (2, 2, None),
+    # Tier 3 — class
+    Talent.DESPERATE_POWER: (3, 3, None),
+    Talent.ALLY_WARP: (3, 3, None),
+    # Tier 3 — Battlemage
+    Talent.EMPOWERED_STRIKE: (3, 3, Subclass.BATTLEMAGE),
+    Talent.MYSTICAL_CHARGE: (3, 3, Subclass.BATTLEMAGE),
+    Talent.EXCESS_CHARGE: (3, 3, Subclass.BATTLEMAGE),
+    # Tier 3 — Warlock
+    Talent.SOUL_EATER: (3, 3, Subclass.WARLOCK),
+    Talent.SOUL_SIPHON: (3, 3, Subclass.WARLOCK),
+    Talent.NECROMANCERS_MINIONS: (3, 3, Subclass.WARLOCK),
+    # Tier 3 — armor ability selection
+    Talent.ELEMENTAL_BLAST_ABILITY: (1, 3, None),
+    Talent.WILD_MAGIC_ABILITY: (1, 3, None),
+    Talent.WARP_BEACON_ABILITY: (1, 3, None),
+    # Tier 4 — Elemental Blast
+    Talent.BLAST_RADIUS: (4, 4, None),
+    Talent.ELEMENTAL_POWER_TALENT: (4, 4, None),
+    Talent.REACTIVE_BARRIER: (4, 4, None),
+    # Tier 4 — Wild Magic
+    Talent.WILD_POWER: (4, 4, None),
+    Talent.FIRE_EVERYTHING: (4, 4, None),
+    Talent.CONSERVED_MAGIC: (4, 4, None),
+    # Tier 4 — Warp Beacon
+    Talent.TELEFRAG: (4, 4, None),
+    Talent.REMOTE_BEACON: (4, 4, None),
+    Talent.LONGRANGE_WARP: (4, 4, None),
+
+    # ===================== HUNTRESS =====================
+    # Tier 1
+    Talent.NATURES_BOUNTY: (2, 1, None),
+    Talent.SURVIVALISTS_INTUITION: (2, 1, None),
+    Talent.FOLLOWUP_STRIKE: (2, 1, None),
+    Talent.NATURES_AID: (2, 1, None),
+    # Tier 2
+    Talent.INVIGORATING_MEAL: (2, 2, None),
+    Talent.LIQUID_NATURE: (2, 2, None),
+    Talent.REJUVENATING_STEPS: (2, 2, None),
+    Talent.HEIGHTENED_SENSES: (2, 2, None),
+    Talent.DURABLE_PROJECTILES: (2, 2, None),
+    # Tier 3 — class
+    Talent.POINT_BLANK: (3, 3, None),
+    Talent.SEER_SHOT: (3, 3, None),
+    # Tier 3 — Sniper
+    Talent.FARSIGHT: (3, 3, Subclass.SNIPER),
+    Talent.SHARED_ENCHANTMENT: (3, 3, Subclass.SNIPER),
+    Talent.SHARED_UPGRADES: (3, 3, Subclass.SNIPER),
+    # Tier 3 — Warden
+    Talent.DURABLE_TIPS: (3, 3, Subclass.WARDEN),
+    Talent.BARKSKIN: (3, 3, Subclass.WARDEN),
+    Talent.SHIELDING_DEW: (3, 3, Subclass.WARDEN),
+    # Tier 3 — armor ability selection
+    Talent.SPECTRAL_BLADES_ABILITY: (1, 3, None),
+    Talent.NATURES_POWER_ABILITY: (1, 3, None),
+    Talent.SPIRIT_HAWK_ABILITY: (1, 3, None),
+    # Tier 4 — Spectral Blades
+    Talent.FAN_OF_BLADES: (4, 4, None),
+    Talent.PROJECTING_BLADES: (4, 4, None),
+    Talent.SPIRIT_BLADES: (4, 4, None),
+    # Tier 4 — Natures Power
+    Talent.GROWING_POWER: (4, 4, None),
+    Talent.NATURES_WRATH: (4, 4, None),
+    Talent.WILD_MOMENTUM: (4, 4, None),
+    # Tier 4 — Spirit Hawk
+    Talent.EAGLE_EYE: (4, 4, None),
+    Talent.GO_FOR_THE_EYES: (4, 4, None),
+    Talent.SWIFT_SPIRIT: (4, 4, None),
 }
 
 
@@ -212,6 +387,26 @@ TALENT_CLASS_REQ: Dict[str, str] = {
     Talent.HASTY_RETREAT: "rogue", Talent.BODY_REPLACEMENT: "rogue", Talent.SHADOW_STEP: "rogue",
     Talent.FEAR_THE_REAPER: "rogue", Talent.DEATHLY_DURABILITY: "rogue", Talent.DOUBLE_MARK: "rogue",
     Talent.SHADOW_BLADE: "rogue", Talent.CLONED_ARMOR: "rogue", Talent.PERFECT_COPY: "rogue",
+    # Mage
+    Talent.EMPOWERING_MEAL: "mage", Talent.SCHOLARS_INTUITION: "mage",
+    Talent.LINGERING_MAGIC: "mage", Talent.BACKUP_BARRIER: "mage",
+    Talent.ENERGIZING_MEAL: "mage", Talent.INSCRIBED_POWER: "mage",
+    Talent.WAND_PRESERVATION: "mage", Talent.ARCANE_VISION: "mage", Talent.SHIELD_BATTERY: "mage",
+    Talent.DESPERATE_POWER: "mage", Talent.ALLY_WARP: "mage",
+    Talent.ELEMENTAL_BLAST_ABILITY: "mage", Talent.WILD_MAGIC_ABILITY: "mage", Talent.WARP_BEACON_ABILITY: "mage",
+    Talent.BLAST_RADIUS: "mage", Talent.ELEMENTAL_POWER_TALENT: "mage", Talent.REACTIVE_BARRIER: "mage",
+    Talent.WILD_POWER: "mage", Talent.FIRE_EVERYTHING: "mage", Talent.CONSERVED_MAGIC: "mage",
+    Talent.TELEFRAG: "mage", Talent.REMOTE_BEACON: "mage", Talent.LONGRANGE_WARP: "mage",
+    # Huntress
+    Talent.NATURES_BOUNTY: "huntress", Talent.SURVIVALISTS_INTUITION: "huntress",
+    Talent.FOLLOWUP_STRIKE: "huntress", Talent.NATURES_AID: "huntress",
+    Talent.INVIGORATING_MEAL: "huntress", Talent.LIQUID_NATURE: "huntress",
+    Talent.REJUVENATING_STEPS: "huntress", Talent.HEIGHTENED_SENSES: "huntress", Talent.DURABLE_PROJECTILES: "huntress",
+    Talent.POINT_BLANK: "huntress", Talent.SEER_SHOT: "huntress",
+    Talent.SPECTRAL_BLADES_ABILITY: "huntress", Talent.NATURES_POWER_ABILITY: "huntress", Talent.SPIRIT_HAWK_ABILITY: "huntress",
+    Talent.FAN_OF_BLADES: "huntress", Talent.PROJECTING_BLADES: "huntress", Talent.SPIRIT_BLADES: "huntress",
+    Talent.GROWING_POWER: "huntress", Talent.NATURES_WRATH: "huntress", Talent.WILD_MOMENTUM: "huntress",
+    Talent.EAGLE_EYE: "huntress", Talent.GO_FOR_THE_EYES: "huntress", Talent.SWIFT_SPIRIT: "huntress",
 }
 
 
@@ -223,6 +418,14 @@ ABILITY_TALENTS: Dict[str, str] = {
     Talent.SMOKE_BOMB: ArmorAbilityType.SMOKE_BOMB,
     Talent.DEATH_MARK: ArmorAbilityType.DEATH_MARK,
     Talent.SHADOW_CLONE: ArmorAbilityType.SHADOW_CLONE,
+    # Mage
+    Talent.ELEMENTAL_BLAST_ABILITY: ArmorAbilityType.ELEMENTAL_BLAST,
+    Talent.WILD_MAGIC_ABILITY: ArmorAbilityType.WILD_MAGIC,
+    Talent.WARP_BEACON_ABILITY: ArmorAbilityType.WARP_BEACON,
+    # Huntress
+    Talent.SPECTRAL_BLADES_ABILITY: ArmorAbilityType.SPECTRAL_BLADES,
+    Talent.NATURES_POWER_ABILITY: ArmorAbilityType.NATURES_POWER,
+    Talent.SPIRIT_HAWK_ABILITY: ArmorAbilityType.SPIRIT_HAWK,
 }
 
 
@@ -274,3 +477,10 @@ class TalentInfo(BaseModel):
 class SubclassInfo(BaseModel):
     subclass: Optional[str] = None
     talent_info: TalentInfo = Field(default_factory=TalentInfo)
+    # Available talent points per tier (tier → count). Player earns these when a
+    # new tier unlocks (level 2, 7, 13, 21) and consumes them on upgrade_talent().
+    talent_points: Dict[int, int] = Field(default_factory=dict)
+    # Tracks which milestone levels (2, 6, 13) have had their events emitted.
+    # Prevents re-emission on subsequent level-ups and ensures events fire even
+    # when a multi-level jump skips the exact milestone level.
+    emitted_milestones: Set[int] = Field(default_factory=set, exclude=True)

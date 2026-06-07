@@ -4,6 +4,7 @@ Handles held-direction intent, stepping (with bump-attacks, pickups, door
 unlocking, traps and stair traversal) and ranged/thrown/wand attacks.
 """
 
+import random
 import time
 from typing import Optional
 
@@ -107,6 +108,8 @@ class MovementCombatMixin:
 
                 entity.last_attack_time = current_time
 
+                if isinstance(entity, Player):
+                    entity._last_action = ""
                 result = resolve_melee_attack(
                     entity, target_entity,
                     floor.mobs, entity.pos.x, entity.pos.y,
@@ -154,10 +157,12 @@ class MovementCombatMixin:
                 if not target_entity.is_alive:
                     if isinstance(target_entity, MobEntity):
                         self.process_death_mark_kill(entity, target_entity, floor, floor_id)
+                    if isinstance(entity, Player):
+                        self.on_kill(entity, target_entity, floor.mobs, floor_id)
                     self.add_event("DEATH", {"target": target_entity.id}, floor_id=floor_id)
                     if isinstance(entity, Player) and isinstance(target_entity, MobEntity):
                         if entity.earn_exp(target_entity.exp):
-                            self.add_event("LEVEL_UP", {"player": entity.id}, floor_id=floor_id)
+                            self.on_talent_level_up(entity)
                         drops = roll_drops(target_entity, self.drop_counters, target_entity.pos.x, target_entity.pos.y)
                         for item in drops:
                             floor.items[item.id] = item
@@ -194,6 +199,12 @@ class MovementCombatMixin:
             self.add_event("MOVE", {"entity": entity_id, "x": entity.pos.x, "y": entity.pos.y}, floor_id=floor_id)
             # Freerunner builds Momentum on each step.
             self.gain_momentum(entity)
+            # Rejuvenating Steps (huntress T2): heal small amount per step
+            rs = entity.talent_info.level("rejuvenating_steps")
+            if rs > 0:
+                heal = rs
+                entity.hp = min(entity.get_total_max_hp(), entity.hp + heal)
+                self.add_event("HEAL", {"target": entity.id, "amount": heal, "x": entity.pos.x, "y": entity.pos.y}, floor_id=floor_id)
 
         if isinstance(entity, Player):
             items_to_pickup = [
@@ -266,6 +277,7 @@ class MovementCombatMixin:
             return None
 
         player.last_attack_time = current_time
+        player._last_action = "ranged"
         projectile_type = getattr(item, "projectile_type", "arrow")
 
         target_entity = None
@@ -362,16 +374,25 @@ class MovementCombatMixin:
             if not target_entity.is_alive:
                 if isinstance(target_entity, MobEntity):
                     self.process_death_mark_kill(player, target_entity, floor, floor_id)
+                self.on_kill(player, target_entity, floor.mobs, floor_id)
                 self.add_event("DEATH", {"target": target_entity.id}, floor_id=floor_id)
                 if isinstance(target_entity, MobEntity):
                     if player.earn_exp(target_entity.exp):
-                        self.add_event("LEVEL_UP", {"player": player.id}, floor_id=floor_id)
+                        self.on_talent_level_up(player)
                     drops = roll_drops(target_entity, self.drop_counters, target_entity.pos.x, target_entity.pos.y)
                     for d in drops:
                         floor.items[d.id] = d
 
         if is_wand:
-            item.charges -= 1
+            # Wand Preservation (mage T2): chance to not consume charge
+            wp = player.talent_info.level("wand_preservation")
+            if wp <= 0 or random.random() >= wp * 0.17:
+                item.charges -= 1
+            # Shield Battery (mage T2): gain shield on wand zap
+            sb = player.talent_info.level("shield_battery")
+            if sb > 0:
+                shield_amt = 1 + sb
+                player.add_shield("shield_battery", shield_amt, priority=1, decay=600)
         else:
             removed = player.belongings.backpack.detach(item.id)
             if removed is not None and player.belongings.get_item(item.id) is None:

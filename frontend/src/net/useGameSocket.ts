@@ -107,6 +107,15 @@ interface MyStats {
   classType: string;
   armorTier: number;
   strength: number;
+  subclass?: string | null;
+  armorAbility?: string | null;
+  armorCharge?: number;
+  berserkPower?: number;
+  invisible?: number;
+  prepSeconds?: number;
+  comboCount?: number;
+  talentLevels?: Record<string, number>;
+  talentPoints?: Record<string, number>;
 }
 
 interface HookProps {
@@ -143,6 +152,10 @@ interface HookProps {
   setEnergy?: (energy: number) => void;
   setBelongings?: (belongings: Player['belongings'] | null) => void;
   setQuickslot?: (quickslot: Player['quickslot'] | null) => void;
+  onLevelUp?: (data: { level: number; tier_unlocked?: number | null; talent_points?: Record<string, number>; can_choose_subclass: boolean; can_choose_armor_ability: boolean }) => void;
+  onSubclassChoiceAvailable?: (data: { options: string[] }) => void;
+  onArmorAbilityChoiceAvailable?: (data: { options: string[] }) => void;
+  onTalentUpgraded?: (data: { talent: string; level: number }) => void;
 }
 
 type HandlerCtx = Pick<
@@ -159,7 +172,12 @@ type HandlerCtx = Pick<
   | 'particlesRef'
   | 'searchEffectsRef'
   | 'floatingTextRef'
->;
+> & {
+  onLevelUp?: HookProps['onLevelUp'];
+  onSubclassChoiceAvailable?: HookProps['onSubclassChoiceAvailable'];
+  onArmorAbilityChoiceAvailable?: HookProps['onArmorAbilityChoiceAvailable'];
+  onTalentUpgraded?: HookProps['onTalentUpgraded'];
+};
 
 export default function useGameSocket({
   enabled,
@@ -195,6 +213,10 @@ export default function useGameSocket({
   setEnergy,
   setBelongings,
   setQuickslot,
+  onLevelUp,
+  onSubclassChoiceAvailable,
+  onArmorAbilityChoiceAvailable,
+  onTalentUpgraded,
 }: HookProps) {
   useEffect(() => {
     if (!enabled) return;
@@ -318,6 +340,15 @@ export default function useGameSocket({
             classType: p.class_type || 'warrior',
             armorTier: 0,
             strength: p.strength ?? 10,
+            subclass: p.subclass_info?.subclass || null,
+            armorAbility: p.armor_ability || null,
+            armorCharge: p.armor_charge || 0,
+            berserkPower: p.berserk_power || 0,
+            invisible: p.invisible || 0,
+            prepSeconds: p.prep_seconds || 0,
+            comboCount: p.combo_count || 0,
+            talentLevels: p.subclass_info?.talent_info?.talents || {},
+            talentPoints: p.subclass_info?.talent_points || {},
           });
         }
 
@@ -458,6 +489,7 @@ export default function useGameSocket({
             myPlayerIdRef, gridRef, setGrid, entitiesRef, visionRef,
             projectilesRef, mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef,
             searchEffectsRef, floatingTextRef,
+            onLevelUp, onSubclassChoiceAvailable, onArmorAbilityChoiceAvailable, onTalentUpgraded,
           });
         });
       }
@@ -485,6 +517,7 @@ function handleEvent(event: GameEvent, {
   myPlayerIdRef, gridRef, setGrid, entitiesRef, visionRef,
   projectilesRef, mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef,
   searchEffectsRef, floatingTextRef,
+  onLevelUp, onSubclassChoiceAvailable, onArmorAbilityChoiceAvailable, onTalentUpgraded,
 }: HandlerCtx) {
   if (event.type === 'PLAY_SOUND') {
     AudioManager.play(event.data.sound);
@@ -757,10 +790,16 @@ function handleEvent(event: GameEvent, {
     if (!tgtEntity) return;
     const isGrim = event.data.grim_proc;
     const isCrit = event.data.crit;
+    const amount = event.data.amount || 0;
     const tc = {
       x: tgtEntity.renderPos.x * TILE_SIZE + TILE_SIZE / 2,
       y: tgtEntity.renderPos.y * TILE_SIZE + TILE_SIZE / 2,
     };
+    if (amount > 0 && floatingTextRef) {
+      const color = isCrit ? '#ffcc00' : '#ff6666';
+      const text = isCrit ? `${amount} CRIT!` : `-${amount}`;
+      spawnFloatingText(floatingTextRef, tc.x, tc.y - TILE_SIZE / 2, text, color);
+    }
     if (isGrim && particlesRef) {
       spawnGrimShadow(particlesRef, tc.x, tc.y, 8);
     }
@@ -776,5 +815,40 @@ function handleEvent(event: GameEvent, {
     if (mob) {
       dyingMobsRef.current[id] = { ...mob, renderPos: { ...mob.renderPos }, deathStart: performance.now() };
     }
+    return;
+  }
+
+  if (event.type === 'LEVEL_UP') {
+    if (event.data.player === myPlayerIdRef.current) {
+      onLevelUp?.({
+        level: event.data.level,
+        tier_unlocked: event.data.tier_unlocked,
+        talent_points: event.data.talent_points,
+        can_choose_subclass: event.data.can_choose_subclass,
+        can_choose_armor_ability: event.data.can_choose_armor_ability,
+      });
+    }
+    return;
+  }
+
+  if (event.type === 'SUBCLASS_CHOICE_AVAILABLE') {
+    if (event.data.player === myPlayerIdRef.current) {
+      onSubclassChoiceAvailable?.({ options: event.data.options });
+    }
+    return;
+  }
+
+  if (event.type === 'ARMOR_ABILITY_CHOICE_AVAILABLE') {
+    if (event.data.player === myPlayerIdRef.current) {
+      onArmorAbilityChoiceAvailable?.({ options: event.data.options });
+    }
+    return;
+  }
+
+  if (event.type === 'TALENT_UPGRADED') {
+    if (event.data.player === myPlayerIdRef.current) {
+      onTalentUpgraded?.({ talent: event.data.talent, level: event.data.level });
+    }
+    return;
   }
 }

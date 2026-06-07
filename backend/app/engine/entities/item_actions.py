@@ -67,6 +67,7 @@ def action_drink(game, player, item, tx=None, ty=None) -> None:
         if removed is not None and player.belongings.get_item(item.id) is None:
             player.quickslot.convert_to_placeholder(removed)
         game.add_event("DRINK", {"player": player.id, "type": "fury"}, floor_id=player.floor_id, source_player_id=player.id)
+    game.on_potion_drunk(player, item)
 
 
 def action_affix(game, player, item, tx=None, ty=None) -> None:
@@ -155,8 +156,17 @@ def action_stealth(game, player, item, tx=None, ty=None) -> None:
     game.toggle_cloak_stealth(player.id)
 
 
+def action_eat_handler(game, player, item, tx=None, ty=None) -> None:
+    removed = player.belongings.backpack.detach(item.id)
+    if removed is not None:
+        if player.belongings.get_item(item.id) is None:
+            player.quickslot.convert_to_placeholder(removed)
+        game.on_food_eaten(player, item)
+    game.add_event("EAT", {"player": player.id, "item": item.id}, floor_id=player.floor_id)
+
+
 def action_noop(game, player, item, tx=None, ty=None) -> None:
-    # OPEN (bag) / EAT (no food effects yet) are handled client-side or are no-ops.
+    # OPEN (bag) are handled client-side or are no-ops.
     return
 
 
@@ -170,7 +180,7 @@ ITEM_ACTION_DISPATCH = {
     Action.ZAP: action_zap,
     Action.AFFIX: action_affix,
     Action.STEALTH: action_stealth,
-    Action.EAT: action_noop,
+    Action.EAT: action_eat_handler,
     Action.OPEN: action_noop,
     Action.INFO: action_noop,
 }
