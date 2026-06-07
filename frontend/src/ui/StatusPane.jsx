@@ -54,7 +54,7 @@ function lerpColor(t, colors) {
   return `rgb(${r},${g},${bl})`;
 }
 
-export default function StatusPane({ myStats, depth, onSearch }) {
+export default function StatusPane({ myStats, depth, onSearch, hasTalentPoints, onOpenTalents }) {
   const canvasRef = useRef(null);
   const imagesRef = useRef({});
   const imgsLoadedRef = useRef(false);
@@ -62,6 +62,9 @@ export default function StatusPane({ myStats, depth, onSearch }) {
   const starsRef = useRef([]);
   const prevLevelRef = useRef(myStats.level || 1);
   const warningRef = useRef(0);
+  const talentBlinkRef = useRef(0);
+  const hasPtsRef = useRef(false);
+  useEffect(() => { hasPtsRef.current = !!hasTalentPoints; }, [hasTalentPoints]);
 
   useEffect(() => { statsRef.current = myStats; }, [myStats]);
 
@@ -136,6 +139,13 @@ export default function StatusPane({ myStats, depth, onSearch }) {
         }
         prevLevelRef.current = level;
 
+        // Talent blink — golden pulse when talent points available (SPD StatusPane.talentBlink)
+        if (hasPtsRef.current) {
+          talentBlinkRef.current = (talentBlinkRef.current + dt * FLASH_RATE) % 2;
+        } else {
+          talentBlinkRef.current = 0;
+        }
+
         ctx.imageSmoothingEnabled = false;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -154,6 +164,10 @@ export default function StatusPane({ myStats, depth, onSearch }) {
         }
 
         // --- Avatar ---
+        // Solid background so transparent sprite edges show uniform color
+        ctx.fillStyle = '#161616';
+        ctx.fillRect(9 * SCALE, 8 * SCALE, FRAME_W * SCALE, FRAME_H * SCALE);
+
         if (sheet?.complete && sheet?.naturalWidth > 0) {
           const ac = avatarCanvas.getContext('2d');
           ac.imageSmoothingEnabled = false;
@@ -236,7 +250,7 @@ export default function StatusPane({ myStats, depth, onSearch }) {
   }, []);
 
   return (
-    <div className="top-left-hud">
+    <div className="top-left-hud" onClick={() => onOpenTalents?.()}>
       <canvas
         ref={canvasRef}
         width={PANE_W * SCALE}
@@ -248,7 +262,7 @@ export default function StatusPane({ myStats, depth, onSearch }) {
         <button
           type="button"
           className="search-btn"
-          onClick={() => { AudioManager.play('CLICK'); onSearch(); }}
+          onClick={(e) => { e.stopPropagation(); AudioManager.play('CLICK'); onSearch(); }}
         >
           Search (E)
         </button>
