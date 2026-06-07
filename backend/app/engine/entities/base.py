@@ -134,6 +134,9 @@ class Entity(BaseModel):
     def get_damage_max(self) -> int:
         return self.damage_max
 
+    def get_surprise_damage_floor(self) -> float:
+        return 0.0
+
     def get_effective_defense_skill(self) -> int:
         return self.defense_skill
 
@@ -1014,6 +1017,9 @@ class Mob(Entity):
     # remaining real-time lifespan in seconds (0 = permanent until killed).
     owner_id: Optional[str] = None
     summon_lifespan: float = 0.0
+
+    def die(self, attacker=None, floor_mobs=None, tile_x=0, tile_y=0, players=None):
+        pass
 
 class Player(Entity):
     type: str = EntityType.PLAYER

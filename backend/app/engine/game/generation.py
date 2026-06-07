@@ -30,8 +30,9 @@ from app.engine.entities.mobs import (
     Rat, Snake, Gnoll, Swarm, Crab, Slime,
     AlbinoRat, GnollExile, HermitCrab, CausticSlime,
     Goo,
+    Skeleton, Thief, DM100, Guard, Necromancer,
 )
-from app.engine.game.constants import MAP_HEIGHT, MAP_WIDTH, MAX_FLOOR_ID, SEWERS_MAX_FLOOR
+from app.engine.game.constants import MAP_HEIGHT, MAP_WIDTH, MAX_FLOOR_ID, SEWERS_MAX_FLOOR, PRISON_MAX_FLOOR
 from app.engine.game.floor_state import FloorState
 
 
@@ -79,6 +80,16 @@ class GenerationMixin:
                 mobs={},
                 items={},
                 region="sewers",
+            )
+        elif depth <= PRISON_MAX_FLOOR:
+            grid, rooms = generator.generate(10 + depth, 4, 8 + (depth // 10))
+            floor = FloorState(
+                floor_id=depth,
+                grid=grid,
+                rooms=rooms,
+                mobs={},
+                items={},
+                region="prison",
             )
         else:
             grid, rooms = generator.generate(10 + depth, 4, 8 + (depth // 10))
@@ -136,6 +147,15 @@ class GenerationMixin:
         }
         return rotations.get(floor_id, [Rat])
 
+    def _get_prison_rotation(self, floor_id: int) -> List[Type[MobEntity]]:
+        rotations = {
+            6: [Skeleton, Skeleton, Thief, DM100],
+            7: [Skeleton, Thief, DM100, DM100, Guard],
+            8: [Thief, DM100, Guard, Guard, Necromancer],
+            9: [DM100, Guard, Necromancer, Necromancer],
+        }
+        return rotations.get(floor_id, [Skeleton])
+
     def _get_mob_limit(self, floor_id: int) -> int:
         if floor_id == 1:
             return 8
@@ -179,17 +199,31 @@ class GenerationMixin:
         if floor.floor_id % 5 == 0:
             self._spawn_boss(floor, unsafe_floor_tiles)
 
-        if floor.floor_id != 5:
-            rotation = self._get_sewers_rotation(floor.floor_id)
+        if floor.floor_id != 5 and floor.floor_id != 10:
+            if floor.floor_id <= SEWERS_MAX_FLOOR:
+                rotation = self._get_sewers_rotation(floor.floor_id)
+                rare_chance = 0.02
+                rare_alts = {
+                    Rat: AlbinoRat,
+                    Gnoll: GnollExile,
+                    Crab: HermitCrab,
+                    Slime: CausticSlime,
+                }
+            elif floor.floor_id <= PRISON_MAX_FLOOR:
+                rotation = self._get_prison_rotation(floor.floor_id)
+                rare_chance = 0.0
+                rare_alts = {}
+            else:
+                rotation = self._get_sewers_rotation(floor.floor_id)
+                rare_chance = 0.02
+                rare_alts = {
+                    Rat: AlbinoRat,
+                    Gnoll: GnollExile,
+                    Crab: HermitCrab,
+                    Slime: CausticSlime,
+                }
             mob_limit = self._get_mob_limit(floor.floor_id)
             floor.mob_limit = mob_limit
-            rare_chance = 0.02
-            rare_alts = {
-                Rat: AlbinoRat,
-                Gnoll: GnollExile,
-                Crab: HermitCrab,
-                Slime: CausticSlime,
-            }
 
             spawn_count = mob_limit if floor.floor_id != 1 else min(mob_limit, len(rotation) * 2)
             for i in range(spawn_count):

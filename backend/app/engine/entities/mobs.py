@@ -258,3 +258,134 @@ class Goo(MobEntity):
     exp: int = 15
     max_lvl: int = 15
     attack_cooldown: float = 2.5
+
+
+# ---------------------------------------------------------------------------
+# Prison Enemies (depths 6-9)
+# ---------------------------------------------------------------------------
+
+class Skeleton(MobEntity):
+    name: str = "Skeleton"
+    hp: int = 25
+    max_hp: int = 25
+    attack_skill: int = 12
+    defense_skill: int = 9
+    damage_min: int = 2
+    damage_max: int = 10
+    dr_min: int = 0
+    dr_max: int = 5
+    exp: int = 5
+    max_lvl: int = 10
+    properties: List[str] = ["UNDEAD", "INORGANIC", "BONES"]
+    loot_table: List[DropEntry] = [
+        DropEntry(item_kind="weapon", chance=0.1667, max_global=0),
+    ]
+
+    def die(self, attacker=None, floor_mobs=None, tile_x=0, tile_y=0, players=None):
+        dmg = random.randint(6, 12)
+        targets = []
+        seen_ids = set()
+        if floor_mobs:
+            for m in floor_mobs.values():
+                if m.is_alive and m.id != getattr(self, "id", "") and abs(m.pos.x - tile_x) + abs(m.pos.y - tile_y) <= 1:
+                    if m.id not in seen_ids:
+                        targets.append(m)
+                        seen_ids.add(m.id)
+        if players:
+            for p in players:
+                if p.is_alive and abs(p.pos.x - tile_x) + abs(p.pos.y - tile_y) <= 1:
+                    if p.id not in seen_ids:
+                        targets.append(p)
+                        seen_ids.add(p.id)
+        if attacker and attacker.id not in seen_ids and abs(attacker.pos.x - tile_x) + abs(attacker.pos.y - tile_y) <= 1:
+            targets.append(attacker)
+            seen_ids.add(attacker.id)
+        for t in targets:
+            t.take_damage(dmg)
+
+
+class Thief(MobEntity):
+    name: str = "Thief"
+    hp: int = 20
+    max_hp: int = 20
+    attack_skill: int = 12
+    defense_skill: int = 12
+    damage_min: int = 1
+    damage_max: int = 10
+    dr_min: int = 0
+    dr_max: int = 3
+    speed: float = 1.5
+    exp: int = 5
+    max_lvl: int = 11
+    attack_cooldown: float = 1.5
+    properties: List[str] = ["UNDEAD"]
+    loot_table: List[DropEntry] = [
+        DropEntry(item_kind="ring", chance=0.03, max_global=0),
+        DropEntry(item_kind="artifact", chance=0.03, max_global=0),
+    ]
+
+    def attack_proc(self, target):
+        gold_stolen = min(getattr(target, "gold", 0), random.randint(5, 20))
+        if gold_stolen > 0:
+            target.gold -= gold_stolen
+            self.ai_state = "fleeing"
+
+    def defense_proc(self, damage: int, attacker, floor_mobs: dict, tile_x: int, tile_y: int):
+        if self.ai_state == "fleeing":
+            pass
+        return damage
+
+
+class DM100(MobEntity):
+    name: str = "DM-100"
+    hp: int = 20
+    max_hp: int = 20
+    attack_skill: int = 11
+    defense_skill: int = 8
+    damage_min: int = 2
+    damage_max: int = 8
+    dr_min: int = 0
+    dr_max: int = 4
+    exp: int = 6
+    max_lvl: int = 13
+    attack_range: int = 8
+    properties: List[str] = ["ELECTRIC", "INORGANIC"]
+    loot_table: List[DropEntry] = [
+        DropEntry(item_kind="scroll", chance=0.25, max_global=0),
+    ]
+
+
+class Guard(MobEntity):
+    name: str = "Guard"
+    hp: int = 40
+    max_hp: int = 40
+    attack_skill: int = 12
+    defense_skill: int = 10
+    damage_min: int = 4
+    damage_max: int = 12
+    dr_min: int = 0
+    dr_max: int = 7
+    exp: int = 7
+    max_lvl: int = 14
+    properties: List[str] = ["UNDEAD"]
+    loot_table: List[DropEntry] = [
+        DropEntry(item_kind="armor", chance=0.2, max_global=0),
+    ]
+
+
+class Necromancer(MobEntity):
+    name: str = "Necromancer"
+    hp: int = 40
+    max_hp: int = 40
+    attack_skill: int = 10
+    defense_skill: int = 14
+    damage_min: int = 2
+    damage_max: int = 5
+    dr_min: int = 0
+    dr_max: int = 5
+    exp: int = 7
+    max_lvl: int = 14
+    properties: List[str] = ["UNDEAD", "DEMONIC"]
+    loot_table: List[DropEntry] = [
+        DropEntry(item_kind="health_potion", chance=0.2, max_global=0),
+    ]

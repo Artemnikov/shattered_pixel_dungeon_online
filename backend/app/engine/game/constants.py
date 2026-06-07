@@ -7,6 +7,7 @@ backward-compatible imports.
 
 MAX_FLOOR_ID = 50
 SEWERS_MAX_FLOOR = 4
+PRISON_MAX_FLOOR = 9
 
 AUTO_MOVE_INTERVAL = 0.15
 

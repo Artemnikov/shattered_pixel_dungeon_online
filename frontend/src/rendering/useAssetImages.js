@@ -22,6 +22,11 @@ import batSprite from '../assets/pixel-dungeon/sprites/bat.png';
 import gnollSprite from '../assets/pixel-dungeon/sprites/gnoll.png';
 import gooSprite from '../assets/pixel-dungeon/sprites/goo.png';
 import scorpioSprite from '../assets/pixel-dungeon/sprites/scorpio.png';
+import skeletonSprite from '../assets/pixel-dungeon/sprites/skeleton.png';
+import thiefSprite from '../assets/pixel-dungeon/sprites/thief.png';
+import dm100Sprite from '../assets/pixel-dungeon/sprites/dm100.png';
+import guardSprite from '../assets/pixel-dungeon/sprites/guard.png';
+import necromancerSprite from '../assets/pixel-dungeon/sprites/necromancer.png';
 
 export default function useAssetImages() {
   const [assetImages, setAssetImages] = useState({
@@ -46,6 +51,11 @@ export default function useAssetImages() {
     gnoll: null,
     goo: null,
     scorpio: null,
+    skeleton: null,
+    thief: null,
+    dm100: null,
+    guard: null,
+    necromancer: null,
   });
 
   useEffect(() => {
@@ -105,6 +115,11 @@ export default function useAssetImages() {
     loadImage(gnollSprite, 'gnoll');
     loadImage(gooSprite, 'goo');
     loadImage(scorpioSprite, 'scorpio');
+    loadImage(skeletonSprite, 'skeleton');
+    loadImage(thiefSprite, 'thief');
+    loadImage(dm100Sprite, 'dm100');
+    loadImage(guardSprite, 'guard');
+    loadImage(necromancerSprite, 'necromancer');
   }, []);
 
   return assetImages;

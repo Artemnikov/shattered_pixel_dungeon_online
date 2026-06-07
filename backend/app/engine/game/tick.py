@@ -20,6 +20,8 @@ from app.engine.game.constants import (
     PASSIVE_REGEN_INTERVAL,
     RESPAWN_TURNS,
     ROOM_HEAL_AMOUNT,
+    SEWERS_MAX_FLOOR,
+    PRISON_MAX_FLOOR,
 )
 from app.engine.game.floor_state import FloorState
 
@@ -160,6 +162,22 @@ class TickMixin:
                     continue
 
                 target_player = self._find_nearest_player(mob.pos, floor_id)
+                # Fleeing mob: run away from nearest player, don't attack
+                if mob.ai_state == "fleeing":
+                    if target_player:
+                        dx = mob.pos.x - target_player.pos.x
+                        dy = mob.pos.y - target_player.pos.y
+                        if abs(dx) >= abs(dy):
+                            step = (1 if dx > 0 else -1, 0)
+                        else:
+                            step = (0, 1 if dy > 0 else -1)
+                        nx, ny = mob.pos.x + step[0], mob.pos.y + step[1]
+                        if 0 <= nx < floor.width and 0 <= ny < floor.height:
+                            occupied = any(m.is_alive and m.pos.x == nx and m.pos.y == ny for m in floor.mobs.values() if m.id != mob.id)
+                            if not occupied:
+                                self.move_entity(mob.id, step[0], step[1])
+                    continue
+
                 # Stealth/invisibility check: skip players who are invisible
                 if target_player and target_player.invisible > 0:
                     # Also check if Shadows buff — if active, mob can't see the player at all
@@ -313,6 +331,12 @@ class TickMixin:
                     if mob.hp <= 0:
                         mob.hp = 0
                         mob.is_alive = False
+                        mob.die(
+                            floor_mobs=floor.mobs,
+                            tile_x=mob.pos.x,
+                            tile_y=mob.pos.y,
+                            players=list(self._players_on_floor(floor_id)),
+                        )
                         self.add_event("DEATH", {"target": mob.id}, floor_id=floor_id)
                     if mob.bleed_turns <= 0:
                         mob.bleed_amount = 0
@@ -328,7 +352,12 @@ class TickMixin:
         if floor.respawn_counter < RESPAWN_TURNS:
             return
         floor.respawn_counter = 0
-        rotation = self._get_sewers_rotation(floor_id)
+        if floor_id <= SEWERS_MAX_FLOOR:
+            rotation = self._get_sewers_rotation(floor_id)
+        elif floor_id <= PRISON_MAX_FLOOR:
+            rotation = self._get_prison_rotation(floor_id)
+        else:
+            rotation = self._get_sewers_rotation(floor_id)
         cls = random.choice(rotation) if rotation else Rat
         floor_tiles = [
             (x, y) for y in range(floor.height) for x in range(floor.width)

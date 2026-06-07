@@ -160,6 +160,14 @@ class MovementCombatMixin:
                     if isinstance(entity, Player):
                         self.on_kill(entity, target_entity, floor.mobs, floor_id)
                     self.add_event("DEATH", {"target": target_entity.id}, floor_id=floor_id)
+                    if isinstance(target_entity, MobEntity):
+                        target_entity.die(
+                            attacker=entity,
+                            floor_mobs=floor.mobs,
+                            tile_x=target_entity.pos.x,
+                            tile_y=target_entity.pos.y,
+                            players=list(self._players_on_floor(floor_id)),
+                        )
                     if isinstance(entity, Player) and isinstance(target_entity, MobEntity):
                         if entity.earn_exp(target_entity.exp):
                             self.on_talent_level_up(entity)

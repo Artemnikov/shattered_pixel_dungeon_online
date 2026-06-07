@@ -14,6 +14,23 @@ export const SNAKE_FW = 12;
 export const SNAKE_FH = 11;
 export const SNAKE_DEST = { dx: 4, dy: 5, dw: 24, dh: 22 };
 
+// Prison mob frame sizes (from SPD sprite classes)
+export const SKELETON_FW = 12;
+export const SKELETON_FH = 15;
+export const SKELETON_DEST = { dx: 4, dy: 1, dw: 24, dh: 30 };
+
+export const THIEF_FW = 12;
+export const THIEF_FH = 13;
+export const THIEF_DEST = { dx: 4, dy: 3, dw: 24, dh: 26 };
+
+export const DM100_FW = 16;
+export const DM100_FH = 14;
+export const DM100_DEST = { dx: 0, dy: 2, dw: 32, dh: 28 };
+
+export const GUARD_FW = 12;
+export const GUARD_FH = 16;
+export const GUARD_DEST = { dx: 4, dy: 0, dw: 24, dh: 32 };
+
 const isEntityMoving = (mob) =>
   mob.targetPos &&
   (Math.abs(mob.targetPos.x - mob.renderPos.x) > 0.05 ||
@@ -60,6 +77,76 @@ export const getScorpioFrame = (mob, mobAnim, now) => {
   }
   if (isEntityMoving(mob)) return [5, 5, 6, 6][Math.floor(now / 125) % 4] * SCORPIO_FW;
   return [0,0,0,0,0,0,0,0,1,2,1,2,1,2][Math.floor(now / 83) % 14] * SCORPIO_FW;
+};
+
+export const getSkeletonFrame = (mob, mobAnim, now) => {
+  const anim = mobAnim[mob.id] || {};
+  const isAttacking = anim.attackUntil && now < anim.attackUntil;
+  if (isAttacking) {
+    const elapsed = now - (anim.attackUntil - 200);
+    const fi = Math.min(Math.floor(elapsed / 67), 2);
+    return [14, 15, 16][fi] * SKELETON_FW;
+  }
+  if (isEntityMoving(mob)) {
+    return [4, 5, 6, 7, 8, 9][Math.floor(now / 67) % 6] * SKELETON_FW;
+  }
+  return [0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,3][Math.floor(now / 83) % 16] * SKELETON_FW;
+};
+
+export const getThiefFrame = (mob, mobAnim, now) => {
+  const anim = mobAnim[mob.id] || {};
+  const isAttacking = anim.attackUntil && now < anim.attackUntil;
+  if (isAttacking) {
+    const elapsed = now - (anim.attackUntil - 333);
+    const fi = Math.min(Math.floor(elapsed / 83), 3);
+    return [10, 11, 12, 0][fi] * THIEF_FW;
+  }
+  if (isEntityMoving(mob)) {
+    return [0, 0, 2, 3, 3, 4][Math.floor(now / 67) % 6] * THIEF_FW;
+  }
+  return [0, 0, 0, 1, 0, 0, 0, 0, 1][Math.floor(now / 1000) % 9] * THIEF_FW;
+};
+
+export const getDM100Frame = (mob, mobAnim, now) => {
+  const anim = mobAnim[mob.id] || {};
+  const isAttacking = anim.attackUntil && now < anim.attackUntil;
+  if (isAttacking) {
+    const elapsed = now - (anim.attackUntil - 250);
+    const fi = Math.min(Math.floor(elapsed / 63), 3);
+    return [2, 3, 4, 0][fi] * DM100_FW;
+  }
+  if (isEntityMoving(mob)) {
+    return [6, 7, 8, 9][Math.floor(now / 83) % 4] * DM100_FW;
+  }
+  return [0, 1][Math.floor(now / 1000) % 2] * DM100_FW;
+};
+
+export const getGuardFrame = (mob, mobAnim, now) => {
+  const anim = mobAnim[mob.id] || {};
+  const isAttacking = anim.attackUntil && now < anim.attackUntil;
+  if (isAttacking) {
+    const elapsed = now - (anim.attackUntil - 250);
+    const fi = Math.min(Math.floor(elapsed / 83), 2);
+    return [8, 9, 10][fi] * GUARD_FW;
+  }
+  if (isEntityMoving(mob)) {
+    return [2, 3, 4, 5, 6, 7][Math.floor(now / 67) % 6] * GUARD_FW;
+  }
+  return [0, 0, 0, 1, 0, 0, 1, 1][Math.floor(now / 500) % 8] * GUARD_FW;
+};
+
+export const getNecromancerFrame = (mob, mobAnim, now) => {
+  const anim = mobAnim[mob.id] || {};
+  const isAttacking = anim.attackUntil && now < anim.attackUntil;
+  if (isAttacking) {
+    const elapsed = now - (anim.attackUntil - 400);
+    const fi = Math.min(Math.floor(elapsed / 100), 3);
+    return [5, 6, 7, 8][fi] * FRAME_W;
+  }
+  if (isEntityMoving(mob)) {
+    return [0, 0, 0, 2, 3, 4][Math.floor(now / 125) % 6] * FRAME_W;
+  }
+  return [0, 0, 0, 1, 0, 0, 0, 0, 1][Math.floor(now / 1000) % 9] * FRAME_W;
 };
 
 export const getRatFrame = (mob, mobAnim, now) => {
