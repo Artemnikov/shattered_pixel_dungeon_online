@@ -338,7 +338,7 @@ export default function useGameSocket({
             maxExp: 5 + (p.level || 1) * 5,
             effects: p.active_effects || [],
             classType: p.class_type || 'warrior',
-            armorTier: 0,
+            armorTier: (() => { const a = p.belongings?.armor; return a && 'tier' in a ? a.tier ?? 0 : 0; })(),
             strength: p.strength ?? 10,
             subclass: p.subclass_info?.subclass || null,
             armorAbility: p.armor_ability || null,

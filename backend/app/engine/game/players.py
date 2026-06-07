@@ -44,15 +44,18 @@ class PlayersMixin:
         # equipped items live in Belongings, not the backpack).
         belongings = Belongings()
 
+        # Every hero starts with Cloth Armor (SPD HeroClass.initHero equips a
+        # ClothArmor for all classes before applying class-specific gear).
+        belongings.armor = Armor(
+            id=str(uuid.uuid4()),
+            name="Cloth Armor",
+            tier=1,
+            strength_requirement=10,
+        )
+
         if class_type == CharacterClass.WARRIOR:
             belongings.weapon = WornShortsword(
                 id=str(uuid.uuid4()),
-            )
-            belongings.armor = Armor(
-                id=str(uuid.uuid4()),
-                name="Cloth Armor",
-                tier=1,
-                strength_requirement=10,
             )
             belongings.artifact = BrokenSeal(
                 id=str(uuid.uuid4()),
@@ -82,12 +85,6 @@ class PlayersMixin:
             # signature item.
             belongings.weapon = Dagger(
                 id=str(uuid.uuid4()),
-            )
-            belongings.armor = Armor(
-                id=str(uuid.uuid4()),
-                name="Cloth Armor",
-                tier=1,
-                strength_requirement=10,
             )
             belongings.artifact = CloakOfShadows(
                 id=str(uuid.uuid4()),
