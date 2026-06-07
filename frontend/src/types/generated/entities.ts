@@ -76,8 +76,10 @@ export interface Player {
   berserk_power?: number;
   berserk_active?: boolean;
   berserk_cooldown?: number;
+  rampage_stacks?: number;
   combo_count?: number;
   combo_timer?: number;
+  combo_max?: number;
   armor_charge?: number;
   armor_ability?: string;
   seal_affixed?: boolean;
@@ -104,6 +106,7 @@ export interface Player {
     | Potion
     | Scroll
     | ScrollOfRage
+    | ScrollOfMetamorphosis
     | Gold
     | Food
     | MysteryMeat
@@ -141,6 +144,7 @@ export interface Player {
         | Potion
         | Scroll
         | ScrollOfRage
+        | ScrollOfMetamorphosis
         | Gold
         | Food
         | MysteryMeat
@@ -179,6 +183,7 @@ export interface Player {
         | Potion
         | Scroll
         | ScrollOfRage
+        | ScrollOfMetamorphosis
         | Gold
         | Food
         | MysteryMeat
@@ -246,6 +251,7 @@ export interface Belongings {
         | Potion
         | Scroll
         | ScrollOfRage
+        | ScrollOfMetamorphosis
         | Gold
         | Food
         | MysteryMeat
@@ -284,6 +290,7 @@ export interface Belongings {
         | Potion
         | Scroll
         | ScrollOfRage
+        | ScrollOfMetamorphosis
         | Gold
         | Food
         | MysteryMeat
@@ -322,6 +329,7 @@ export interface Belongings {
         | Potion
         | Scroll
         | ScrollOfRage
+        | ScrollOfMetamorphosis
         | Gold
         | Food
         | MysteryMeat
@@ -360,6 +368,7 @@ export interface Belongings {
         | Potion
         | Scroll
         | ScrollOfRage
+        | ScrollOfMetamorphosis
         | Gold
         | Food
         | MysteryMeat
@@ -398,6 +407,7 @@ export interface Belongings {
         | Potion
         | Scroll
         | ScrollOfRage
+        | ScrollOfMetamorphosis
         | Gold
         | Food
         | MysteryMeat
@@ -450,6 +460,7 @@ export interface Bag {
     | Potion
     | Scroll
     | ScrollOfRage
+    | ScrollOfMetamorphosis
     | Gold
     | Food
     | MysteryMeat
@@ -791,6 +802,20 @@ export interface ScrollOfRage {
   unique?: boolean;
   kept_though_lost?: boolean;
 }
+export interface ScrollOfMetamorphosis {
+  kind?: "scroll_of_metamorphosis";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+}
 export interface Gold {
   kind?: "gold";
   id?: string;
@@ -996,6 +1021,7 @@ export interface VelvetPouch {
     | Potion
     | Scroll
     | ScrollOfRage
+    | ScrollOfMetamorphosis
     | Gold
     | Food
     | MysteryMeat
@@ -1047,6 +1073,7 @@ export interface ScrollHolder {
     | Potion
     | Scroll
     | ScrollOfRage
+    | ScrollOfMetamorphosis
     | Gold
     | Food
     | MysteryMeat
@@ -1098,6 +1125,7 @@ export interface MagicalHolster {
     | Potion
     | Scroll
     | ScrollOfRage
+    | ScrollOfMetamorphosis
     | Gold
     | Food
     | MysteryMeat
@@ -1149,6 +1177,7 @@ export interface PotionBandolier {
     | Potion
     | Scroll
     | ScrollOfRage
+    | ScrollOfMetamorphosis
     | Gold
     | Food
     | MysteryMeat
@@ -1178,7 +1207,15 @@ export interface QuickSlotEntry {
 export interface SubclassInfo {
   subclass?: string | null;
   talent_info?: TalentInfo;
-  talent_points?: Record<string, number>;
+  talent_points?: {
+    [k: string]: number;
+  };
+  bonus_talent_points?: {
+    [k: string]: number;
+  };
+  metamorphed_talents?: {
+    [k: string]: string;
+  };
 }
 export interface TalentInfo {
   talents?: {

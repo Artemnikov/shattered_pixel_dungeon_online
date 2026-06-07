@@ -93,6 +93,12 @@ def action_read(game, player, item, tx=None, ty=None) -> None:
         removed = player.belongings.backpack.detach(item.id)
         if removed is not None and player.belongings.get_item(item.id) is None:
             player.quickslot.convert_to_placeholder(removed)
+    elif effect == "scroll_of_metamorphosis":
+        removed = player.belongings.backpack.detach(item.id)
+        if removed is not None and player.belongings.get_item(item.id) is None:
+            player.quickslot.convert_to_placeholder(removed)
+        game.add_event("METAMORPH_OPEN", {"player": player.id}, floor_id=player.floor_id)
+        return
     game.add_event("READ", {"player": player.id, "item": item.id}, floor_id=player.floor_id)
 
 

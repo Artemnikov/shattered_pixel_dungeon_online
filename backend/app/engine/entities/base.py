@@ -620,6 +620,15 @@ class ScrollOfRage(Scroll):
         return [Action.READ, Action.THROW, Action.DROP]
 
 
+class ScrollOfMetamorphosis(Scroll):
+    kind: Literal["scroll_of_metamorphosis"] = "scroll_of_metamorphosis"
+    name: str = "Scroll of Metamorphosis"
+    DESC: ClassVar[str] = "A scroll that lets you replace one of your talents with a talent from another class."
+
+    def actions(self, player: Optional["Player"] = None) -> List[str]:
+        return [Action.READ, Action.THROW, Action.DROP]
+
+
 class Throwable(ItemBase):
     kind: Literal["throwable"] = "throwable"
     type: str = "throwable"
@@ -844,7 +853,7 @@ AnyItem = Annotated[
     Union[
         MeleeWeapon, Dagger, WornShortsword, Bow, Staff, MissileWeapon,
         Armor, Ring, Artifact, BrokenSeal, CloakOfShadows, Wand,
-        HealthPotion, RevivingPotion, FuryPotion, Potion, Scroll, ScrollOfRage, Gold, Food, MysteryMeat, Berry, Key,
+        HealthPotion, RevivingPotion, FuryPotion, Potion, Scroll, ScrollOfRage, ScrollOfMetamorphosis, Gold, Food, MysteryMeat, Berry, Key,
         Seed, Dewdrop, Stone, Boomerang, ThrowableDagger, Throwable,
         VelvetPouch, ScrollHolder, MagicalHolster, PotionBandolier, Bag,
     ],

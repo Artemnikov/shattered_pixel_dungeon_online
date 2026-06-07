@@ -252,6 +252,7 @@
                 "ring": "#/$defs/Ring",
                 "scroll": "#/$defs/Scroll",
                 "scroll_holder": "#/$defs/ScrollHolder",
+                "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
                 "scroll_of_rage": "#/$defs/ScrollOfRage",
                 "seed": "#/$defs/Seed",
                 "staff": "#/$defs/Staff",
@@ -318,6 +319,9 @@
               },
               {
                 "$ref": "#/$defs/ScrollOfRage"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfMetamorphosis"
               },
               {
                 "$ref": "#/$defs/Gold"
@@ -412,6 +416,7 @@
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
                   "scroll_of_rage": "#/$defs/ScrollOfRage",
                   "seed": "#/$defs/Seed",
                   "staff": "#/$defs/Staff",
@@ -478,6 +483,9 @@
                 },
                 {
                   "$ref": "#/$defs/ScrollOfRage"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMetamorphosis"
                 },
                 {
                   "$ref": "#/$defs/Gold"
@@ -565,6 +573,7 @@
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
                   "scroll_of_rage": "#/$defs/ScrollOfRage",
                   "seed": "#/$defs/Seed",
                   "staff": "#/$defs/Staff",
@@ -631,6 +640,9 @@
                 },
                 {
                   "$ref": "#/$defs/ScrollOfRage"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMetamorphosis"
                 },
                 {
                   "$ref": "#/$defs/Gold"
@@ -718,6 +730,7 @@
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
                   "scroll_of_rage": "#/$defs/ScrollOfRage",
                   "seed": "#/$defs/Seed",
                   "staff": "#/$defs/Staff",
@@ -784,6 +797,9 @@
                 },
                 {
                   "$ref": "#/$defs/ScrollOfRage"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMetamorphosis"
                 },
                 {
                   "$ref": "#/$defs/Gold"
@@ -871,6 +887,7 @@
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
                   "scroll_of_rage": "#/$defs/ScrollOfRage",
                   "seed": "#/$defs/Seed",
                   "staff": "#/$defs/Staff",
@@ -937,6 +954,9 @@
                 },
                 {
                   "$ref": "#/$defs/ScrollOfRage"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMetamorphosis"
                 },
                 {
                   "$ref": "#/$defs/Gold"
@@ -1024,6 +1044,7 @@
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
                   "scroll_of_rage": "#/$defs/ScrollOfRage",
                   "seed": "#/$defs/Seed",
                   "staff": "#/$defs/Staff",
@@ -1090,6 +1111,9 @@
                 },
                 {
                   "$ref": "#/$defs/ScrollOfRage"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMetamorphosis"
                 },
                 {
                   "$ref": "#/$defs/Gold"
@@ -1647,7 +1671,7 @@
           "type": "integer"
         },
         "attack_cooldown": {
-          "default": 1.5,
+          "default": 0.84,
           "type": "number"
         },
         "enchantment": {
@@ -2200,6 +2224,7 @@
                 "ring": "#/$defs/Ring",
                 "scroll": "#/$defs/Scroll",
                 "scroll_holder": "#/$defs/ScrollHolder",
+                "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
                 "scroll_of_rage": "#/$defs/ScrollOfRage",
                 "seed": "#/$defs/Seed",
                 "staff": "#/$defs/Staff",
@@ -2266,6 +2291,9 @@
               },
               {
                 "$ref": "#/$defs/ScrollOfRage"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfMetamorphosis"
               },
               {
                 "$ref": "#/$defs/Gold"
@@ -3076,6 +3104,10 @@
           "default": 0,
           "type": "integer"
         },
+        "rampage_stacks": {
+          "default": 0,
+          "type": "integer"
+        },
         "combo_count": {
           "default": 0,
           "type": "integer"
@@ -3083,6 +3115,10 @@
         "combo_timer": {
           "default": 0.0,
           "type": "number"
+        },
+        "combo_max": {
+          "default": 10,
+          "type": "integer"
         },
         "armor_charge": {
           "default": 0,
@@ -3141,6 +3177,7 @@
                 "ring": "#/$defs/Ring",
                 "scroll": "#/$defs/Scroll",
                 "scroll_holder": "#/$defs/ScrollHolder",
+                "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
                 "scroll_of_rage": "#/$defs/ScrollOfRage",
                 "seed": "#/$defs/Seed",
                 "staff": "#/$defs/Staff",
@@ -3207,6 +3244,9 @@
               },
               {
                 "$ref": "#/$defs/ScrollOfRage"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfMetamorphosis"
               },
               {
                 "$ref": "#/$defs/Gold"
@@ -3291,6 +3331,7 @@
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
                   "scroll_of_rage": "#/$defs/ScrollOfRage",
                   "seed": "#/$defs/Seed",
                   "staff": "#/$defs/Staff",
@@ -3357,6 +3398,9 @@
                 },
                 {
                   "$ref": "#/$defs/ScrollOfRage"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMetamorphosis"
                 },
                 {
                   "$ref": "#/$defs/Gold"
@@ -3444,6 +3488,7 @@
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
                   "scroll_of_rage": "#/$defs/ScrollOfRage",
                   "seed": "#/$defs/Seed",
                   "staff": "#/$defs/Staff",
@@ -3510,6 +3555,9 @@
                 },
                 {
                   "$ref": "#/$defs/ScrollOfRage"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMetamorphosis"
                 },
                 {
                   "$ref": "#/$defs/Gold"
@@ -3753,6 +3801,7 @@
                 "ring": "#/$defs/Ring",
                 "scroll": "#/$defs/Scroll",
                 "scroll_holder": "#/$defs/ScrollHolder",
+                "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
                 "scroll_of_rage": "#/$defs/ScrollOfRage",
                 "seed": "#/$defs/Seed",
                 "staff": "#/$defs/Staff",
@@ -3819,6 +3868,9 @@
               },
               {
                 "$ref": "#/$defs/ScrollOfRage"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfMetamorphosis"
               },
               {
                 "$ref": "#/$defs/Gold"
@@ -4203,6 +4255,7 @@
                 "ring": "#/$defs/Ring",
                 "scroll": "#/$defs/Scroll",
                 "scroll_holder": "#/$defs/ScrollHolder",
+                "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
                 "scroll_of_rage": "#/$defs/ScrollOfRage",
                 "seed": "#/$defs/Seed",
                 "staff": "#/$defs/Staff",
@@ -4271,6 +4324,9 @@
                 "$ref": "#/$defs/ScrollOfRage"
               },
               {
+                "$ref": "#/$defs/ScrollOfMetamorphosis"
+              },
+              {
                 "$ref": "#/$defs/Gold"
               },
               {
@@ -4321,6 +4377,67 @@
             ]
           },
           "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "ScrollOfMetamorphosis": {
+      "properties": {
+        "kind": {
+          "const": "scroll_of_metamorphosis",
+          "default": "scroll_of_metamorphosis",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Scroll of Metamorphosis",
+          "type": "string"
+        },
+        "type": {
+          "default": "scroll",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "type": "object"
@@ -4670,6 +4787,24 @@
         },
         "talent_info": {
           "$ref": "#/$defs/TalentInfo"
+        },
+        "talent_points": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "type": "object"
+        },
+        "bonus_talent_points": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "type": "object"
+        },
+        "metamorphed_talents": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         }
       },
       "type": "object"
@@ -4932,6 +5067,7 @@
                 "ring": "#/$defs/Ring",
                 "scroll": "#/$defs/Scroll",
                 "scroll_holder": "#/$defs/ScrollHolder",
+                "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
                 "scroll_of_rage": "#/$defs/ScrollOfRage",
                 "seed": "#/$defs/Seed",
                 "staff": "#/$defs/Staff",
@@ -4998,6 +5134,9 @@
               },
               {
                 "$ref": "#/$defs/ScrollOfRage"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfMetamorphosis"
               },
               {
                 "$ref": "#/$defs/Gold"

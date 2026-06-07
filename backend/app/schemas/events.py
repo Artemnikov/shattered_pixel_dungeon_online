@@ -194,6 +194,23 @@ class AffixSealData(_EventData):
     armor: str
 
 
+class MetamorphOpenData(_EventData):
+    player: str
+
+
+class MetamorphOptionsData(_EventData):
+    player: str
+    old_talent: str
+    options: List[dict]
+    """[{id, name, tier, subclass, max_pts, description}] eligible replacements."""
+
+
+class TalentMetamorphData(_EventData):
+    player: str
+    old_talent: str
+    new_talent: str
+
+
 # event "type" -> payload model. Used by the opt-in dev validation hook.
 EVENT_MODELS = {
     "ATTACK": AttackData,
@@ -225,4 +242,7 @@ EVENT_MODELS = {
     "BERSERK_ACTIVATED": BerserkActivatedData,
     "RAGE_CHANGED": RageChangedData,
     "AFFIX_SEAL": AffixSealData,
+    "METAMORPH_OPEN": MetamorphOpenData,
+    "METAMORPH_OPTIONS": MetamorphOptionsData,
+    "TALENT_METAMORPHED": TalentMetamorphData,
 }

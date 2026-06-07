@@ -934,9 +934,10 @@
   background: rgba(0, 0, 0, 0.6);
 }
 .talent-pane {
-  background: #26252b;
-  border: 2px solid #3a3a44;
+  background: #393b35;
+  border: 2px solid #7b8073;
   border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), inset 0 0 0 2px #555950;
   width: 460px;
   max-width: 94vw;
   max-height: 85vh;
@@ -950,7 +951,7 @@
   align-items: center;
   gap: 8px;
   padding: 12px 16px;
-  border-bottom: 2px solid #3a3a44;
+  border-bottom: 2px solid #555950;
   flex-wrap: wrap;
 }
 .talent-title {
@@ -1034,6 +1035,16 @@
   display: flex;
   flex-direction: column;
 }
+.talent-body::-webkit-scrollbar {
+  width: 6px;
+}
+.talent-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.talent-body::-webkit-scrollbar-thumb {
+  background: rgba(123, 128, 115, 0.5);
+  border-radius: 3px;
+}
 
 /* SPD-style tier pane */
 .tier-pane {
@@ -1047,33 +1058,40 @@
   height: 16px;
 }
 .tier-title {
-  color: #c8c8d0;
-  font-size: 11px;
+  color: #ffff44;
+  font-size: 18px;
   font-weight: bold;
-  text-transform: uppercase;
   line-height: 16px;
 }
 .tier-stars {
   display: flex;
-  gap: 4px;
+  gap: 12px;
   align-items: center;
   height: 16px;
 }
 .tier-star {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  border: 1px solid #444;
-  background: #111;
+  width: 14px;
+  height: 14px;
+  background-size: 14px 14px;
   flex-shrink: 0;
 }
 .tier-star.available {
-  background: transparent;
-  border-color: #777;
+  filter: brightness(1);
 }
 .tier-star.spent {
-  background: #777;
-  border-color: #777;
+  filter: brightness(0.75);
+}
+.tier-star.locked {
+  filter: brightness(0);
+}
+.tier-pts-badge {
+  color: #66dd66;
+  font-size: 10px;
+  background: #1a2a1a;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid #2a4a2a;
+  line-height: 14px;
 }
 .tier-random-btn {
   margin-left: auto;
@@ -1138,8 +1156,57 @@
 .talent-btn.locked {
   cursor: default;
 }
+.talent-btn.pressed {
+  filter: brightness(1.5);
+}
 .talent-btn.locked:hover {
   filter: none;
+}
+.talent-btn.locked.pressed {
+  filter: none;
+}
+
+/* Metamorph target glow */
+.talent-btn.metamorph-target {
+  box-shadow: 0 0 8px 3px rgba(255, 200, 50, 0.7);
+  animation: metamorph-pulse 1s ease-in-out infinite;
+}
+.talent-btn.metamorph-target:hover {
+  box-shadow: 0 0 12px 5px rgba(255, 200, 50, 1);
+}
+@keyframes metamorph-pulse {
+  0%, 100% { box-shadow: 0 0 8px 3px rgba(255, 200, 50, 0.7); }
+  50% { box-shadow: 0 0 8px 3px rgba(255, 200, 50, 0.3); }
+}
+.talent-metamorph-hint {
+  font-size: 11px;
+  color: #ffcc33;
+  margin-left: 8px;
+  font-style: italic;
+}
+
+/* Upgrade particle burst */
+.talent-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  overflow: visible;
+}
+.talent-star-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #ffff88;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  left: 18px;
+  top: 24px;
+  animation: talent-star-fly 0.4s ease-out forwards;
+  animation-delay: var(--delay);
+}
+@keyframes talent-star-fly {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(0.3); opacity: 0; }
 }
 
 /* Talent icon inside buttons */
@@ -1424,7 +1491,11 @@
   border-radius: 4px;
   background: #2a4a2a;
   color: #66dd66;
-  cursor: pointer;
+  cursor: var(--cursor-mouse, pointer);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
 }
 .wnd-upgrade-btn:hover {
   background: #3a5a3a;
@@ -1435,6 +1506,11 @@
   color: #555;
   cursor: default;
 }
+.wnd-upgrade-icon {
+  width: 16px;
+  height: 16px;
+  background-size: 512px 128px !important;
+}
 .wnd-close-btn {
   padding: 8px 16px;
   font-family: inherit;
@@ -1443,13 +1519,25 @@
   border-radius: 4px;
   background: #222;
   color: #aaa;
-  cursor: pointer;
+  cursor: var(--cursor-mouse, pointer);
 }
 .wnd-close-btn:hover {
   background: #2a2a2a;
   color: #ddd;
 }
 
+.wnd-info-talent {
+  background: #26252b;
+  border: 2px solid #3a3a44;
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 360px;
+  width: 90vw;
+  font-family: 'Courier New', Courier, monospace;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 /* WndInfoTalent overlay */
 .wnd-overlay {
   position: fixed; inset: 0; z-index: 500;
@@ -1519,4 +1607,111 @@
   border-top: none;
   border-radius: 0 0 6px 6px;
   pointer-events: none;
+}
+
+/* Rankings screen (SPD-style end-of-run summary) */
+.rankings-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  background: rgba(0,0,0,0.7);
+}
+.rankings-pane {
+  background: #1a1a22;
+  border: 2px solid #333;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 420px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  color: #ccc;
+  font-family: 'Courier New', Courier, monospace;
+}
+.rankings-title {
+  font-size: 24px;
+  color: #ffe070;
+  text-align: center;
+  margin: 0 0 8px;
+  letter-spacing: 2px;
+}
+.rankings-score {
+  text-align: center;
+  font-size: 16px;
+  color: #ffcc33;
+  margin-bottom: 16px;
+}
+.rankings-stats {
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  background: rgba(255,255,255,0.04);
+}
+.rankings-stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  font-size: 12px;
+}
+.rankings-stat-label {
+  color: #888;
+}
+.rankings-stat-value {
+  color: #ddd;
+}
+.rankings-section-title {
+  font-size: 14px;
+  color: #aaa;
+  margin: 12px 0 6px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 4px;
+}
+.rankings-talents,
+.rankings-items {
+  margin-bottom: 12px;
+}
+.rankings-talent-row,
+.rankings-item-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 4px;
+  font-size: 11px;
+  color: #bbb;
+}
+.rankings-talent-name {
+  color: #ddd;
+}
+.rankings-talent-level {
+  color: #ffcc33;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+.rankings-empty {
+  font-size: 11px;
+  color: #666;
+  font-style: italic;
+  padding: 4px;
+}
+.rankings-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+.rankings-btn {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  padding: 8px 20px;
+  color: #fff;
+  background: #3a3a3a;
+  border: 2px solid #6a6a6a;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.rankings-btn:hover {
+  filter: brightness(1.2);
 }

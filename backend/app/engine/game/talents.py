@@ -223,6 +223,86 @@ class TalentsMixin:
         player.berserk_power = min(max_power, player.berserk_power + power_gain)
 
     # ------------------------------------------------------------------
+    # Metamorphosis (Scroll of Metamorphosis)
+    # ------------------------------------------------------------------
+
+    def _eligible_replacements(self, player, old_talent: str) -> list:
+        """Return list of talent IDs that can replace `old_talent` via metamorphosis."""
+        def_ = TALENT_DEFS.get(old_talent)
+        if not def_:
+            return []
+        _, tier, _ = def_
+        owned = set(player.subclass_info.talent_info.talents.keys())
+        meta_replaced = set(player.subclass_info.metamorphed_talents.values())
+        player_class = player.class_type
+
+        def _belongs_to_class(tid):
+            c = TALENT_CLASS_REQ.get(tid)
+            return c is not None and c == player_class
+
+        eligible = []
+        for tid, (mpts, tt, sreq) in TALENT_DEFS.items():
+            if tt != tier:
+                continue
+            if _belongs_to_class(tid):
+                continue
+            if tid in owned:
+                continue
+            if tid in meta_replaced:
+                continue
+            if sreq is not None and player.subclass_info.subclass != sreq:
+                continue
+            eligible.append(tid)
+        return eligible
+
+    def metamorph_choose(self, player_id: str, old_talent: str) -> bool:
+        """Player selected a talent to replace via metamorphosis."""
+        player = self.players.get(player_id)
+        if not player:
+            return False
+        owned = player.subclass_info.talent_info.level(old_talent)
+        if owned <= 0:
+            return False  # player doesn't have this talent
+        options = self._eligible_replacements(player, old_talent)
+        if not options:
+            return False
+        self.add_event("METAMORPH_OPTIONS", {
+            "player": player.id, "old_talent": old_talent, "options": options,
+        }, floor_id=player.floor_id, source_player_id=player.id)
+        return True
+
+    def metamorph_replace(self, player_id: str, old_talent: str, new_talent: str) -> bool:
+        """Swap old_talent for new_talent via metamorphosis."""
+        player = self.players.get(player_id)
+        if not player:
+            return False
+        info = player.subclass_info
+        old_lvl = info.talent_info.level(old_talent)
+        if old_lvl <= 0:
+            return False
+        if new_talent not in self._eligible_replacements(player, old_talent):
+            return False
+        new_def = TALENT_DEFS.get(new_talent)
+        if not new_def:
+            return False
+        max_new = new_def[0]
+        # Transfer points, capped at new talent's max
+        transfer = min(old_lvl, max_new)
+        # Remove old talent
+        del info.talent_info.talents[old_talent]
+        # Add new talent at transferred level
+        info.talent_info.talents[new_talent] = transfer
+        # Record metamorphosis
+        info.metamorphed_talents[old_talent] = new_talent
+        # If the old talent was an armor ability selector, clear the armor ability
+        if old_talent in ABILITY_TALENTS and player.armor_ability == ABILITY_TALENTS.get(old_talent):
+            player.armor_ability = None
+        self.add_event("TALENT_METAMORPHED", {
+            "player": player.id, "old_talent": old_talent, "new_talent": new_talent,
+        }, floor_id=player.floor_id, source_player_id=player.id)
+        return True
+
+    # ------------------------------------------------------------------
     # Talent effect callbacks — called from item_actions, combat, tick
     # ------------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 import TalentIcon from './TalentIcon';
 
 const TALENT_DESC = {
@@ -100,17 +100,34 @@ const TALENT_DESC = {
 export default function WndInfoTalent({
   talentId,
   name,
+  desc: descProp,
   currentLevel,
   maxPoints,
   canUpgrade,
   onUpgrade,
   onClose,
 }) {
-  const desc = useMemo(() => TALENT_DESC[talentId] || '', [talentId]);
+  const overlayRef = useRef(null);
+  const desc = useMemo(() => (descProp ?? TALENT_DESC[talentId]) || '', [descProp, talentId]);
   const atMax = currentLevel >= maxPoints;
 
+  useEffect(() => {
+    overlayRef.current?.focus();
+  }, []);
+
   return (
-    <div className="wnd-overlay" onClick={onClose}>
+    <div
+      className="wnd-overlay"
+      tabIndex={-1}
+      ref={overlayRef}
+      onClick={onClose}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          e.stopPropagation();
+          onClose();
+        }
+      }}
+    >
       <div className="wnd-info-talent" onClick={(e) => e.stopPropagation()}>
         <div className="wnd-info-title">
           <TalentIcon talentId={talentId} />
@@ -124,6 +141,7 @@ export default function WndInfoTalent({
         <div className="wnd-info-actions">
           {canUpgrade ? (
             <button className="wnd-upgrade-btn" onClick={() => { onUpgrade?.(talentId); onClose?.(); }}>
+              <TalentIcon talentId={talentId} className="wnd-upgrade-icon" />
               Upgrade
             </button>
           ) : (

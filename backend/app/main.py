@@ -213,7 +213,8 @@ async def root():
 @app.get("/api/talents/{class_type}")
 async def get_talents(class_type: str):
     from app.engine.entities.subclasses import (
-        TALENT_DEFS, TALENT_CLASS_REQ, ABILITY_TALENTS, TIER_UNLOCK_LEVELS,
+        TALENT_DEFS, TALENT_TITLES, TALENT_DESCRIPTIONS,
+        TALENT_CLASS_REQ, ABILITY_TALENTS, TIER_UNLOCK_LEVELS,
         TIER_MAX_POINTS, CLASS_SUBCLASSES,
     )
     from app.engine.entities.base import CharacterClass
@@ -241,6 +242,8 @@ async def get_talents(class_type: str):
 
         entry = {
             "id": talent_id,
+            "name": TALENT_TITLES.get(talent_id, talent_id),
+            "description": TALENT_DESCRIPTIONS.get(talent_id, ""),
             "max_pts": max_pts,
             "tier": tier,
             "subclass": subclass_req,
@@ -395,6 +398,12 @@ async def game_websocket(websocket: WebSocket, game_id: str, class_type: str = "
 
             elif isinstance(message, msg.PreparationStrike):
                 game.preparation_strike(player_id, message.target_x, message.target_y)
+
+            elif isinstance(message, msg.MetamorphChoose):
+                game.metamorph_choose(player_id, message.talent)
+
+            elif isinstance(message, msg.MetamorphReplace):
+                game.metamorph_replace(player_id, message.old_talent, message.new_talent)
 
     except WebSocketDisconnect:
         # Keep the hero alive for the reconnect grace window (see reaper); the

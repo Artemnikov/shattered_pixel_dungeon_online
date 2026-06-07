@@ -25,16 +25,21 @@ export default function TalentPane({
   talentDefs,
   talentLevels,
   talentPoints,
+  bonusTalentPoints,
   level,
   subclass,
   armorAbility,
   abilityTier4,
+  upgradedTalentId,
+  onAnimationDone,
   onUpgradeTalent,
   onChooseSubclass,
   onChooseArmorAbility,
   onClose,
   loading,
   error,
+  metamorphMode,
+  onMetamorphChoose,
 }) {
   const [info, setInfo] = useState(null);
 
@@ -51,9 +56,19 @@ export default function TalentPane({
     return Object.values(talentPoints || {}).some(pts => pts > 0);
   }, [talentPoints]);
 
+  const descMap = useMemo(() => {
+    const m = {};
+    for (const [, tier] of sortedTiers) {
+      for (const t of tier.talents) {
+        m[t.id] = t.description || '';
+      }
+    }
+    return m;
+  }, [sortedTiers]);
+
   const handleInfo = useCallback((talentId, name, currentLevel, maxPoints, canUpgrade) => {
-    setInfo({ talentId, name, currentLevel, maxPoints, canUpgrade });
-  }, []);
+    setInfo({ talentId, name, desc: descMap[talentId], currentLevel, maxPoints, canUpgrade });
+  }, [descMap]);
 
   const blockerMsg = tiersAvailable < sortedTiers.length
     ? BLOCKER_MESSAGES[tiersAvailable]
@@ -91,29 +106,29 @@ export default function TalentPane({
     <div className="talent-overlay" onClick={onClose}>
       <div className="talent-pane" onClick={(e) => e.stopPropagation()}>
         <div className="talent-header">
-          <h2 className="talent-title">Talents</h2>
-          <span className="talent-level-badge">Lv.{level}</span>
-          {subclass && (
+          <h2 className="talent-title">{metamorphMode ? 'Replace a talent' : 'Talents'}</h2>
+          {!metamorphMode && <span className="talent-level-badge">Lv.{level}</span>}
+          {!metamorphMode && subclass && (
             <span className="talent-badge subclass-badge" title="Tap to view subclass info">
               {subclass}
             </span>
           )}
-          {armorAbility && (
+          {!metamorphMode && armorAbility && (
             <span className="talent-badge ability-badge" title={armorAbility.replace(/_/g, ' ')}>
               {armorAbility.replace(/_/g, ' ')}
             </span>
           )}
-          {!subclass && level >= 6 && (
+          {!metamorphMode && !subclass && level >= 6 && (
             <button className="talent-action-btn" onClick={onChooseSubclass}>
               Choose Subclass
             </button>
           )}
-          {subclass && !armorAbility && level >= 13 && (
+          {!metamorphMode && subclass && !armorAbility && level >= 13 && (
             <button className="talent-action-btn" onClick={onChooseArmorAbility}>
               Choose Ability
             </button>
           )}
-          {hasTalentPoints && (
+          {!metamorphMode && hasTalentPoints && (
             <span className="talent-pts-badge">
               {Object.entries(talentPoints || {})
                 .filter(([, pts]) => pts > 0)
@@ -121,6 +136,9 @@ export default function TalentPane({
                   <span key={tier} className="talent-tier-pts">T{tier}: {pts}</span>
                 ))}
             </span>
+          )}
+          {metamorphMode && (
+            <span className="talent-metamorph-hint">Tap a talent to replace it</span>
           )}
           <button className="talent-close" onClick={onClose}>&times;</button>
         </div>
@@ -139,10 +157,17 @@ export default function TalentPane({
                   talents={normalTalents}
                   talentLevels={talentLevels}
                   talentPoints={talentPoints}
+                  bonusTalentPoints={bonusTalentPoints}
+                  tierThresholds={TIER_THRESHOLDS}
                   subclass={subclass}
                   armorAbility={armorAbility}
                   abilityTier4={abilityTier4}
+                  upgradedTalentId={upgradedTalentId}
+                  onAnimationDone={onAnimationDone}
+                  onUpgradeTalent={onUpgradeTalent}
                   onInfo={handleInfo}
+                  metamorphMode={metamorphMode}
+                  onMetamorphChoose={onMetamorphChoose}
                 />
               </div>
             );
@@ -163,6 +188,7 @@ export default function TalentPane({
         <WndInfoTalent
           talentId={info.talentId}
           name={info.name}
+          desc={info.desc}
           currentLevel={info.currentLevel}
           maxPoints={info.maxPoints}
           canUpgrade={info.canUpgrade}

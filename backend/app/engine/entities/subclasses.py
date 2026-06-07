@@ -457,6 +457,325 @@ COMBO_MOVES: Dict[int, str] = {
 COST_ARMOR_ABILITY = 35  # Leap/Shockwave charge cost
 COST_ENDURE = 50  # Endure charge cost (slightly higher)
 
+# Human-readable titles and descriptions served via /api/talents/{class}
+TALENT_TITLES: Dict[str, str] = {
+    # Warrior T1
+    Talent.IRON_WILL: "Iron Will",
+    Talent.IRON_STOMACH: "Iron Stomach",
+    Talent.RESTORED_STRENGTH: "Restored Strength",
+    Talent.LIGHT_ARMOR: "Light Armor",
+    # Berserker T2
+    Talent.BERSERK_RESTORATION: "Berserk Restoration",
+    Talent.DEATHLESS_FURY: "Deathless Fury",
+    Talent.ENRAGED_CATALYST: "Enraged Catalyst",
+    Talent.BERSERK_RUSH: "Berserk Rush",
+    # Gladiator T2
+    Talent.COMBO_SHIELD: "Combo Shield",
+    Talent.COMBO_RESTORATION: "Combo Restoration",
+    Talent.SLOW_COMBO: "Slow Combo",
+    Talent.LETHAL_HIT: "Lethal Hit",
+    # Warrior T3
+    Talent.ENDLESS_RAGE: "Endless Rage",
+    Talent.IMPOSING_PRESENCE: "Imposing Presence",
+    Talent.ENHANCED_COMBO: "Enhanced Combo",
+    Talent.COMBO_SURGE: "Combo Surge",
+    Talent.SUB_ATK: "Sub-Atk",
+    Talent.SUB_DEF: "Sub-Def",
+    # Warrior T4 Berserker
+    Talent.RISK_REWARD: "Risk Reward",
+    Talent.BERSERK_DURATION: "Berserk Duration",
+    Talent.RAMPAGE: "Rampage",
+    # Warrior T4 Gladiator
+    Talent.COMBO_AURA: "Combo Aura",
+    Talent.SAVAGE_CAPACITY: "Savage Capacity",
+    Talent.DEADLY_FOLLOWUP: "Deadly Followup",
+    # Rogue T1
+    Talent.CACHED_RATIONS: "Cached Rations",
+    Talent.THIEFS_INTUITION: "Thief's Intuition",
+    Talent.SUCKER_PUNCH: "Sucker Punch",
+    Talent.PROTECTIVE_SHADOWS: "Protective Shadows",
+    # Rogue T2
+    Talent.MYSTICAL_MEAL: "Mystical Meal",
+    Talent.INSCRIBED_STEALTH: "Inscribed Stealth",
+    Talent.WIDE_SEARCH: "Wide Search",
+    Talent.SILENT_STEPS: "Silent Steps",
+    Talent.ROGUES_FORESIGHT: "Rogue's Foresight",
+    # Rogue T3
+    Talent.ENHANCED_RINGS: "Enhanced Rings",
+    Talent.LIGHT_CLOAK: "Light Cloak",
+    # Rogue T3 Assassin
+    Talent.ENHANCED_LETHALITY: "Enhanced Lethality",
+    Talent.ASSASSINS_REACH: "Assassin's Reach",
+    Talent.BOUNTY_HUNTER: "Bounty Hunter",
+    # Rogue T3 Freerunner
+    Talent.EVASIVE_ARMOR: "Evasive Armor",
+    Talent.PROJECTILE_MOMENTUM: "Projectile Momentum",
+    Talent.SPEEDY_STEALTH: "Speedy Stealth",
+    # Rogue T4 Smoke Bomb
+    Talent.HASTY_RETREAT: "Hasty Retreat",
+    Talent.BODY_REPLACEMENT: "Body Replacement",
+    Talent.SHADOW_STEP: "Shadow Step",
+    # Rogue T4 Death Mark
+    Talent.FEAR_THE_REAPER: "Fear the Reaper",
+    Talent.DEATHLY_DURABILITY: "Deathly Durability",
+    Talent.DOUBLE_MARK: "Double Mark",
+    # Rogue T4 Shadow Clone
+    Talent.SHADOW_BLADE: "Shadow Blade",
+    Talent.CLONED_ARMOR: "Cloned Armor",
+    Talent.PERFECT_COPY: "Perfect Copy",
+    # Mage T1
+    Talent.EMPOWERING_MEAL: "Empowering Meal",
+    Talent.SCHOLARS_INTUITION: "Scholar's Intuition",
+    Talent.LINGERING_MAGIC: "Lingering Magic",
+    Talent.BACKUP_BARRIER: "Backup Barrier",
+    # Mage T2
+    Talent.ENERGIZING_MEAL: "Energizing Meal",
+    Talent.INSCRIBED_POWER: "Inscribed Power",
+    Talent.WAND_PRESERVATION: "Wand Preservation",
+    Talent.ARCANE_VISION: "Arcane Vision",
+    Talent.SHIELD_BATTERY: "Shield Battery",
+    # Mage T3
+    Talent.DESPERATE_POWER: "Desperate Power",
+    Talent.ALLY_WARP: "Ally Warp",
+    # Mage T3 Battlemage
+    Talent.EMPOWERED_STRIKE: "Empowered Strike",
+    Talent.MYSTICAL_CHARGE: "Mystical Charge",
+    Talent.EXCESS_CHARGE: "Excess Charge",
+    # Mage T3 Warlock
+    Talent.SOUL_EATER: "Soul Eater",
+    Talent.SOUL_SIPHON: "Soul Siphon",
+    Talent.NECROMANCERS_MINIONS: "Necromancer's Minions",
+    # Huntress T1
+    Talent.NATURES_BOUNTY: "Nature's Bounty",
+    Talent.SURVIVALISTS_INTUITION: "Survivalist's Intuition",
+    Talent.FOLLOWUP_STRIKE: "Followup Strike",
+    Talent.NATURES_AID: "Nature's Aid",
+    # Huntress T2
+    Talent.INVIGORATING_MEAL: "Invigorating Meal",
+    Talent.LIQUID_NATURE: "Liquid Nature",
+    Talent.REJUVENATING_STEPS: "Rejuvenating Steps",
+    Talent.HEIGHTENED_SENSES: "Heightened Senses",
+    Talent.DURABLE_PROJECTILES: "Durable Projectiles",
+    # Huntress T3
+    Talent.POINT_BLANK: "Point Blank",
+    Talent.SEER_SHOT: "Seer Shot",
+    # Huntress T3 Sniper
+    Talent.FARSIGHT: "Farsight",
+    Talent.SHARED_ENCHANTMENT: "Shared Enchantment",
+    Talent.SHARED_UPGRADES: "Shared Upgrades",
+    # Huntress T3 Warden
+    Talent.DURABLE_TIPS: "Durable Tips",
+    Talent.BARKSKIN: "Barkskin",
+    Talent.SHIELDING_DEW: "Shielding Dew",
+    # Armor ability selectors
+    Talent.HEROIC_LEAP: "Heroic Leap",
+    Talent.SHOCKWAVE: "Shockwave",
+    Talent.ENDURE_ABILITY: "Endure",
+    Talent.SMOKE_BOMB: "Smoke Bomb",
+    Talent.DEATH_MARK: "Death Mark",
+    Talent.SHADOW_CLONE: "Shadow Clone",
+    Talent.ELEMENTAL_BLAST_ABILITY: "Elemental Blast",
+    Talent.WILD_MAGIC_ABILITY: "Wild Magic",
+    Talent.WARP_BEACON_ABILITY: "Warp Beacon",
+    Talent.SPECTRAL_BLADES_ABILITY: "Spectral Blades",
+    Talent.NATURES_POWER_ABILITY: "Nature's Power",
+    Talent.SPIRIT_HAWK_ABILITY: "Spirit Hawk",
+    # Huntress T4 Spectral Blades
+    Talent.FAN_OF_BLADES: "Fan of Blades",
+    Talent.PROJECTING_BLADES: "Projecting Blades",
+    Talent.SPIRIT_BLADES: "Spirit Blades",
+    # Huntress T4 Nature's Power
+    Talent.GROWING_POWER: "Growing Power",
+    Talent.NATURES_WRATH: "Nature's Wrath",
+    Talent.WILD_MOMENTUM: "Wild Momentum",
+    # Huntress T4 Spirit Hawk
+    Talent.EAGLE_EYE: "Eagle Eye",
+    Talent.GO_FOR_THE_EYES: "Go for the Eyes",
+    Talent.SWIFT_SPIRIT: "Swift Spirit",
+    # Mage T4 Elemental Blast
+    Talent.BLAST_RADIUS: "Blast Radius",
+    Talent.ELEMENTAL_POWER_TALENT: "Elemental Power",
+    Talent.REACTIVE_BARRIER: "Reactive Barrier",
+    # Mage T4 Wild Magic
+    Talent.WILD_POWER: "Wild Power",
+    Talent.FIRE_EVERYTHING: "Fire Everything",
+    Talent.CONSERVED_MAGIC: "Conserved Magic",
+    # Mage T4 Warp Beacon
+    Talent.TELEFRAG: "Telefrag",
+    Talent.REMOTE_BEACON: "Remote Beacon",
+    Talent.LONGRANGE_WARP: "Longrange Warp",
+    # Rogue T4 (ability-gated, subclass_req=None)
+    Talent.HASTY_RETREAT: "Hasty Retreat",
+    Talent.BODY_REPLACEMENT: "Body Replacement",
+    Talent.SHADOW_STEP: "Shadow Step",
+    Talent.FEAR_THE_REAPER: "Fear the Reaper",
+    Talent.DEATHLY_DURABILITY: "Deathly Durability",
+    Talent.DOUBLE_MARK: "Double Mark",
+    Talent.SHADOW_BLADE: "Shadow Blade",
+    Talent.CLONED_ARMOR: "Cloned Armor",
+    Talent.PERFECT_COPY: "Perfect Copy",
+}
+
+TALENT_DESCRIPTIONS: Dict[str, str] = {
+    # Warrior T1
+    Talent.IRON_WILL: "Armor damage reduction +2 per point.",
+    Talent.IRON_STOMACH: "Food heals for an additional 33% per point.",
+    Talent.RESTORED_STRENGTH: "Gain +1 max HP per upgrade spent on an item.",
+    Talent.LIGHT_ARMOR: "Reduces the speed and evasion penalties of armor.",
+    # Berserker T2
+    Talent.BERSERK_RESTORATION: "Killing an enemy during Berserk heals you.",
+    Talent.DEATHLESS_FURY: "Berserk can save you from fatal damage.",
+    Talent.ENRAGED_CATALYST: "Taking damage builds extra Berserk power.",
+    Talent.BERSERK_RUSH: "Berserk grants a burst of movement speed.",
+    # Gladiator T2
+    Talent.COMBO_SHIELD: "Each combo hit grants shielding.",
+    Talent.COMBO_RESTORATION: "Using a finisher move heals you.",
+    Talent.SLOW_COMBO: "Combo timer decays 25% slower per point.",
+    Talent.LETHAL_HIT: "Finisher moves have increased critical chance.",
+    # Warrior T3
+    Talent.ENDLESS_RAGE: "Berserk lasts longer. +17% max power per point.",
+    Talent.IMPOSING_PRESENCE: "Nearby enemies deal less damage.",
+    Talent.ENHANCED_COMBO: "Max combo count +2 per point.",
+    Talent.COMBO_SURGE: "Enter a fury state at max combo, empowering attacks.",
+    Talent.SUB_ATK: "+1 attack per point.",
+    Talent.SUB_DEF: "+1 defense per point.",
+    # Warrior T4 Berserker
+    Talent.RISK_REWARD: "Deal more damage when at low HP.",
+    Talent.BERSERK_DURATION: "Berserk lasts significantly longer.",
+    Talent.RAMPAGE: "Kills stack a damage buff, up to 5 stacks per point.",
+    # Warrior T4 Gladiator
+    Talent.COMBO_AURA: "At 6+ combo, kills deal AOE damage to nearby enemies.",
+    Talent.SAVAGE_CAPACITY: "Max combo count +2 per point.",
+    Talent.DEADLY_FOLLOWUP: "Attacking a new target after damaging one deals bonus damage.",
+    # Rogue T1
+    Talent.CACHED_RATIONS: "Eating food grants a shield. +4 shield per point.",
+    Talent.THIEFS_INTUITION: "Better at detecting secrets and traps.",
+    Talent.SUCKER_PUNCH: "Surprise attacks stun the target briefly.",
+    Talent.PROTECTIVE_SHADOWS: "Damage resistance while in shadow or stealthed.",
+    # Rogue T2
+    Talent.MYSTICAL_MEAL: "Eating food recharges your cloak by 1 charge per point.",
+    Talent.INSCRIBED_STEALTH: "Reading a scroll grants brief stealth.",
+    Talent.WIDE_SEARCH: "Searching reveals a larger area.",
+    Talent.SILENT_STEPS: "Moving while stealthed does not break stealth.",
+    Talent.ROGUES_FORESIGHT: "See traps and secrets from further away.",
+    # Rogue T3
+    Talent.ENHANCED_RINGS: "Ring effects are 20% stronger per point.",
+    Talent.LIGHT_CLOAK: "The cloak of shadows recharges faster.",
+    # Rogue T3 Assassin
+    Talent.ENHANCED_LETHALITY: "Assassinate deals significantly more damage.",
+    Talent.ASSASSINS_REACH: "Assassinate can be used from 1 tile further away.",
+    Talent.BOUNTY_HUNTER: "Kills drop more gold.",
+    # Rogue T3 Freerunner
+    Talent.EVASIVE_ARMOR: "Armor no longer reduces dodge chance while moving.",
+    Talent.PROJECTILE_MOMENTUM: "Ranged damage increases with distance.",
+    Talent.SPEEDY_STEALTH: "Move at full speed while stealthed.",
+    # Rogue T4 Smoke Bomb
+    Talent.HASTY_RETREAT: "Smoke Bomb grants a speed boost.",
+    Talent.BODY_REPLACEMENT: "When fatal damage would be taken, swap with your clone.",
+    Talent.SHADOW_STEP: "Teleport to your shadow clone's location.",
+    # Rogue T4 Death Mark
+    Talent.FEAR_THE_REAPER: "Death Mark can instantly kill marked enemies.",
+    Talent.DEATHLY_DURABILITY: "Death Mark weakens the target's damage output.",
+    Talent.DOUBLE_MARK: "Can mark two enemies at once.",
+    # Rogue T4 Shadow Clone
+    Talent.SHADOW_BLADE: "Your clone deals increased damage.",
+    Talent.CLONED_ARMOR: "Your clone inherits your armor rating.",
+    Talent.PERFECT_COPY: "Your clone can use items from your inventory.",
+    # Mage T1
+    Talent.EMPOWERING_MEAL: "Eating food recharges your wands by 1 charge per point.",
+    Talent.SCHOLARS_INTUITION: "Identify items more easily and quickly.",
+    Talent.LINGERING_MAGIC: "Potion buff effects last 15% longer per point.",
+    Talent.BACKUP_BARRIER: "Drinking a potion grants a shield.",
+    # Mage T2
+    Talent.ENERGIZING_MEAL: "Eating food recharges all wands. +1 charge per point.",
+    Talent.INSCRIBED_POWER: "Reading a scroll grants a shield.",
+    Talent.WAND_PRESERVATION: "Wands have a chance to not consume a charge.",
+    Talent.ARCANE_VISION: "See magic traps and concealed doors.",
+    Talent.SHIELD_BATTERY: "Using a wand grants a shield.",
+    # Mage T3
+    Talent.DESPERATE_POWER: "At low HP, wands recharge automatically.",
+    Talent.ALLY_WARP: "Swap places with a friendly summoned creature.",
+    # Mage T3 Battlemage
+    Talent.EMPOWERED_STRIKE: "Staff melee attacks deal significantly more damage.",
+    Talent.MYSTICAL_CHARGE: "Wand hits charge your staff.",
+    Talent.EXCESS_CHARGE: "Overcharging your staff deals bonus damage on melee hit.",
+    # Mage T3 Warlock
+    Talent.SOUL_EATER: "Killing an enemy heals you. +2 HP per point.",
+    Talent.SOUL_SIPHON: "Hitting an enemy with a wand drains life.",
+    Talent.NECROMANCERS_MINIONS: "Kills have a chance to raise a minion.",
+    # Huntress T1
+    Talent.NATURES_BOUNTY: "More dew drops and seeds from plants.",
+    Talent.SURVIVALISTS_INTUITION: "Identify plants more easily.",
+    Talent.FOLLOWUP_STRIKE: "Hitting with a ranged weapon boosts follow-up melee damage.",
+    Talent.NATURES_AID: "Dew drops heal for more HP.",
+    # Huntress T2
+    Talent.INVIGORATING_MEAL: "Eating food grants a speed boost.",
+    Talent.LIQUID_NATURE: "Standing in water heals additional HP.",
+    Talent.REJUVENATING_STEPS: "Walking on grass gradually heals.",
+    Talent.HEIGHTENED_SENSES: "See hidden doors and traps more easily.",
+    Talent.DURABLE_PROJECTILES: "Thrown weapons have a chance not to break.",
+    # Huntress T3
+    Talent.POINT_BLANK: "Ranged weapons deal more damage at close range.",
+    Talent.SEER_SHOT: "Hitting an enemy with a ranged attack reveals them.",
+    # Huntress T3 Sniper
+    Talent.FARSIGHT: "Increases view distance by 1 tile per point.",
+    Talent.SHARED_ENCHANTMENT: "Ranged weapons inherit your melee weapon's enchantment.",
+    Talent.SHARED_UPGRADES: "Ranged weapons benefit from melee weapon upgrades.",
+    # Huntress T3 Warden
+    Talent.DURABLE_TIPS: "Thrown weapons never break.",
+    Talent.BARKSKIN: "Grass provides an armor buff while standing on it.",
+    Talent.SHIELDING_DEW: "Dew drops grant a shield.",
+    # Armor ability selectors (no separate desc needed — handled by ability tooltip)
+    Talent.HEROIC_LEAP: "Leap at enemies, damaging and stunning them.",
+    Talent.SHOCKWAVE: "Unleash a shockwave that pushes and damages enemies.",
+    Talent.ENDURE_ABILITY: "Enter a defensive stance, greatly reducing damage taken.",
+    Talent.SMOKE_BOMB: "Throw a smoke bomb to escape and stealth.",
+    Talent.DEATH_MARK: "Mark an enemy, causing them to take extra damage.",
+    Talent.SHADOW_CLONE: "Create a shadow clone to fight alongside you.",
+    Talent.ELEMENTAL_BLAST_ABILITY: "Unleash a blast of elemental energy.",
+    Talent.WILD_MAGIC_ABILITY: "Trigger random wand effects.",
+    Talent.WARP_BEACON_ABILITY: "Place a beacon to teleport back to.",
+    Talent.SPECTRAL_BLADES_ABILITY: "Throw spectral blades that pierce enemies.",
+    Talent.NATURES_POWER_ABILITY: "Empower yourself with nature's strength.",
+    Talent.SPIRIT_HAWK_ABILITY: "Summon a spirit hawk to scout ahead.",
+    # Mage T4 Elemental Blast
+    Talent.BLAST_RADIUS: "Elemental Blast affects a larger area.",
+    Talent.ELEMENTAL_POWER_TALENT: "Elemental Blast deals more damage.",
+    Talent.REACTIVE_BARRIER: "Using Elemental Blast grants a shield.",
+    # Mage T4 Wild Magic
+    Talent.WILD_POWER: "Wild Magic triggers more effects.",
+    Talent.FIRE_EVERYTHING: "Wild Magic fires additional projectiles.",
+    Talent.CONSERVED_MAGIC: "Wild Magic has a chance to not consume charge.",
+    # Mage T4 Warp Beacon
+    Talent.TELEFRAG: "Teleporting onto an enemy damages them.",
+    Talent.REMOTE_BEACON: "Can trigger the beacon from a distance.",
+    Talent.LONGRANGE_WARP: "Warp Beacon has unlimited range.",
+    # Huntress T4 Spectral Blades
+    Talent.FAN_OF_BLADES: "Spectral Blades hit multiple targets.",
+    Talent.PROJECTING_BLADES: "Spectral Blades pass through walls.",
+    Talent.SPIRIT_BLADES: "Spectral Blades return to the owner after hitting.",
+    # Huntress T4 Natures Power
+    Talent.GROWING_POWER: "Nature's Power duration and strength increase.",
+    Talent.NATURES_WRATH: "Nature's Power deals damage over time to nearby enemies.",
+    Talent.WILD_MOMENTUM: "Nature's Power grants increased speed.",
+    # Huntress T4 Spirit Hawk
+    Talent.EAGLE_EYE: "The hawk reveals the entire floor map.",
+    Talent.GO_FOR_THE_EYES: "The hawk blinds enemies it attacks.",
+    Talent.SWIFT_SPIRIT: "The hawk attacks more frequently.",
+    # Rogue T4 Smoke Bomb (ability-gated)
+    Talent.HASTY_RETREAT: "Smoke Bomb grants a speed boost.",
+    Talent.BODY_REPLACEMENT: "Fatal damage swaps you with your clone.",
+    Talent.SHADOW_STEP: "Teleport to your shadow clone's location.",
+    # Rogue T4 Death Mark
+    Talent.FEAR_THE_REAPER: "Death Mark can instantly kill marked enemies.",
+    Talent.DEATHLY_DURABILITY: "Death Mark weakens the target's attacks.",
+    Talent.DOUBLE_MARK: "Mark two enemies at once.",
+    # Rogue T4 Shadow Clone
+    Talent.SHADOW_BLADE: "Your clone deals increased damage.",
+    Talent.CLONED_ARMOR: "Your clone inherits your armor rating.",
+    Talent.PERFECT_COPY: "Your clone can use items from your inventory.",
+}
+
 
 class TalentInfo(BaseModel):
     talents: Dict[str, int] = Field(default_factory=dict)
@@ -480,7 +799,11 @@ class SubclassInfo(BaseModel):
     # Available talent points per tier (tier → count). Player earns these when a
     # new tier unlocks (level 2, 7, 13, 21) and consumes them on upgrade_talent().
     talent_points: Dict[int, int] = Field(default_factory=dict)
+    # Bonus talent points per tier, granted by Potion of Divine Inspiration.
+    bonus_talent_points: Dict[int, int] = Field(default_factory=dict)
     # Tracks which milestone levels (2, 6, 13) have had their events emitted.
     # Prevents re-emission on subsequent level-ups and ensures events fire even
     # when a multi-level jump skips the exact milestone level.
     emitted_milestones: Set[int] = Field(default_factory=set, exclude=True)
+    # Talents replaced via Scroll of Metamorphosis: {original_talent: replacement_talent}
+    metamorphed_talents: Dict[str, str] = Field(default_factory=dict)
