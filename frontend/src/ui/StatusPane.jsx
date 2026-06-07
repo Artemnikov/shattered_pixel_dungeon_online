@@ -25,10 +25,10 @@ const EXP_FILL = { x: 0, y: 48, w: 17, h: 4 };
 const FRAME_W = 12;
 const FRAME_H = 15;
 
-// The HUD portrait uses the distinctive class bust (SPD HeroSelectScene art,
-// also used in CharacterSelection) so each class is unmistakable, rather than
-// the near-identical bare-chested tier-0 walking frame.
-const BUST = { x: 0, y: 90 };
+// The HUD portrait is the hero avatar (walking sheet col 1), cropped to the row
+// matching the equipped armor tier so it reflects the gear actually worn —
+// mirrors SPD HeroSprite.avatar(), which shifts the frame by tiers().get(tier).
+const MAX_ARMOR_TIER = 6;
 
 // buffs.png is sliced into 7x7 cells; 128/7 = 18 columns. icon idx -> (col,row).
 const BUFF_SIZE = 7;
@@ -165,7 +165,8 @@ export default function StatusPane({ myStats, depth, onSearch }) {
           const ac = avatarCanvas.getContext('2d');
           ac.imageSmoothingEnabled = false;
           ac.clearRect(0, 0, FRAME_W, FRAME_H);
-          ac.drawImage(sheet, BUST.x, BUST.y, FRAME_W, FRAME_H, 0, 0, FRAME_W, FRAME_H);
+          const armorRow = Math.max(0, Math.min(s.armorTier || 0, MAX_ARMOR_TIER)) * FRAME_H;
+          ac.drawImage(sheet, FRAME_W, armorRow, FRAME_W, FRAME_H, 0, 0, FRAME_W, FRAME_H);
 
           if (s.isDowned) {
             ac.globalCompositeOperation = 'source-atop';
@@ -182,24 +183,6 @@ export default function StatusPane({ myStats, depth, onSearch }) {
             ac.globalCompositeOperation = 'source-over';
           }
           ctx.drawImage(avatarCanvas, 9 * SCALE, 8 * SCALE, FRAME_W * SCALE, FRAME_H * SCALE);
-
-          // Armor-tier marker: small badge in the bottom-right of the portrait so
-          // worn gear is still legible now that the bust no longer reflects armor.
-          const tier = s.armorTier ?? 0;
-          if (tier > 0) {
-            const bx = (9 + FRAME_W) * SCALE;
-            const by = (8 + FRAME_H) * SCALE;
-            const r = 3.5 * SCALE;
-            ctx.fillStyle = 'rgba(0,0,0,0.7)';
-            ctx.beginPath();
-            ctx.arc(bx - r, by - r, r, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#ffe9a8';
-            ctx.font = `${4 * SCALE}px monospace`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(`${tier}`, bx - r, by - r + 0.5 * SCALE);
-          }
         }
 
         // --- HP bar + text ---
