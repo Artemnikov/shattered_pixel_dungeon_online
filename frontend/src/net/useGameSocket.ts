@@ -18,8 +18,8 @@ import type {
   TrapInfo,
 } from '../types/contract';
 
-// Blood color per mob (default red; Goo bleeds green like its acidic body).
-const BLOOD_COLORS: Record<string, string> = { Goo: '#8eb300' };
+// Blood color per mob (default red; Goo bleeds black, per GooSprite.blood() = 0xFF000000).
+const BLOOD_COLORS: Record<string, string> = { Goo: '#000000' };
 
 // Reconnect/heartbeat tuning.
 const HEARTBEAT_INTERVAL_MS = 15000; // app-level PING cadence
@@ -63,6 +63,7 @@ interface AnimState {
   attackUntil?: number;
   flashUntil?: number;
   operateUntil?: number;
+  pumpUntil?: number;
 }
 
 interface Projectile {
@@ -99,6 +100,7 @@ interface MyStats {
   maxHp: number;
   name: string;
   isDowned: boolean | undefined;
+  isAdmin: boolean;
   isRegen: boolean;
   exp: number;
   level: number;
@@ -141,6 +143,7 @@ interface HookProps {
   particlesRef: Ref<unknown[]>;
   searchEffectsRef: Ref<unknown[]>;
   floatingTextRef: Ref<unknown[]>;
+  warnedTilesRef?: Ref<{ tiles: [number, number][]; untilMs: number } | null>;
   wasDownedRef: Ref<boolean | undefined>;
   setGrid: Dispatch<SetStateAction<number[][]>>;
   setDepth: (depth: number) => void;
@@ -149,6 +152,7 @@ interface HookProps {
   setEquippedItems: (e: { weapon: Player['equipped_weapon']; wearable: Player['equipped_wearable'] }) => void;
   setMyStats: (stats: MyStats) => void;
   setDifficulty: (difficulty: Difficulty) => void;
+  setBossInfo?: (info: { name: string; hp: number; maxHp: number } | null) => void;
   setGold?: (gold: number) => void;
   setEnergy?: (energy: number) => void;
   setBelongings?: (belongings: Player['belongings'] | null) => void;
@@ -175,6 +179,7 @@ type HandlerCtx = Pick<
   | 'particlesRef'
   | 'searchEffectsRef'
   | 'floatingTextRef'
+  | 'warnedTilesRef'
 > & {
   onLevelUp?: HookProps['onLevelUp'];
   onSubclassChoiceAvailable?: HookProps['onSubclassChoiceAvailable'];
@@ -206,6 +211,7 @@ export default function useGameSocket({
   particlesRef,
   searchEffectsRef,
   floatingTextRef,
+  warnedTilesRef,
   wasDownedRef,
   setGrid,
   setDepth,
@@ -214,6 +220,7 @@ export default function useGameSocket({
   setEquippedItems,
   setMyStats,
   setDifficulty,
+  setBossInfo,
   setGold,
   setEnergy,
   setBelongings,
@@ -339,6 +346,7 @@ export default function useGameSocket({
             maxHp: p.max_hp,
             name: p.name,
             isDowned: p.is_downed,
+            isAdmin: p.is_admin || false,
             isRegen: (p.heal_left || 0) > 0,
             exp: p.experience || 0,
             level: p.level || 1,
@@ -467,6 +475,11 @@ export default function useGameSocket({
         }
       });
 
+      if (setBossInfo) {
+        const boss = data.mobs.find(m => m.type === 'boss' && m.is_alive !== false);
+        setBossInfo(boss ? { name: boss.name, hp: boss.hp, maxHp: boss.max_hp } : null);
+      }
+
       entitiesRef.current.items = data.items || [];
 
       if (data.visible_tiles) {
@@ -496,7 +509,7 @@ export default function useGameSocket({
           handleEvent(event, {
             myPlayerIdRef, gridRef, setGrid, entitiesRef, visionRef,
             projectilesRef, mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef,
-            searchEffectsRef, floatingTextRef,
+            searchEffectsRef, floatingTextRef, warnedTilesRef,
             onLevelUp, onSubclassChoiceAvailable, onArmorAbilityChoiceAvailable, onTalentUpgraded,
             onMetamorphOpen, onMetamorphOptions,
           });
@@ -525,12 +538,40 @@ export default function useGameSocket({
 function handleEvent(event: GameEvent, {
   myPlayerIdRef, gridRef, setGrid, entitiesRef, visionRef,
   projectilesRef, mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef,
-  searchEffectsRef, floatingTextRef,
+  searchEffectsRef, floatingTextRef, warnedTilesRef,
   onLevelUp, onSubclassChoiceAvailable, onArmorAbilityChoiceAvailable, onTalentUpgraded,
   onMetamorphOpen, onMetamorphOptions,
 }: HandlerCtx) {
   if (event.type === 'PLAY_SOUND') {
     AudioManager.play(event.data.sound);
+    return;
+  }
+
+  if (event.type === 'GOO_CHARGE') {
+    // Pumped-up telegraph: an empty tile list means the charge released or was
+    // cancelled, so clear the overlay and the boss's pump pose immediately.
+    const now = performance.now();
+    const tiles = event.data.tiles || [];
+    if (warnedTilesRef) {
+      warnedTilesRef.current = tiles.length
+        ? { tiles, untilMs: now + (event.data.duration_ms ?? 1500) }
+        : null;
+    }
+    if (mobAnimRef) {
+      if (!mobAnimRef.current[event.data.mob]) mobAnimRef.current[event.data.mob] = {};
+      mobAnimRef.current[event.data.mob].pumpUntil = tiles.length
+        ? now + (event.data.duration_ms ?? 1500)
+        : 0;
+    }
+    return;
+  }
+
+  if (event.type === 'GOO_ENRAGE') {
+    const mob = entitiesRef.current.mobs[event.data.mob];
+    const visible = visionRef.current?.visible;
+    if (mob && visible?.has(`${mob.pos.x},${mob.pos.y}`)) {
+      AudioManager.play('BURNING');
+    }
     return;
   }
 

@@ -21,6 +21,7 @@ import useDebugApi from './dev/useDebugApi';
 import { getApiBaseUrl } from './config/urls';
 
 import StatusPane from './ui/StatusPane';
+import BossHealthBar from './ui/BossHealthBar';
 import Toolbar from './ui/Toolbar';
 import InventoryPane from './ui/InventoryPane';
 import WndBag from './ui/WndBag';
@@ -107,6 +108,7 @@ function App() {
   // Inspect popup: { name, sub, left, top, below } positioned over the inspected cell.
   const [inspectInfo, setInspectInfo] = useState(null);
   const [myStats, setMyStats] = useState({ hp: 0, maxHp: 10, name: '' });
+  const [bossInfo, setBossInfo] = useState(null);
   const [depth, setDepth] = useState(1);
   const [, setCamera] = useState({ x: 0, y: 0 });
   const getInitialInterfaceSize = () => {
@@ -171,6 +173,9 @@ function App() {
   const playerAnimRef = useRef({});
   const particlesRef = useRef([]);
   const searchEffectsRef = useRef([]);
+  // Boss ability telegraphs (e.g. Goo's pumped-up charge): { tiles: [[x,y],...], untilMs }.
+  // Cleared by an empty-tiles GOO_CHARGE event when the charge releases or cancels.
+  const warnedTilesRef = useRef(null);
   const floatingTextRef = useRef([]);
   const trapsRef = useRef([]);
   const depthRef = useRef(1);
@@ -261,9 +266,9 @@ function App() {
     socketRef, gridRef, myPlayerIdRef, entitiesRef,
     visionRef, openDoorsRef, projectilesRef,
     trapsRef,
-    mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef, searchEffectsRef, floatingTextRef, wasDownedRef,
+    mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef, searchEffectsRef, floatingTextRef, wasDownedRef, warnedTilesRef,
     setGrid, setDepth, setMyPlayerId, setInventory,
-    setEquippedItems, setMyStats, setDifficulty,
+    setEquippedItems, setMyStats, setDifficulty, setBossInfo,
     setGold, setEnergy, setBelongings, setQuickslot,
     onLevelUp: (data) => {
       if (data.talent_points) setTalentPoints(data.talent_points);
@@ -316,7 +321,7 @@ function App() {
     canvasRef, grid, myPlayerId, depth, assetImages,
     entitiesRef, visionRef, openDoorsRef, projectilesRef,
     trapsRef,
-    mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef, searchEffectsRef, floatingTextRef, myPlayerIdRef,
+    mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef, searchEffectsRef, floatingTextRef, myPlayerIdRef, warnedTilesRef,
     panOffsetRef, cameraLerpRef, zoomRef,
     isRefocusingRef, isDraggingRef,
     setCamera,
@@ -682,6 +687,7 @@ function App() {
     setMyPlayerId(null);
     setGrid([]);
     setMyStats({ hp: 0, maxHp: 10, name: '' });
+    setBossInfo(null);
     setInventory([]);
     setConnectionStatus(null);
     setShowMetamorphMode(false);
@@ -762,12 +768,16 @@ function App() {
         </div>
       )}
 
+      <BossHealthBar boss={bossInfo} />
+
       <StatusPane
         myStats={myStats}
         depth={depth}
+        isAdmin={myStats.isAdmin}
         onSearch={handleExamineOrReveal}
         hasTalentPoints={Object.values(talentPoints || {}).some(p => p > 0)}
         onOpenTalents={() => setShowTalentPane(v => !v)}
+        onTeleport={(floor) => sendMessage({ type: 'ADMIN_TELEPORT', target_floor: floor })}
       />
 
       <div className="canvas-wrapper" ref={wrapperRef}>

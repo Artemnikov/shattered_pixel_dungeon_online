@@ -64,7 +64,8 @@ class Entity(BaseModel):
     # Status effect fields (mutated by attack_proc/defense_proc)
     bleed_amount: int = 0
     bleed_turns: int = 0
-    ooze_amount: int = 0
+    ooze_amount: int = 0       # remaining ooze "turns" (caustic DoT)
+    ooze_cooldown: int = 0     # ticks until the next ooze damage application
 
     # Shields (absorption layers)
     shields: List[Shield] = Field(default_factory=list)

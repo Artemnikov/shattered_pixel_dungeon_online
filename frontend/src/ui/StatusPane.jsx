@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import AudioManager from '../audio/AudioManager';
 
 import statusPaneImg from '../assets/pixel-dungeon/interfaces/status_pane.png';
@@ -54,7 +54,8 @@ function lerpColor(t, colors) {
   return `rgb(${r},${g},${bl})`;
 }
 
-export default function StatusPane({ myStats, depth, onSearch, hasTalentPoints, onOpenTalents }) {
+export default function StatusPane({ myStats, depth, isAdmin, onSearch, hasTalentPoints, onOpenTalents, onTeleport }) {
+  const [showFloorPicker, setShowFloorPicker] = useState(false);
   const canvasRef = useRef(null);
   const imagesRef = useRef({});
   const imgsLoadedRef = useRef(false);
@@ -249,6 +250,9 @@ export default function StatusPane({ myStats, depth, onSearch, hasTalentPoints, 
     return () => cancelAnimationFrame(raf);
   }, []);
 
+  const floorNumbers = [];
+  for (let i = 1; i <= 50; i++) floorNumbers.push(i);
+
   return (
     <div className="top-left-hud" onClick={() => onOpenTalents?.()}>
       <canvas
@@ -258,7 +262,34 @@ export default function StatusPane({ myStats, depth, onSearch, hasTalentPoints, 
         className="status-pane-canvas"
       />
       <div className="status-pane-footer">
-        <span className="status-floor-label">floor: {depth}</span>
+        <span
+          className={`status-floor-label${isAdmin ? ' status-floor-label--admin' : ''}`}
+          onClick={(e) => {
+            if (!isAdmin) return;
+            e.stopPropagation();
+            AudioManager.play('CLICK');
+            setShowFloorPicker(v => !v);
+          }}
+        >
+          floor: {depth}{isAdmin ? ' \u25BE' : ''}
+        </span>
+        {showFloorPicker && (
+          <div className="floor-picker" onClick={(e) => e.stopPropagation()}>
+            {floorNumbers.map(f => (
+              <div
+                key={f}
+                className={`floor-picker__item${f === depth ? ' floor-picker__item--current' : ''}`}
+                onClick={() => {
+                  AudioManager.play('CLICK');
+                  onTeleport?.(f);
+                  setShowFloorPicker(false);
+                }}
+              >
+                {f}
+              </div>
+            ))}
+          </div>
+        )}
         <button
           type="button"
           className="search-btn"

@@ -31,6 +31,14 @@ export const GUARD_FW = 12;
 export const GUARD_FH = 16;
 export const GUARD_DEST = { dx: 4, dy: 0, dw: 24, dh: 32 };
 
+// Goo uses 20x14 frames in the original SPD sheet (TextureFilm(texture, 20, 14)), NOT the
+// generic 16x16 — slicing at 16 grabs a sliver straddling two real frames and garbles the
+// animation. Native 20x14 scaled 2x -> 40x28, centered in the 32px tile so Goo overhangs the
+// tile edges (it is bigger than one tile in the original): @ (-4, +2).
+export const GOO_FW = 20;
+export const GOO_FH = 14;
+export const GOO_DEST = { dx: -4, dy: 2, dw: 40, dh: 28 };
+
 const isEntityMoving = (mob) =>
   mob.targetPos &&
   (Math.abs(mob.targetPos.x - mob.renderPos.x) > 0.05 ||
@@ -38,14 +46,20 @@ const isEntityMoving = (mob) =>
 
 export const getGooFrame = (mob, mobAnim, now) => {
   const anim = mobAnim[mob.id] || {};
+  // Pumped-up charge: play the pump frames [4,3,2,1,0] while the boss winds up (anim.pumpUntil
+  // set from the backend telegraph events), and the pump-release frame 7 on the burst.
+  const isPumping = anim.pumpUntil && now < anim.pumpUntil;
   const isAttacking = anim.attackUntil && now < anim.attackUntil;
   if (isAttacking) {
     const elapsed = now - (anim.attackUntil - 300);
     const fi = Math.min(Math.floor(elapsed / 100), 2);
-    return [8, 9, 10][fi] * FRAME_W;
+    return [8, 9, 10][fi] * GOO_FW;
   }
-  if (isEntityMoving(mob)) return [3, 2, 1, 2][Math.floor(now / 67) % 4] * FRAME_W;
-  return [2, 1, 0, 0, 1][Math.floor(now / 100) % 5] * FRAME_W;
+  if (isPumping) {
+    return [4, 3, 2, 1, 0][Math.floor(now / 50) % 5] * GOO_FW;
+  }
+  if (isEntityMoving(mob)) return [3, 2, 1, 2][Math.floor(now / 67) % 4] * GOO_FW;
+  return [2, 1, 0, 0, 1][Math.floor(now / 100) % 5] * GOO_FW;
 };
 
 // Faithful to original SPD GnollSprite (12x15 frames, row 0):

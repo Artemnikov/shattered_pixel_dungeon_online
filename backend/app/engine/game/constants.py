@@ -15,6 +15,15 @@ HEAL_TICK_INTERVAL = 20
 ROOM_HEAL_AMOUNT = 10
 PASSIVE_REGEN_INTERVAL = 10
 
+# Caustic ooze (SPD Ooze): DURATION=20 turns, ~1 dmg/turn vs the depth-5 Goo,
+# washed off by stepping into water. Ticks are throttled so the real-time loop
+# applies roughly one point of damage per in-game "turn".
+OOZE_DURATION = 20
+OOZE_TICK_INTERVAL = 20  # ticks (~1s at 20Hz) between ooze damage applications
+
+# Goo water-heal cadence: ticks between each +heal_inc while standing in water.
+GOO_WATER_HEAL_INTERVAL = 20
+
 # Respawn timer: 50 turns (ticks) base
 RESPAWN_TURNS = 50
 # No respawns on floor 1

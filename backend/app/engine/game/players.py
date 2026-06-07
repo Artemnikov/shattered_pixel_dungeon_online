@@ -174,6 +174,14 @@ class PlayersMixin:
             if player.floor_id > 1:
                 self._move_player_to_floor(player, player.floor_id - 1, TileType.STAIRS_DOWN)
 
+    def admin_teleport(self, player_id: str, target_floor: int):
+        """Admin-only direct floor teleport. No-op if the player is not admin."""
+        player = self.players.get(player_id)
+        if not player or not player.is_admin:
+            return
+        target_floor = max(1, min(MAX_FLOOR_ID, target_floor))
+        self._move_player_to_floor(player, target_floor, TileType.STAIRS_UP)
+
     def _kill_player(self, player: Player, floor: FloorState, floor_id: int):
         # Run the death sequence once: scatter the backpack and mark the spot
         # with a grave (mirrors Hero.reallyDie in Shattered Pixel Dungeon).

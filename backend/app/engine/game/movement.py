@@ -157,6 +157,7 @@ class MovementCombatMixin:
                 if not target_entity.is_alive:
                     if isinstance(target_entity, MobEntity):
                         self.process_death_mark_kill(entity, target_entity, floor, floor_id)
+                        self.handle_mob_death(target_entity, floor, floor_id)
                     if isinstance(entity, Player):
                         self.on_kill(entity, target_entity, floor.mobs, floor_id)
                     self.add_event("DEATH", {"target": target_entity.id}, floor_id=floor_id)

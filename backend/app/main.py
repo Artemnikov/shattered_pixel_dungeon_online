@@ -405,6 +405,9 @@ async def game_websocket(websocket: WebSocket, game_id: str, class_type: str = "
             elif isinstance(message, msg.MetamorphReplace):
                 game.metamorph_replace(player_id, message.old_talent, message.new_talent)
 
+            elif isinstance(message, msg.AdminTeleport):
+                game.admin_teleport(player_id, message.target_floor)
+
     except WebSocketDisconnect:
         # Keep the hero alive for the reconnect grace window (see reaper); the
         # player is only removed once the deadline elapses without a reconnect.

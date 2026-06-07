@@ -10,6 +10,7 @@ import { drawPlayers } from './draw/players';
 import { advanceAndDrawProjectiles } from './draw/projectiles';
 import { advanceAndDrawParticles } from './draw/particles';
 import { advanceAndDrawCheckedCells } from './draw/searchEffects';
+import { drawWarnedTiles } from './draw/warnedTiles';
 import { advanceAndDrawFloatingText } from './draw/floatingText';
 
 export default function useGameRenderer({
@@ -29,6 +30,7 @@ export default function useGameRenderer({
   particlesRef,
   searchEffectsRef,
   floatingTextRef,
+  warnedTilesRef,
   myPlayerIdRef,
   panOffsetRef,
   cameraLerpRef,
@@ -124,6 +126,7 @@ export default function useGameRenderer({
       drawWaterBackground(ctx, waterTex, waterClipPath, gridBounds, performance.now());
       drawGrid(ctx, { grid, depth, assetImages, visionRef, openDoorsRef });
       drawTerrainFeatures(ctx, assetImages.terrainFeatures, trapsRef.current, grid, visionRef);
+      if (warnedTilesRef) drawWarnedTiles(ctx, { ref: warnedTilesRef });
       drawItems(ctx, { entitiesRef, visionRef, assetImages });
       drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef, dyingMobsRef });
       drawPlayers(ctx, { entitiesRef, visionRef, assetImages, playerAnimRef, myPlayerId });

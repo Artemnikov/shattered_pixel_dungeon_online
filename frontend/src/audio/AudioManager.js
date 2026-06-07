@@ -18,6 +18,10 @@ import drinkSound from '../assets/sounds/drink.mp3';
 import throwSound from '../assets/sounds/miss.mp3';
 import levelUpSound from '../assets/sounds/levelup.mp3';
 import trapSound from '../assets/sounds/trap.mp3';
+import chargeupSound from '../assets/pixel-dungeon/audio/chargeup.mp3';
+import burningSound from '../assets/pixel-dungeon/audio/burning.mp3';
+import bossSound from '../assets/pixel-dungeon/audio/boss.mp3';
+import alertSound from '../assets/pixel-dungeon/audio/alert.mp3';
 import { effectiveSfxVolume } from '../menu/menuSettings';
 
 class AudioManager {
@@ -53,6 +57,10 @@ class AudioManager {
         this.loadSound('DRINK', drinkSound);
         this.loadSound('LEVELUP', levelUpSound);
         this.loadSound('TRAP', trapSound);
+        this.loadSound('CHARGEUP', chargeupSound);
+        this.loadSound('BURNING', burningSound);
+        this.loadSound('BOSS', bossSound);
+        this.loadSound('ALERT', alertSound);
 
         const doorSounds = import.meta.glob('../assets/sounds/door_open.mp3', { eager: true, query: '?url' });
         const doorUrl = doorSounds['../assets/sounds/door_open.mp3']?.default;

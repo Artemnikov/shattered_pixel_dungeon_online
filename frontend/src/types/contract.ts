@@ -359,6 +359,19 @@ export interface TalentMetamorphedEvent {
   data: { player: string; old_talent: string; new_talent: string };
 }
 
+/** Goo boss: pumped-up charge telegraph. `tiles` lists the threatened cells
+ * (cleared with an empty array when the charge is released or cancelled). */
+export interface GooChargeEvent {
+  type: 'GOO_CHARGE';
+  data: { mob: string; tiles: [number, number][]; duration_ms?: number };
+}
+
+/** Goo boss crossed the 50% HP enrage threshold. */
+export interface GooEnrageEvent {
+  type: 'GOO_ENRAGE';
+  data: { mob: string };
+}
+
 export type GameEvent =
   | AttackEvent
   | MissEvent
@@ -395,7 +408,9 @@ export type GameEvent =
   | ArmorAbilityChoiceAvailableEvent
   | MetamorphOpenEvent
   | MetamorphOptionsEvent
-  | TalentMetamorphedEvent;
+  | TalentMetamorphedEvent
+  | GooChargeEvent
+  | GooEnrageEvent;
 
 export type GameEventType = GameEvent['type'];
 
@@ -471,4 +486,5 @@ export type ClientMessage =
   | { type: 'TRIGGER_BERSERK' }
   | { type: 'PREPARATION_STRIKE'; target_x: number; target_y: number }
   | { type: 'METAMORPH_CHOOSE'; talent: string }
-  | { type: 'METAMORPH_REPLACE'; old_talent: string; new_talent: string };
+  | { type: 'METAMORPH_REPLACE'; old_talent: string; new_talent: string }
+  | { type: 'ADMIN_TELEPORT'; target_floor: number };

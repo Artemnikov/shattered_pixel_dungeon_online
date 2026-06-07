@@ -4,14 +4,39 @@ Reveals hidden doors/traps around a searching player, consumes keys to open
 locked doors, and resolves trap triggers when a player steps onto one.
 """
 
+import uuid
 from typing import List
 
 from app.engine.dungeon.generator import TileType
-from app.engine.entities.base import Key, Player
+from app.engine.entities.base import Key, Player, Position
 from app.engine.game.floor_state import FloorState
 
 
 class WorldInteractionMixin:
+    def handle_mob_death(self, mob, floor: FloorState, floor_id: int) -> None:
+        """Boss-specific on-death drops, called at every mob-death site.
+
+        The Goo drops the key that unlocks the sealed arena exit (SPD Goo.die
+        drops a WornKey). Regular loot (goo blobs) is handled by roll_drops; the
+        key is dropped here because it needs the floor-specific lock id, and it
+        must drop no matter how Goo died (melee or bleed) so progression can't
+        soft-lock."""
+        from app.engine.entities.mobs import Goo
+        if not isinstance(mob, Goo):
+            return
+        key_id = next(iter(floor.locked_doors.values()), "goo_door")
+        # Don't double-drop if the boss death is processed from two sites.
+        if any(isinstance(i, Key) and getattr(i, "key_id", None) == key_id
+               for i in floor.items.values()):
+            return
+        key = Key(
+            id=str(uuid.uuid4()),
+            name="Worn Key",
+            pos=Position(x=mob.pos.x, y=mob.pos.y),
+            key_id=key_id,
+        )
+        floor.items[key.id] = key
+        self.add_event("PLAY_SOUND", {"sound": "BOSS"}, floor_id=floor_id)
     def search(self, player_id: str):
         player = self.players.get(player_id)
         if not player:

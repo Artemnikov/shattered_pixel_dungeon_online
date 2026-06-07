@@ -19,6 +19,9 @@ import {
   GUARD_FW,
   GUARD_FH,
   GUARD_DEST,
+  GOO_FW,
+  GOO_FH,
+  GOO_DEST,
   drawMobSprite,
   getGnollFrame,
   getGooFrame,
@@ -113,6 +116,7 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     const isThief = mob.name === 'Thief';
     const isDM100 = mob.name === 'DM-100';
     const isGuard = mob.name === 'Guard';
+    const isGoo = mob.name === 'Goo';
     const flash = !!(mobAnimRef.current[mob.id]?.flashUntil && now < mobAnimRef.current[mob.id].flashUntil);
     if (isGnoll) {
       drawMobSprite(ctx, mob, mobSprite, sx, GNOLL_FW, GNOLL_FH, flash, GNOLL_DEST);
@@ -126,6 +130,8 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
       drawMobSprite(ctx, mob, mobSprite, sx, DM100_FW, DM100_FH, flash, DM100_DEST);
     } else if (isGuard) {
       drawMobSprite(ctx, mob, mobSprite, sx, GUARD_FW, GUARD_FH, flash, GUARD_DEST);
+    } else if (isGoo) {
+      drawMobSprite(ctx, mob, mobSprite, sx, GOO_FW, GOO_FH, flash, GOO_DEST);
     } else {
       drawMobSprite(ctx, mob, mobSprite, sx,
         isScorpio ? SCORPIO_FW : FRAME_W,
@@ -193,7 +199,7 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
       drawMobSprite(ctx, mob, assetImages.scorpio, [0, 7, 8, 9, 10][fi] * SCORPIO_FW, SCORPIO_FW, SCORPIO_FW);
     } else if (isGooDeath) {
       const fi = Math.min(Math.floor(elapsed / 100), 2);
-      drawMobSprite(ctx, mob, assetImages.goo, [5, 6, 7][fi] * FRAME_W);
+      drawMobSprite(ctx, mob, assetImages.goo, [5, 6, 7][fi] * GOO_FW, GOO_FW, GOO_FH, false, GOO_DEST);
     } else if (isRatDeath) {
       const fi = Math.min(Math.floor(elapsed / 100), 3);
       drawMobSprite(ctx, mob, assetImages.rat, [11, 12, 13, 14][fi] * FRAME_W);

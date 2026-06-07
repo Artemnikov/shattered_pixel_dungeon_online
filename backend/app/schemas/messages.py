@@ -139,6 +139,11 @@ class MetamorphReplace(_ClientMessageBase):
     new_talent: str
 
 
+class AdminTeleport(_ClientMessageBase):
+    type: Literal["ADMIN_TELEPORT"]
+    target_floor: int
+
+
 ClientMessage = Annotated[
     Union[
         Ping,
@@ -163,6 +168,7 @@ ClientMessage = Annotated[
         PreparationStrike,
         MetamorphChoose,
         MetamorphReplace,
+        AdminTeleport,
     ],
     Field(discriminator="type"),
 ]

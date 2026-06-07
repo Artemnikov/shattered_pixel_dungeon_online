@@ -80,6 +80,7 @@ class GenerationMixin:
                 mobs={},
                 items={},
                 region="sewers",
+                locked_doors=dict(getattr(generator, "boss_locked_doors", {})),
             )
         elif depth <= PRISON_MAX_FLOOR:
             grid, rooms = generator.generate(10 + depth, 4, 8 + (depth // 10))

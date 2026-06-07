@@ -243,21 +243,62 @@ class CausticSlime(MobEntity):
 
 
 class Goo(MobEntity):
+    # Stats mirror the original single-player Goo (Goo.java): 100 HP, attack 10
+    # (15 enraged), damage 1-8 (1-12 enraged), DR 0-2. Enrage, water-heal and the
+    # pumped-up charge are driven by GameInstance._update_goo / _process_bleed_ooze.
     type: str = "boss"
     name: str = "Goo"
     defense_verb: str = "blocked"
-    hp: int = 300
-    max_hp: int = 300
-    attack_skill: int = 14
-    defense_skill: int = 6
-    damage_min: int = 5
-    damage_max: int = 12
+    hp: int = 100
+    max_hp: int = 100
+    attack_skill: int = 10
+    defense_skill: int = 8
+    damage_min: int = 1
+    damage_max: int = 8
     dr_min: int = 0
     dr_max: int = 2
-    speed: float = 1.5
-    exp: int = 15
+    speed: float = 1.0
+    exp: int = 10
     max_lvl: int = 15
-    attack_cooldown: float = 2.5
+    # Paces both Goo's melee swing and each beat of the pumped-up charge.
+    attack_cooldown: float = 1.5
+
+    # Runtime boss state (serialized via model_dump so the client can render the
+    # charge telegraph / pump animation, and so it survives reconnects).
+    pumped_up: int = 0            # 0 idle, 1 charging, 2 ready to release
+    heal_inc: int = 1            # water-heal ramp (SPD Goo.healInc)
+    heal_cooldown: int = 0       # ticks until the next water-heal application
+    enraged_announced: bool = False
+
+    # 2-4 goo blobs on death (avg ~2.5, matching SPD Goo.die). The boss-floor key
+    # is dropped separately (see GameInstance.handle_boss_death) because it needs
+    # the floor-specific lock id.
+    loot_table: List[DropEntry] = [
+        DropEntry(item_kind="goo_blob", chance=1.0, max_global=0),
+        DropEntry(item_kind="goo_blob", chance=1.0, max_global=0),
+        DropEntry(item_kind="goo_blob", chance=0.3, max_global=0),
+        DropEntry(item_kind="goo_blob", chance=0.2, max_global=0),
+    ]
+
+    def is_enraged(self) -> bool:
+        # SPD: Goo enrages once at or below half health (HP*2 <= HT).
+        return self.hp * 2 <= self.max_hp
+
+    def get_damage_min(self) -> int:
+        return 1
+
+    def get_damage_max(self) -> int:
+        return 12 if self.is_enraged() else 8
+
+    def get_effective_defense_skill(self) -> int:
+        base = self.defense_skill
+        return int(base * 1.5) if self.is_enraged() else base
+
+    def attack_proc(self, target: "Entity") -> None:
+        # 1/3 chance to coat the target in caustic ooze (SPD Goo.attackProc).
+        from app.engine.game.constants import OOZE_DURATION
+        if random.randint(0, 2) == 0:
+            target.ooze_amount = OOZE_DURATION
 
 
 # ---------------------------------------------------------------------------

@@ -82,10 +82,25 @@ class DungeonGenerator(SewersGenerationMixin, CorridorsMixin, TerrainMixin):
         self._create_tunnel(boss_room.center,  north_room.center)
         self._create_tunnel(boss_room.center,  south_room.center)
 
+        # Water-filled arena (SPD GooBossRoom): a central pool with a 1-tile dry
+        # ring inside the walls. Goo heals while standing in it, so the player has
+        # to bait it out onto the dry border.
+        for y in range(boss_room.y + 1, boss_room.y + boss_room.height - 1):
+            for x in range(boss_room.x + 1, boss_room.x + boss_room.width - 1):
+                if self.grid[y][x] == TileType.FLOOR:
+                    self.grid[y][x] = TileType.FLOOR_WATER
+
         wx, wy = west_room.center
         ex, ey = east_room.center
         self.grid[wy][wx] = TileType.STAIRS_UP
         self.grid[ey][ex] = TileType.STAIRS_DOWN
+
+        # Seal the exit: the east corridor leaving the arena (both rooms are
+        # centred on y=19, so the tunnel carves a door at the arena's right wall)
+        # is locked. Only Goo drops the matching key (see handle_boss_death).
+        door_x, door_y = boss_room.x + boss_room.width, boss_room.center[1]
+        self.grid[door_y][door_x] = TileType.LOCKED_DOOR
+        self.boss_locked_doors = {(door_x, door_y): "goo_door"}
 
         self.rooms = [west_room, boss_room, north_room, south_room, east_room]
         self._save_debug_map(self.grid)
