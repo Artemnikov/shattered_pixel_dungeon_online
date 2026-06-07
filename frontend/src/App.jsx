@@ -109,6 +109,7 @@ function App() {
   const [inspectInfo, setInspectInfo] = useState(null);
   const [myStats, setMyStats] = useState({ hp: 0, maxHp: 10, name: '' });
   const [bossInfo, setBossInfo] = useState(null);
+  const [bossFightActive, setBossFightActive] = useState(false);
   const [depth, setDepth] = useState(1);
   const [, setCamera] = useState({ x: 0, y: 0 });
   const getInitialInterfaceSize = () => {
@@ -257,7 +258,7 @@ function App() {
   // --- infra hooks ---
   useAudioUnlock();
   const assetImages = useAssetImages();
-  useMusicByDepth({ enabled: gameState === 'PLAYING', depth, musicRef });
+  useMusicByDepth({ enabled: gameState === 'PLAYING', depth, bossFightActive: bossFightActive && !!bossInfo, musicRef });
 
   useGameSocket({
     enabled: gameState === 'PLAYING',
@@ -283,6 +284,7 @@ function App() {
       setArmorAbilityOptions(data.options);
       setShowArmorAbilityChoice(true);
     },
+    onGooFightStarted: () => setBossFightActive(true),
     onMetamorphOpen: () => {
       setShowTalentPane(true);
       setShowMetamorphMode(true);
@@ -688,6 +690,7 @@ function App() {
     setGrid([]);
     setMyStats({ hp: 0, maxHp: 10, name: '' });
     setBossInfo(null);
+    setBossFightActive(false);
     setInventory([]);
     setConnectionStatus(null);
     setShowMetamorphMode(false);

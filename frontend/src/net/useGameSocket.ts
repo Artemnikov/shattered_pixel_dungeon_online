@@ -163,6 +163,7 @@ interface HookProps {
   onTalentUpgraded?: (data: { talent: string; level: number }) => void;
   onMetamorphOpen?: () => void;
   onMetamorphOptions?: (data: { old_talent: string; options: string[] }) => void;
+  onGooFightStarted?: (data: { mob: string }) => void;
 }
 
 type HandlerCtx = Pick<
@@ -187,6 +188,7 @@ type HandlerCtx = Pick<
   onTalentUpgraded?: HookProps['onTalentUpgraded'];
   onMetamorphOpen?: HookProps['onMetamorphOpen'];
   onMetamorphOptions?: HookProps['onMetamorphOptions'];
+  onGooFightStarted?: HookProps['onGooFightStarted'];
 };
 
 export default function useGameSocket({
@@ -231,6 +233,7 @@ export default function useGameSocket({
   onTalentUpgraded,
   onMetamorphOpen,
   onMetamorphOptions,
+  onGooFightStarted,
 }: HookProps) {
   useEffect(() => {
     if (!enabled) return;
@@ -511,7 +514,7 @@ export default function useGameSocket({
             projectilesRef, mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef,
             searchEffectsRef, floatingTextRef, warnedTilesRef,
             onLevelUp, onSubclassChoiceAvailable, onArmorAbilityChoiceAvailable, onTalentUpgraded,
-            onMetamorphOpen, onMetamorphOptions,
+            onMetamorphOpen, onMetamorphOptions, onGooFightStarted,
           });
         });
       }
@@ -540,7 +543,7 @@ function handleEvent(event: GameEvent, {
   projectilesRef, mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef,
   searchEffectsRef, floatingTextRef, warnedTilesRef,
   onLevelUp, onSubclassChoiceAvailable, onArmorAbilityChoiceAvailable, onTalentUpgraded,
-  onMetamorphOpen, onMetamorphOptions,
+  onMetamorphOpen, onMetamorphOptions, onGooFightStarted,
 }: HandlerCtx) {
   if (event.type === 'PLAY_SOUND') {
     AudioManager.play(event.data.sound);
@@ -567,11 +570,13 @@ function handleEvent(event: GameEvent, {
   }
 
   if (event.type === 'GOO_ENRAGE') {
-    const mob = entitiesRef.current.mobs[event.data.mob];
-    const visible = visionRef.current?.visible;
-    if (mob && visible?.has(`${mob.pos.x},${mob.pos.y}`)) {
-      AudioManager.play('BURNING');
-    }
+    // SPD's Goo.damage() plays no sound at the bleed/enrage threshold — only a
+    // status text + yell ("gluuurp") and the BossHealthBar bleed visuals.
+    return;
+  }
+
+  if (event.type === 'GOO_FIGHT_STARTED') {
+    onGooFightStarted?.(event.data);
     return;
   }
 

@@ -223,6 +223,26 @@ class TickMixin:
                     else:
                         mob.ai_state = "hunting"
 
+                # SPD's Goo.notice() (called once Goo is in the hero's FOV) locks
+                # the boss room and starts the boss track. The generic wake-up
+                # check above is purely distance-based (no LOS), so it can flip
+                # Goo to "hunting" from clear across the level — gate the actual
+                # "fight start" announcement on mutual visibility so it lines up
+                # with the moment the hero can actually see Goo notice them.
+                # _is_in_los defaults to shadowcaster.MAX_DISTANCE (20) when no
+                # distance is given, which is *not* the hero's rendered sight
+                # radius (view_distance, normally 8) — across the open boss
+                # arena that let Goo count as "seen" while still off-screen, so
+                # the track started the moment the hero stepped into the room.
+                # Cap the check at the hero's actual view distance to match what
+                # they can see on screen.
+                if (isinstance(mob, Goo) and mob.ai_state == "hunting" and not mob.fight_started
+                        and target_player is not None
+                        and self._is_in_los(mob.pos, target_player.pos, floor_id=floor_id,
+                                             distance=self._view_distance(target_player))):
+                    mob.fight_started = True
+                    self.add_event("GOO_FIGHT_STARTED", {"mob": mob.id}, floor_id=floor_id)
+
                 dist = self._get_distance(mob.pos, target_player.pos) if target_player else float("inf")
                 atk_range = getattr(mob, "attack_range", 1)
                 is_passive = getattr(mob, "ai_state", "") == "passive"
@@ -326,7 +346,6 @@ class TickMixin:
         if enraged and not goo.enraged_announced:
             goo.enraged_announced = True
             self.add_event("GOO_ENRAGE", {"mob": goo.id}, floor_id=floor_id)
-            self.add_event("PLAY_SOUND", {"sound": "ALERT"}, floor_id=floor_id)
 
     def _goo_water_heal(self, goo: Goo, floor: FloorState, floor_id: int):
         if goo.flying or goo.hp >= goo.max_hp:

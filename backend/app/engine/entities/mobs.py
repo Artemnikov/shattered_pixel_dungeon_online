@@ -269,6 +269,7 @@ class Goo(MobEntity):
     heal_inc: int = 1            # water-heal ramp (SPD Goo.healInc)
     heal_cooldown: int = 0       # ticks until the next water-heal application
     enraged_announced: bool = False
+    fight_started: bool = False  # one-shot: fires GOO_FIGHT_STARTED on first notice
 
     # 2-4 goo blobs on death (avg ~2.5, matching SPD Goo.die). The boss-floor key
     # is dropped separately (see GameInstance.handle_boss_death) because it needs

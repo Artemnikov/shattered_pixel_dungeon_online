@@ -52,6 +52,62 @@ def test_goo_enrages_at_half_hp():
 # Ooze on hit
 # ---------------------------------------------------------------------------
 
+def test_goo_fight_started_fires_once_on_notice():
+    # Mirrors SPD's Goo.notice() -> Level.seal() -> boss music start: the
+    # backend should announce the fight exactly once, the moment Goo's AI
+    # notices the hero (ai_state flips from idle to hunting).
+    game = GameInstance("test-goo-notice")
+    game.players = {}
+    game.grid = [[TileType.FLOOR for _ in range(10)] for _ in range(10)]
+    game._get_or_create_floor(game.depth).rebuild_flags()
+    game.mobs = {}
+
+    goo = Goo(id="goo1", pos=Position(x=5, y=5), faction=Faction.DUNGEON)
+    game.mobs[goo.id] = goo
+    assert goo.ai_state == "idle"
+    assert goo.fight_started is False
+
+    player = game.add_player("p1", "Hero")
+    player.pos = Position(x=5, y=4)
+
+    fired = []
+    for _ in range(300):
+        game.update_tick()
+        fired += [e for e in game.flush_events() if e["type"] == "GOO_FIGHT_STARTED"]
+        if goo.ai_state == "hunting":
+            break
+
+    assert goo.ai_state == "hunting", "Goo should eventually notice the adjacent hero"
+    assert len(fired) == 1, "GOO_FIGHT_STARTED must fire exactly once"
+    assert fired[0]["data"] == {"mob": goo.id}
+    assert goo.fight_started is True
+
+
+def test_goo_enrage_no_longer_plays_alert_sound():
+    # SPD's Goo.damage() plays no sound at the bleed/enrage threshold (only a
+    # status text + yell + bleed visuals) — the backend used to also fire a
+    # PLAY_SOUND/ALERT here, which the original doesn't; it should be gone now.
+    game = GameInstance("test-goo-enrage-sound")
+    game.players = {}
+    game.grid = [[TileType.FLOOR for _ in range(10)] for _ in range(10)]
+    game._get_or_create_floor(game.depth).rebuild_flags()
+    game.mobs = {}
+
+    goo = Goo(id="goo1", pos=Position(x=5, y=5), faction=Faction.DUNGEON)
+    goo.hp = goo.max_hp // 2
+    game.mobs[goo.id] = goo
+
+    player = game.add_player("p1", "Hero")
+    player.pos = Position(x=5, y=4)
+
+    floor = game._get_or_create_floor(game.depth)
+    game._goo_sync_enrage(goo, floor.floor_id)
+    events = game.flush_events()
+
+    assert any(e["type"] == "GOO_ENRAGE" for e in events)
+    assert not any(e["type"] == "PLAY_SOUND" and e["data"].get("sound") == "ALERT" for e in events)
+
+
 def test_goo_attack_proc_can_apply_ooze():
     goo = Goo(id="g1", pos=Position(x=0, y=0), faction=Faction.DUNGEON)
     target = Player(id="p1", name="Hero", pos=Position(x=1, y=0), hp=50, max_hp=50, faction=Faction.PLAYER)

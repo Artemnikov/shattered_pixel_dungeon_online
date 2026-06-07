@@ -372,6 +372,12 @@ export interface GooEnrageEvent {
   data: { mob: string };
 }
 
+/** Goo boss noticed the hero — the fight begins (mirrors SPD's Goo.notice()/seal()). */
+export interface GooFightStartedEvent {
+  type: 'GOO_FIGHT_STARTED';
+  data: { mob: string };
+}
+
 export type GameEvent =
   | AttackEvent
   | MissEvent
@@ -410,7 +416,8 @@ export type GameEvent =
   | MetamorphOptionsEvent
   | TalentMetamorphedEvent
   | GooChargeEvent
-  | GooEnrageEvent;
+  | GooEnrageEvent
+  | GooFightStartedEvent;
 
 export type GameEventType = GameEvent['type'];
 
