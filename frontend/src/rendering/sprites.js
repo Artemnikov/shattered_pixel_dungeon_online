@@ -56,6 +56,7 @@ export const ITEM_SPRITES = {
   "Magical Holster":  [5, 30],  // HOLSTER
 
   // Consumables (generic first entry of each section)
+  "Metamorphosis":    [5, 19],  // SCROLL_METAMORPH (SCROLLS+5 = idx 309)
   "Scroll":           [0, 19],  // SCROLLS = xy(1,20) = idx 304
   "Health Potion":    [0, 22],  // POTIONS = xy(1,23) = idx 352
   "Reviving Potion":  [0, 22],

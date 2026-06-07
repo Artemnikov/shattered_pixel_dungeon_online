@@ -128,6 +128,17 @@ class PreparationStrike(_ClientMessageBase):
     target_y: int
 
 
+class MetamorphChoose(_ClientMessageBase):
+    type: Literal["METAMORPH_CHOOSE"]
+    talent: str
+
+
+class MetamorphReplace(_ClientMessageBase):
+    type: Literal["METAMORPH_REPLACE"]
+    old_talent: str
+    new_talent: str
+
+
 ClientMessage = Annotated[
     Union[
         Ping,
@@ -150,6 +161,8 @@ ClientMessage = Annotated[
         UseArmorAbility,
         TriggerBerserk,
         PreparationStrike,
+        MetamorphChoose,
+        MetamorphReplace,
     ],
     Field(discriminator="type"),
 ]

@@ -37,6 +37,7 @@ import ArmorAbilityChoice from './ui/ArmorAbilityChoice';
 import AbilityButton from './ui/AbilityButton';
 import BerserkButton from './ui/BerserkButton';
 import PrepStrikeButton from './ui/PrepStrikeButton';
+import WndOptions from './ui/WndOptions';
 import ComboDisplay from './ui/ComboDisplay';
 import LevelUpBanner from './ui/LevelUpBanner';
 
@@ -131,6 +132,10 @@ function App() {
   const [armorAbilityOptions, setArmorAbilityOptions] = useState([]);
   const [showLevelUpBanner, setShowLevelUpBanner] = useState(false);
   const [levelUpData, setLevelUpData] = useState({});
+  const [upgradedTalentId, setUpgradedTalentId] = useState(null);
+  const [showMetamorphMode, setShowMetamorphMode] = useState(false);
+  const [metamorphOldTalent, setMetamorphOldTalent] = useState(null);
+  const [metamorphOptions, setMetamorphOptions] = useState(null);
 
   // --- shared refs ---
   const canvasRef = useRef(null);
@@ -273,6 +278,14 @@ function App() {
       setArmorAbilityOptions(data.options);
       setShowArmorAbilityChoice(true);
     },
+    onMetamorphOpen: () => {
+      setShowTalentPane(true);
+      setShowMetamorphMode(true);
+    },
+    onMetamorphOptions: ({ old_talent, options }) => {
+      setMetamorphOldTalent(old_talent);
+      setMetamorphOptions(options);
+    },
     onTalentUpgraded: ({ talent }) => {
       if (!talentDefs) return;
       for (const [tierKey, tierData] of Object.entries(talentDefs.tiers)) {
@@ -281,6 +294,7 @@ function App() {
             ...prev,
             [tierKey]: Math.max(0, (prev[tierKey] || 0) - 1),
           }));
+          setUpgradedTalentId(talent);
           AudioManager.play('LEVELUP', 1.2);
           return;
         }
@@ -437,6 +451,8 @@ function App() {
   };
 
   const sendUpgradeTalent = (talent) => send({ type: 'UPGRADE_TALENT', talent });
+  const sendMetamorphChoose = (talent) => send({ type: 'METAMORPH_CHOOSE', talent });
+  const sendMetamorphReplace = (oldTalent, newTalent) => send({ type: 'METAMORPH_REPLACE', old_talent: oldTalent, new_talent: newTalent });
   const handleChooseSubclass = (subclass) => {
     send({ type: 'CHOOSE_SUBCLASS', subclass });
     setShowTalentPane(false);
@@ -668,6 +684,9 @@ function App() {
     setMyStats({ hp: 0, maxHp: 10, name: '' });
     setInventory([]);
     setConnectionStatus(null);
+    setShowMetamorphMode(false);
+    setMetamorphOptions(null);
+    setMetamorphOldTalent(null);
   };
 
   const handleLeaveGame = () => {
@@ -743,7 +762,13 @@ function App() {
         </div>
       )}
 
-      <StatusPane myStats={myStats} depth={depth} onSearch={handleExamineOrReveal} />
+      <StatusPane
+        myStats={myStats}
+        depth={depth}
+        onSearch={handleExamineOrReveal}
+        hasTalentPoints={Object.values(talentPoints || {}).some(p => p > 0)}
+        onOpenTalents={() => setShowTalentPane(v => !v)}
+      />
 
       <div className="canvas-wrapper" ref={wrapperRef}>
         <canvas
@@ -940,10 +965,13 @@ function App() {
           talentDefs={talentDefs}
           talentLevels={myStats.talentLevels || {}}
           talentPoints={talentPoints}
+          bonusTalentPoints={myStats.bonusTalentPoints}
           level={myStats.level || 1}
           subclass={myStats.subclass || null}
           armorAbility={myStats.armorAbility || null}
           abilityTier4={talentDefs?.ability_tier4 || {}}
+          upgradedTalentId={upgradedTalentId}
+          onAnimationDone={() => setUpgradedTalentId(null)}
           onUpgradeTalent={sendUpgradeTalent}
           onChooseSubclass={handleChooseSubclass}
           onChooseArmorAbility={handleChooseArmorAbility}
@@ -951,9 +979,44 @@ function App() {
             setShowSubclassChoice(false);
             setShowArmorAbilityChoice(false);
             setShowTalentPane(false);
+            setShowMetamorphMode(false);
+            setMetamorphOptions(null);
+            setMetamorphOldTalent(null);
           }}
           loading={talentDefsLoading}
           error={talentDefsError}
+          metamorphMode={showMetamorphMode}
+          onMetamorphChoose={sendMetamorphChoose}
+        />
+      )}
+
+      {metamorphOptions && (
+        <WndOptions
+          icon="§"
+          title="Choose replacement talent"
+          message="Pick a talent from another class to replace your current one."
+          options={metamorphOptions.map(tid => {
+            // Look up talent name from talentDefs
+            for (const [, tier] of Object.entries(talentDefs?.tiers || {})) {
+              const found = tier.talents.find(t => t.id === tid);
+              if (found) return found.name || tid;
+            }
+            return tid;
+          })}
+          onSelect={(idx) => {
+            const tid = metamorphOptions[idx];
+            if (metamorphOldTalent && tid) {
+              sendMetamorphReplace(metamorphOldTalent, tid);
+            }
+            setMetamorphOptions(null);
+            setMetamorphOldTalent(null);
+            setShowMetamorphMode(false);
+          }}
+          onClose={() => {
+            setMetamorphOptions(null);
+            setMetamorphOldTalent(null);
+            setShowMetamorphMode(false);
+          }}
         />
       )}
 
@@ -966,6 +1029,16 @@ function App() {
 
       {!!myStats.isDowned && (
         <GameOverScreen
+          playerName={myStats.name}
+          classType={myStats.classType || selectedClass}
+          level={myStats.level || 1}
+          depth={depth}
+          gold={gold ?? 0}
+          subclass={myStats.subclass}
+          armorAbility={myStats.armorAbility}
+          talentLevels={myStats.talentLevels}
+          talentDefs={talentDefs}
+          inventory={inventory}
           onNewGame={() => { resetForRestart(); setGameState('SELECT'); }}
           onMenu={() => { resetForRestart(); setGameState('WELCOME'); }}
         />

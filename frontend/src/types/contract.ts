@@ -31,6 +31,7 @@ import type {
   WornShortsword,
   BrokenSeal,
   ScrollOfRage,
+  ScrollOfMetamorphosis,
   Gold,
   Food,
   MysteryMeat,
@@ -73,6 +74,7 @@ export type GeneratedItem =
   | Potion
   | Scroll
   | ScrollOfRage
+  | ScrollOfMetamorphosis
   | Gold
   | Food
   | MysteryMeat
@@ -342,6 +344,21 @@ export interface ShieldEvent {
 }
 
 /** Every event the server can place in `STATE_UPDATE.events`. */
+export interface MetamorphOpenEvent {
+  type: 'METAMORPH_OPEN';
+  data: { player: string };
+}
+
+export interface MetamorphOptionsEvent {
+  type: 'METAMORPH_OPTIONS';
+  data: { player: string; old_talent: string; options: string[] };
+}
+
+export interface TalentMetamorphedEvent {
+  type: 'TALENT_METAMORPHED';
+  data: { player: string; old_talent: string; new_talent: string };
+}
+
 export type GameEvent =
   | AttackEvent
   | MissEvent
@@ -375,7 +392,10 @@ export type GameEvent =
   | ShadowCloneEvent
   | ShieldEvent
   | SubclassChoiceAvailableEvent
-  | ArmorAbilityChoiceAvailableEvent;
+  | ArmorAbilityChoiceAvailableEvent
+  | MetamorphOpenEvent
+  | MetamorphOptionsEvent
+  | TalentMetamorphedEvent;
 
 export type GameEventType = GameEvent['type'];
 
@@ -449,4 +469,6 @@ export type ClientMessage =
   | { type: 'UPGRADE_TALENT'; talent: string }
   | { type: 'USE_ARMOR_ABILITY'; ability: string; target_x?: number; target_y?: number }
   | { type: 'TRIGGER_BERSERK' }
-  | { type: 'PREPARATION_STRIKE'; target_x: number; target_y: number };
+  | { type: 'PREPARATION_STRIKE'; target_x: number; target_y: number }
+  | { type: 'METAMORPH_CHOOSE'; talent: string }
+  | { type: 'METAMORPH_REPLACE'; old_talent: string; new_talent: string };

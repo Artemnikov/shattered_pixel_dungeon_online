@@ -116,6 +116,7 @@ interface MyStats {
   comboCount?: number;
   talentLevels?: Record<string, number>;
   talentPoints?: Record<string, number>;
+  bonusTalentPoints?: Record<string, number>;
 }
 
 interface HookProps {
@@ -156,6 +157,8 @@ interface HookProps {
   onSubclassChoiceAvailable?: (data: { options: string[] }) => void;
   onArmorAbilityChoiceAvailable?: (data: { options: string[] }) => void;
   onTalentUpgraded?: (data: { talent: string; level: number }) => void;
+  onMetamorphOpen?: () => void;
+  onMetamorphOptions?: (data: { old_talent: string; options: string[] }) => void;
 }
 
 type HandlerCtx = Pick<
@@ -177,6 +180,8 @@ type HandlerCtx = Pick<
   onSubclassChoiceAvailable?: HookProps['onSubclassChoiceAvailable'];
   onArmorAbilityChoiceAvailable?: HookProps['onArmorAbilityChoiceAvailable'];
   onTalentUpgraded?: HookProps['onTalentUpgraded'];
+  onMetamorphOpen?: HookProps['onMetamorphOpen'];
+  onMetamorphOptions?: HookProps['onMetamorphOptions'];
 };
 
 export default function useGameSocket({
@@ -217,6 +222,8 @@ export default function useGameSocket({
   onSubclassChoiceAvailable,
   onArmorAbilityChoiceAvailable,
   onTalentUpgraded,
+  onMetamorphOpen,
+  onMetamorphOptions,
 }: HookProps) {
   useEffect(() => {
     if (!enabled) return;
@@ -349,6 +356,7 @@ export default function useGameSocket({
             comboCount: p.combo_count || 0,
             talentLevels: p.subclass_info?.talent_info?.talents || {},
             talentPoints: p.subclass_info?.talent_points || {},
+            bonusTalentPoints: p.subclass_info?.bonus_talent_points || {},
           });
         }
 
@@ -490,6 +498,7 @@ export default function useGameSocket({
             projectilesRef, mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef,
             searchEffectsRef, floatingTextRef,
             onLevelUp, onSubclassChoiceAvailable, onArmorAbilityChoiceAvailable, onTalentUpgraded,
+            onMetamorphOpen, onMetamorphOptions,
           });
         });
       }
@@ -518,6 +527,7 @@ function handleEvent(event: GameEvent, {
   projectilesRef, mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef,
   searchEffectsRef, floatingTextRef,
   onLevelUp, onSubclassChoiceAvailable, onArmorAbilityChoiceAvailable, onTalentUpgraded,
+  onMetamorphOpen, onMetamorphOptions,
 }: HandlerCtx) {
   if (event.type === 'PLAY_SOUND') {
     AudioManager.play(event.data.sound);
@@ -848,6 +858,29 @@ function handleEvent(event: GameEvent, {
   if (event.type === 'TALENT_UPGRADED') {
     if (event.data.player === myPlayerIdRef.current) {
       onTalentUpgraded?.({ talent: event.data.talent, level: event.data.level });
+    }
+    return;
+  }
+
+  if (event.type === 'METAMORPH_OPEN') {
+    if (event.data.player === myPlayerIdRef.current) {
+      onMetamorphOpen?.();
+    }
+    return;
+  }
+
+  if (event.type === 'METAMORPH_OPTIONS') {
+    if (event.data.player === myPlayerIdRef.current) {
+      onMetamorphOptions?.(event.data);
+    }
+    return;
+  }
+
+  if (event.type === 'TALENT_METAMORPHED') {
+    if (event.data.player === myPlayerIdRef.current) {
+      // Remove the replaced old talent, add the new one
+      // The full talentLevels will arrive in next STATE_UPDATE
+      AudioManager.play('LEVELUP', 1.2);
     }
     return;
   }
