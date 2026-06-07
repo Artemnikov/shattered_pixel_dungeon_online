@@ -17,6 +17,8 @@ import rogueSprite from '../assets/pixel-dungeon/sprites/rogue.png';
 import huntressSprite from '../assets/pixel-dungeon/sprites/huntress.png';
 import itemsSprite from '../assets/pixel-dungeon/sprites/items.png';
 import ratSprite from '../assets/pixel-dungeon/sprites/rat.png';
+import crabSprite from '../assets/pixel-dungeon/sprites/crab.png';
+import slimeSprite from '../assets/pixel-dungeon/sprites/slime.png';
 import snakeSprite from '../assets/pixel-dungeon/sprites/snake.png';
 import batSprite from '../assets/pixel-dungeon/sprites/bat.png';
 import gnollSprite from '../assets/pixel-dungeon/sprites/gnoll.png';
@@ -46,6 +48,8 @@ export default function useAssetImages() {
     huntress: null,
     items: null,
     rat: null,
+    crab: null,
+    slime: null,
     snake: null,
     bat: null,
     gnoll: null,
@@ -110,6 +114,8 @@ export default function useAssetImages() {
     loadImage(huntressSprite, 'huntress');
     loadImage(itemsSprite, 'items');
     loadImage(ratSprite, 'rat');
+    loadImage(crabSprite, 'crab');
+    loadImage(slimeSprite, 'slime');
     loadImage(snakeSprite, 'snake');
     loadImage(batSprite, 'bat');
     loadImage(gnollSprite, 'gnoll');

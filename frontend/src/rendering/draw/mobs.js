@@ -1,6 +1,7 @@
 import { TILE_SIZE } from '../../constants';
 import {
   FRAME_W,
+  FRAME_H,
   SCORPIO_FW,
   GNOLL_FW,
   GNOLL_FH,
@@ -22,9 +23,15 @@ import {
   GOO_FW,
   GOO_FH,
   GOO_DEST,
+  SLIME_FW,
+  SLIME_FH,
+  SLIME_DEST,
   drawMobSprite,
+  getCrabFrame,
+  getHermitCrabFrame,
   getGnollFrame,
   getGooFrame,
+  getSlimeFrame,
   getRatFrame,
   getSnakeFrame,
   getScorpioFrame,
@@ -78,6 +85,15 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     if (mob.name === 'Rat') {
       mobSprite = assetImages.rat;
       sx = getRatFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Crab') {
+      mobSprite = assetImages.crab;
+      sx = getCrabFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Hermit Crab') {
+      mobSprite = assetImages.crab;
+      sx = getHermitCrabFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Slime' || mob.name === 'Caustic Slime') {
+      mobSprite = assetImages.slime;
+      sx = getSlimeFrame(mob, mobAnimRef.current, now);
     } else if (mob.name === 'Snake') {
       mobSprite = assetImages.snake;
       sx = getSnakeFrame(mob, mobAnimRef.current, now);
@@ -110,6 +126,10 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     }
 
     const isScorpio = mob.name === 'Scorpio';
+    const isCrab = mob.name === 'Crab';
+    const isHermitCrab = mob.name === 'Hermit Crab';
+    const isSlime = mob.name === 'Slime';
+    const isCausticSlime = mob.name === 'Caustic Slime';
     const isGnoll = mob.name === 'Gnoll';
     const isSnake = mob.name === 'Snake';
     const isSkeleton = mob.name === 'Skeleton';
@@ -132,6 +152,12 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
       drawMobSprite(ctx, mob, mobSprite, sx, GUARD_FW, GUARD_FH, flash, GUARD_DEST);
     } else if (isGoo) {
       drawMobSprite(ctx, mob, mobSprite, sx, GOO_FW, GOO_FH, flash, GOO_DEST);
+    } else if (isCrab || isHermitCrab) {
+      // crab.png stacks variants in 16px rows: Crab = row 0, Hermit Crab = row 1.
+      drawMobSprite(ctx, mob, mobSprite, sx, FRAME_W, FRAME_H, flash, null, 1, isHermitCrab ? FRAME_H : 0);
+    } else if (isSlime || isCausticSlime) {
+      // slime.png stacks variants in 12px rows: Slime = row 0, Caustic Slime = row 1.
+      drawMobSprite(ctx, mob, mobSprite, sx, SLIME_FW, SLIME_FH, flash, SLIME_DEST, 1, isCausticSlime ? SLIME_FH : 0);
     } else {
       drawMobSprite(ctx, mob, mobSprite, sx,
         isScorpio ? SCORPIO_FW : FRAME_W,
@@ -183,6 +209,10 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     const isScorpioDeath = mob.name === 'Scorpio';
     const isGooDeath = mob.name === 'Goo';
     const isRatDeath = mob.name === 'Rat';
+    const isCrabDeath = mob.name === 'Crab';
+    const isHermitCrabDeath = mob.name === 'Hermit Crab';
+    const isSlimeDeath = mob.name === 'Slime';
+    const isCausticSlimeDeath = mob.name === 'Caustic Slime';
     const isSnakeDeath = mob.name === 'Snake';
     const isSkeletonDeath = mob.name === 'Skeleton';
     const isThiefDeath = mob.name === 'Thief';
@@ -191,7 +221,7 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     const isNecromancerDeath = mob.name === 'Necromancer';
     // Gnoll: die frames [8,9,10] over 250ms, then a 3s alpha fade (SPD AlphaTweener).
     // Snake: die frames [11,12,13] over 300ms, then a 3s alpha fade.
-    const deathDuration = isScorpioDeath ? 417 : isGooDeath ? 300 : isRatDeath ? 400 : isSnakeDeath ? 3300 : isSkeletonDeath ? 332 : isThiefDeath ? 500 : isDM100Death ? 498 : isGuardDeath ? 500 : isNecromancerDeath ? 400 : 3250;
+    const deathDuration = isScorpioDeath ? 417 : isGooDeath ? 300 : isRatDeath ? 400 : (isCrabDeath || isHermitCrabDeath) ? 333 : (isSlimeDeath || isCausticSlimeDeath) ? 400 : isSnakeDeath ? 3300 : isSkeletonDeath ? 332 : isThiefDeath ? 500 : isDM100Death ? 498 : isGuardDeath ? 500 : isNecromancerDeath ? 400 : 3250;
     if (elapsed > deathDuration) { delete dyingMobsRef.current[id]; return; }
     if (!visionRef.current.visible.has(`${Math.round(mob.renderPos.x)},${Math.round(mob.renderPos.y)}`)) return;
     if (isScorpioDeath) {
@@ -203,6 +233,14 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     } else if (isRatDeath) {
       const fi = Math.min(Math.floor(elapsed / 100), 3);
       drawMobSprite(ctx, mob, assetImages.rat, [11, 12, 13, 14][fi] * FRAME_W);
+    } else if (isCrabDeath || isHermitCrabDeath) {
+      const fi = Math.min(Math.floor(elapsed / 83), 3);
+      const sy = isHermitCrabDeath ? FRAME_H : 0;
+      drawMobSprite(ctx, mob, assetImages.crab, [10, 11, 12, 13][fi] * FRAME_W, FRAME_W, FRAME_H, false, null, 1, sy);
+    } else if (isSlimeDeath || isCausticSlimeDeath) {
+      const fi = Math.min(Math.floor(elapsed / 100), 3);
+      const sy = isCausticSlimeDeath ? SLIME_FH : 0;
+      drawMobSprite(ctx, mob, assetImages.slime, [0, 5, 6, 7][fi] * SLIME_FW, SLIME_FW, SLIME_FH, false, SLIME_DEST, 1, sy);
     } else if (isSkeletonDeath) {
       const fi = Math.min(Math.floor(elapsed / 83), 3);
       drawMobSprite(ctx, mob, assetImages.skeleton, [10, 11, 12, 13][fi] * SKELETON_FW, SKELETON_FW, SKELETON_FH, false, SKELETON_DEST);

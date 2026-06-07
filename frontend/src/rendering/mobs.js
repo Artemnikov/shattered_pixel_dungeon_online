@@ -39,6 +39,12 @@ export const GOO_FW = 20;
 export const GOO_FH = 14;
 export const GOO_DEST = { dx: -4, dy: 2, dw: 40, dh: 28 };
 
+// Slime's 14x12 frame, bottom-aligned in the 32px tile per SPD placement
+// (x=(col+0.5)*16-w/2, y=(row+1)*16-h), scaled 2x -> 28x24 at offset (+2,+8).
+export const SLIME_FW = 14;
+export const SLIME_FH = 12;
+export const SLIME_DEST = { dx: 2, dy: 8, dw: 28, dh: 24 };
+
 const isEntityMoving = (mob) =>
   mob.targetPos &&
   (Math.abs(mob.targetPos.x - mob.renderPos.x) > 0.05 ||
@@ -177,6 +183,62 @@ export const getRatFrame = (mob, mobAnim, now) => {
   return [0, 0, 0, 1][Math.floor(now / 500) % 4] * FRAME_W;
 };
 
+// Faithful to original SPD SlimeSprite (14x12 frames, row 0 of slime.png):
+//   idle    3fps loop  [0,1,1,0]
+//   run    10fps loop  [0,2,3,3,2,0]
+//   attack 15fps once  [2,3,4,6,5]   ~333ms
+//   die    10fps once  [0,5,6,7]     (handled in draw/mobs.js)
+// Caustic Slime reuses this (same column indices), drawn from row 1 (sy = SLIME_FH)
+// per CausticSlimeSprite's frame offset c=9.
+export const getSlimeFrame = (mob, mobAnim, now) => {
+  const anim = mobAnim[mob.id] || {};
+  const isAttacking = anim.attackUntil && now < anim.attackUntil;
+  if (isAttacking) {
+    const elapsed = now - (anim.attackUntil - 333);
+    const fi = Math.min(Math.floor(elapsed / 67), 4);
+    return [2, 3, 4, 6, 5][fi] * SLIME_FW;
+  }
+  if (isEntityMoving(mob)) {
+    return [0, 2, 3, 3, 2, 0][Math.floor(now / 100) % 6] * SLIME_FW;
+  }
+  return [0, 1, 1, 0][Math.floor(now / 333) % 4] * SLIME_FW;
+};
+
+// Faithful to original SPD CrabSprite (16x16 frames, row 0 of crab.png):
+//   idle    5fps loop  [0,1,0,2]
+//   run    15fps loop  [3,4,5,6]
+//   attack 12fps once  [7,8,9]        ~250ms
+//   die    12fps once  [10,11,12,13]  (handled in draw/mobs.js)
+export const getCrabFrame = (mob, mobAnim, now) => {
+  const anim = mobAnim[mob.id] || {};
+  const isAttacking = anim.attackUntil && now < anim.attackUntil;
+  if (isAttacking) {
+    const elapsed = now - (anim.attackUntil - 250);
+    const fi = Math.min(Math.floor(elapsed / 83), 2);
+    return [7, 8, 9][fi] * FRAME_W;
+  }
+  if (isEntityMoving(mob)) {
+    return [3, 4, 5, 6][Math.floor(now / 67) % 4] * FRAME_W;
+  }
+  return [0, 1, 0, 2][Math.floor(now / 200) % 4] * FRAME_W;
+};
+
+// Hermit Crab: same crab.png sheet, second row (HermitCrabSprite uses frame index +16),
+// with a slower 10fps run animation.
+export const getHermitCrabFrame = (mob, mobAnim, now) => {
+  const anim = mobAnim[mob.id] || {};
+  const isAttacking = anim.attackUntil && now < anim.attackUntil;
+  if (isAttacking) {
+    const elapsed = now - (anim.attackUntil - 250);
+    const fi = Math.min(Math.floor(elapsed / 83), 2);
+    return [7, 8, 9][fi] * FRAME_W;
+  }
+  if (isEntityMoving(mob)) {
+    return [3, 4, 5, 6][Math.floor(now / 100) % 4] * FRAME_W;
+  }
+  return [0, 1, 0, 2][Math.floor(now / 200) % 4] * FRAME_W;
+};
+
 // Faithful to original SPD SnakeSprite (12x11 frames, row 0):
 //   idle   10fps loop  0(x15), 1(x10), 2, 3, 2, 1(x2) = 30 frames, 3s loop
 //   run     8fps loop  [4,5,6,7] = 4 frames, 0.5s loop
@@ -199,7 +261,7 @@ export const getSnakeFrame = (mob, mobAnim, now) => {
 // dest (optional): in-tile placement {dx,dy,dw,dh} for sprites whose native frame is not a
 // full 32x32 tile (e.g. gnoll's 12x15 -> 24x30 @ +4,+2). Omitted = legacy full-tile draw.
 // alpha (optional): 0..1 used for the death fade-out.
-export const drawMobSprite = (ctx, mob, sprite, sx, fw = FRAME_W, fh = FRAME_H, flash = false, dest = null, alpha = 1) => {
+export const drawMobSprite = (ctx, mob, sprite, sx, fw = FRAME_W, fh = FRAME_H, flash = false, dest = null, alpha = 1, sy = 0) => {
   const x = mob.renderPos.x * TILE_SIZE;
   const y = mob.renderPos.y * TILE_SIZE;
   const dx = dest ? dest.dx : 0;
@@ -214,11 +276,11 @@ export const drawMobSprite = (ctx, mob, sprite, sx, fw = FRAME_W, fh = FRAME_H, 
       const lx = TILE_SIZE - dx - dw;
       ctx.translate(x + TILE_SIZE, y);
       ctx.scale(-1, 1);
-      ctx.drawImage(sprite, sx, 0, fw, fh, lx, dy, dw, dh);
-      if (flash) drawWhiteSilhouette(ctx, sprite, sx, 0, fw, fh, lx, dy, dw, dh);
+      ctx.drawImage(sprite, sx, sy, fw, fh, lx, dy, dw, dh);
+      if (flash) drawWhiteSilhouette(ctx, sprite, sx, sy, fw, fh, lx, dy, dw, dh);
     } else {
-      ctx.drawImage(sprite, sx, 0, fw, fh, x + dx, y + dy, dw, dh);
-      if (flash) drawWhiteSilhouette(ctx, sprite, sx, 0, fw, fh, x + dx, y + dy, dw, dh);
+      ctx.drawImage(sprite, sx, sy, fw, fh, x + dx, y + dy, dw, dh);
+      if (flash) drawWhiteSilhouette(ctx, sprite, sx, sy, fw, fh, x + dx, y + dy, dw, dh);
     }
     ctx.restore();
   } else {
