@@ -38,6 +38,8 @@ from app.engine.entities.base import (
 from app.engine.entities.mobs import (
     AcidicScorpio,
     AlbinoRat,
+    DM300,
+    Tengu,
     ArmoredBrute,
     Bandit,
     Bat,
@@ -170,6 +172,8 @@ _MOB_CLASSES: Dict[str, type[MobEntity]] = {
     "Acidic": AcidicScorpio,
     "AcidicScorpio": AcidicScorpio,
     "RipperDemon": RipperDemon,
+    "Tengu": Tengu,
+    "DM300": DM300,
 }
 
 # Trap class (SPD) -> remake TrapType

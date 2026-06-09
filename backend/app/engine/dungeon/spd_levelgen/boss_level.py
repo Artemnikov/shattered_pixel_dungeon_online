@@ -46,6 +46,14 @@ from app.engine.dungeon.spd_random import SPDRandom
 # ---------------------------------------------------------------------------
 
 def build_boss_floor(rng: SPDRandom, depth: int, run_state: RunState) -> Tuple[GenLevel, List[Room]]:
+    if depth == 10:
+        return _build_prison_boss_floor(rng, depth, run_state)
+    if depth == 15:
+        return _build_caves_boss_floor(rng, depth, run_state)
+    return _build_sewer_boss_floor(rng, depth, run_state)
+
+
+def _build_sewer_boss_floor(rng: SPDRandom, depth: int, run_state: RunState) -> Tuple[GenLevel, List[Room]]:
     """Port of SewerBossLevel's build()/create() sequence.  Creates the
     figure-8 layout, paints via SewerPainter (water/grass/traps all zero),
     and spawns Bones items only."""
@@ -74,6 +82,73 @@ def build_boss_floor(rng: SPDRandom, depth: int, run_state: RunState) -> Tuple[G
 
     _boss_create_items(rng, level)
 
+    return level, rooms
+
+
+def _build_prison_boss_floor(rng: SPDRandom, depth: int, run_state: RunState) -> Tuple[GenLevel, List[Room]]:
+    """Simplified prison boss level (Tengu, depth 10). Single enclosed arena
+    with entrance at one end, Tengu in the center, locked exit at the other."""
+    from app.engine.dungeon.spd_levelgen.prison_painter import PrisonPainter
+
+    level = GenLevel(depth, Feeling.NONE)
+    level.run_state = run_state
+
+    while True:
+        builder = _boss_builder(rng)
+        init_rooms = _prison_boss_init_rooms(rng, depth)
+        rng.shuffle(init_rooms)
+        for r in init_rooms:
+            r.neighbours.clear()
+            r.connected.clear()
+        rooms = builder.build(list(init_rooms), rng, depth)
+        if rooms is not None:
+            break
+
+    painter = (PrisonPainter()
+               .set_water(0.20, 4)
+               .set_grass(0.10, 3)
+               .set_traps(0, (), ()))
+    painter.paint(rng, level, rooms)
+
+    level.rooms = rooms
+    level.room_entrance = next(r for r in rooms if r.is_entrance())
+    level.room_exit = next(r for r in rooms if r.is_exit())
+    level.build_flag_maps()
+
+    _boss_create_items(rng, level)
+    return level, rooms
+
+
+def _build_caves_boss_floor(rng: SPDRandom, depth: int, run_state: RunState) -> Tuple[GenLevel, List[Room]]:
+    """Simplified caves boss level (DM-300, depth 15). Open arena with pillars."""
+    from app.engine.dungeon.spd_levelgen.caves_painter import CavesPainter
+
+    level = GenLevel(depth, Feeling.NONE)
+    level.run_state = run_state
+
+    while True:
+        builder = _boss_builder(rng)
+        init_rooms = _caves_boss_init_rooms(rng, depth)
+        rng.shuffle(init_rooms)
+        for r in init_rooms:
+            r.neighbours.clear()
+            r.connected.clear()
+        rooms = builder.build(list(init_rooms), rng, depth)
+        if rooms is not None:
+            break
+
+    painter = (CavesPainter()
+               .set_water(0.20, 6)
+               .set_grass(0.10, 3)
+               .set_traps(0, (), ()))
+    painter.paint(rng, level, rooms)
+
+    level.rooms = rooms
+    level.room_entrance = next(r for r in rooms if r.is_entrance())
+    level.room_exit = next(r for r in rooms if r.is_exit())
+    level.build_flag_maps()
+
+    _boss_create_items(rng, level)
     return level, rooms
 
 
@@ -127,6 +202,42 @@ def _boss_init_rooms(rng: SPDRandom, depth: int) -> List[Room]:
 def _boss_standard_rooms(force_max: bool) -> int:
     """Port of SewerBossLevel.standardRooms()."""
     return 3  # always returns 3 when forceMax (and boss level always forces)
+
+
+def _prison_boss_init_rooms(rng: SPDRandom, depth: int) -> List[Room]:
+    rooms: List[Room] = []
+    entrance = PrisonBossEntranceRoom()
+    entrance.init_size_cat(rng)
+    rooms.append(entrance)
+    exit_ = PrisonBossExitRoom()
+    exit_.init_size_cat(rng)
+    rooms.append(exit_)
+    for _ in range(3):
+        s = create_standard_room(rng, depth)
+        s.set_size_cat(rng, 0, 0)
+        rooms.append(s)
+    boss_room = TenguBossRoom()
+    boss_room.init_size_cat(rng)
+    rooms.append(boss_room)
+    return rooms
+
+
+def _caves_boss_init_rooms(rng: SPDRandom, depth: int) -> List[Room]:
+    rooms: List[Room] = []
+    entrance = CavesBossEntranceRoom()
+    entrance.init_size_cat(rng)
+    rooms.append(entrance)
+    exit_ = CavesBossExitRoom()
+    exit_.init_size_cat(rng)
+    rooms.append(exit_)
+    for _ in range(3):
+        s = create_standard_room(rng, depth)
+        s.set_size_cat(rng, 0, 0)
+        rooms.append(s)
+    boss_room = DM300BossRoom()
+    boss_room.init_size_cat(rng)
+    rooms.append(boss_room)
+    return rooms
 
 
 # ---------------------------------------------------------------------------
@@ -458,3 +569,139 @@ class RatKingRoom(SecretRoom):
                 or pos == door - level.width() or pos == door + level.width()):
             return
         level.drop(frozenset({"Gold", "CHEST"}), pos).type = "CHEST"
+
+
+# ===========================================================================
+# Prison Boss (Tengu, depth 10) room types
+# ===========================================================================
+
+class PrisonBossEntranceRoom(StandardRoom):
+    def min_width(self) -> int:
+        return max(super().min_width(), 7)
+
+    def min_height(self) -> int:
+        return max(super().min_height(), 7)
+
+    def is_entrance(self) -> bool:
+        return True
+
+    def paint(self, level, rng) -> None:
+        Painter.fill(level, self, terrain.WALL)
+        Painter.fill(level, self, 1, terrain.EMPTY)
+        entrance = level.point_to_cell(self.random(rng, 2))
+        Painter.set(level, entrance, terrain.ENTRANCE)
+        for door in self.connected.values():
+            door.set(DoorType.REGULAR)
+
+
+class PrisonBossExitRoom(StandardRoom):
+    def min_width(self) -> int:
+        return max(super().min_width(), 7)
+
+    def min_height(self) -> int:
+        return max(super().min_height(), 7)
+
+    def is_exit(self) -> bool:
+        return True
+
+    def paint(self, level, rng) -> None:
+        Painter.fill(level, self, terrain.WALL)
+        Painter.fill(level, self, 1, terrain.EMPTY)
+        c = self.center(rng)
+        Painter.set(level, c, terrain.LOCKED_EXIT)
+        for door in self.connected.values():
+            door.set(DoorType.REGULAR)
+
+
+class TenguBossRoom(StandardRoom):
+    def size_cat_probs(self):
+        return [0.0, 1.0, 0.0]
+
+    def min_width(self) -> int:
+        return max(super().min_width(), 10)
+
+    def min_height(self) -> int:
+        return max(super().min_height(), 10)
+
+    def paint(self, level, rng) -> None:
+        Painter.fill(level, self, terrain.WALL)
+        Painter.fill(level, self, 1, terrain.EMPTY)
+        Painter.fill(level, self, 2, terrain.EMPTY)
+        for door in self.connected.values():
+            door.set(DoorType.REGULAR)
+        c = self.center(rng)
+        tengu_pos = level.point_to_cell(c)
+        level.mobs.append(GenMob(cls_name="Tengu", pos=tengu_pos))
+
+
+# ===========================================================================
+# Caves Boss (DM-300, depth 15) room types
+# ===========================================================================
+
+class CavesBossEntranceRoom(StandardRoom):
+    def min_width(self) -> int:
+        return max(super().min_width(), 7)
+
+    def min_height(self) -> int:
+        return max(super().min_height(), 7)
+
+    def is_entrance(self) -> bool:
+        return True
+
+    def paint(self, level, rng) -> None:
+        Painter.fill(level, self, terrain.WALL)
+        Painter.fill(level, self, 1, terrain.EMPTY)
+        entrance = level.point_to_cell(self.random(rng, 2))
+        Painter.set(level, entrance, terrain.ENTRANCE)
+        for door in self.connected.values():
+            door.set(DoorType.REGULAR)
+
+
+class CavesBossExitRoom(StandardRoom):
+    def min_width(self) -> int:
+        return max(super().min_width(), 7)
+
+    def min_height(self) -> int:
+        return max(super().min_height(), 7)
+
+    def is_exit(self) -> bool:
+        return True
+
+    def paint(self, level, rng) -> None:
+        Painter.fill(level, self, terrain.WALL)
+        Painter.fill(level, self, 1, terrain.EMPTY)
+        c = self.center(rng)
+        Painter.set(level, c, terrain.LOCKED_EXIT)
+        for door in self.connected.values():
+            door.set(DoorType.REGULAR)
+
+
+class DM300BossRoom(StandardRoom):
+    def size_cat_probs(self):
+        return [0.0, 1.0, 0.0]
+
+    def min_width(self) -> int:
+        return max(super().min_width(), 12)
+
+    def min_height(self) -> int:
+        return max(super().min_height(), 12)
+
+    def paint(self, level, rng) -> None:
+        Painter.fill(level, self, terrain.WALL)
+        Painter.fill(level, self, 1, terrain.EMPTY)
+
+        # Place 3 boulder pillars
+        w, h = self.width(), self.height()
+        for px, py in [
+            (self.left + w // 4, self.top + h // 4),
+            (self.right - w // 4, self.top + h // 4),
+            (self.left + w // 2, self.bottom - h // 4),
+        ]:
+            Painter.fill(level, px - 1, py - 1, 2, 2, terrain.MINE_BOULDER)
+
+        for door in self.connected.values():
+            door.set(DoorType.REGULAR)
+
+        c = self.center(rng)
+        dm300_pos = level.point_to_cell(c)
+        level.mobs.append(GenMob(cls_name="DM300", pos=dm300_pos))

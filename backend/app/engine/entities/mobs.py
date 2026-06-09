@@ -317,6 +317,73 @@ class Goo(MobEntity):
 
 
 # ---------------------------------------------------------------------------
+# Boss: Tengu (floor 10)
+# ---------------------------------------------------------------------------
+
+class Tengu(MobEntity):
+    type: str = "boss"
+    name: str = "Tengu"
+    hp: int = 200
+    max_hp: int = 200
+    attack_skill: int = 20
+    defense_skill: int = 15
+    damage_min: int = 6
+    damage_max: int = 12
+    dr_min: int = 0
+    dr_max: int = 5
+    exp: int = 20
+    max_lvl: int = 25
+    attack_range: int = 6
+    attack_cooldown: float = 1.5
+
+    phase2: bool = False
+    enrage_announced: bool = False
+    fight_started: bool = False
+
+    loot_table: List[DropEntry] = [
+        DropEntry(item_kind="tengu_mask", chance=1.0, max_global=0),
+    ]
+
+    def is_enraged(self) -> bool:
+        return self.hp * 2 <= self.max_hp
+
+    def get_attack_skill(self) -> int:
+        return 20 if not self.is_enraged() else 10
+
+
+# ---------------------------------------------------------------------------
+# Boss: DM-300 (floor 15)
+# ---------------------------------------------------------------------------
+
+class DM300(MobEntity):
+    type: str = "boss"
+    name: str = "DM-300"
+    hp: int = 300
+    max_hp: int = 300
+    attack_skill: int = 22
+    defense_skill: int = 10
+    damage_min: int = 15
+    damage_max: int = 35
+    dr_min: int = 5
+    dr_max: int = 10
+    exp: int = 30
+    max_lvl: int = 30
+    attack_cooldown: float = 2.0
+    properties: List[str] = ["INORGANIC"]
+
+    phase2: bool = False
+    rocket_cooldown: int = 0
+    fight_started: bool = False
+
+    loot_table: List[DropEntry] = [
+        DropEntry(item_kind="overloaded_charger", chance=1.0, max_global=0),
+    ]
+
+    def is_enraged(self) -> bool:
+        return self.hp * 2 <= self.max_hp
+
+
+# ---------------------------------------------------------------------------
 # Prison Enemies (depths 6-9)
 # ---------------------------------------------------------------------------
 

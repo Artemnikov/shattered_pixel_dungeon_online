@@ -350,10 +350,9 @@ class GenerationMixin:
             )
 
     def _spawn_boss(self, floor: FloorState, floor_tiles: List[Tuple[int, int]]):
-        if floor.floor_id == 5:
-            x, y = floor.rooms[1].center
-            mob = Goo(id=str(uuid.uuid4()), pos=Position(x=x, y=y))
-            floor.mobs[mob.id] = mob
+        if floor.floor_id in (5, 10, 15):
+            # Bosses for these floors are placed by the boss floor builder (spd_adapter)
+            return
         else:
             if not floor_tiles:
                 return
