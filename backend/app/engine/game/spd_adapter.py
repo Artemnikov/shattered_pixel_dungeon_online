@@ -176,7 +176,7 @@ _MOB_CLASSES: Dict[str, type[MobEntity]] = {
     "Bat": Bat,
     "Brute": Brute,
     "ArmoredBrute": ArmoredBrute,
-    "Shaman": RedShaman,
+    "Shaman": RedShaman,  # Java simple class name maps to RedShaman by convention
     "RedShaman": RedShaman,
     "BlueShaman": BlueShaman,
     "PurpleShaman": PurpleShaman,
@@ -279,7 +279,7 @@ def _spawn_mob(gen_mob: GenMob, width: int) -> MobEntity:
     y = pos // width
     mob = cls(id=str(uuid.uuid4()), pos=Position(x=x, y=y), faction=Faction.DUNGEON)
     # Set floor_level for depth-scaled mobs
-    if hasattr(mob, 'floor_level') and hasattr(gen_mob, 'depth'):
+    if hasattr(mob, 'floor_level'):
         mob.floor_level = gen_mob.depth
     return mob
 

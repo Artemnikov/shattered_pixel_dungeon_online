@@ -358,7 +358,7 @@ class PoolRoom(SpecialRoom):
         level.add_item_to_spawn(frozenset())  # PotionOfInvisibility -- never a findPrizeItem match-target
 
         for _ in range(3):
-            cls_name = "PhantomPiranha" if rng.Float() < 0.02 else "Piranha"
+            cls_name = "PhantomPiranha" if rng.Float() < 0.02 else "Piranha"  # 1/50 * exoticChanceMultiplier (no RatSkull) == 0.02
             while True:
                 ppos = level.point_to_cell(self.random(rng))
                 if level.map[ppos] == terrain.WATER and level.find_mob(ppos) is None:
