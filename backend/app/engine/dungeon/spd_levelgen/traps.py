@@ -86,6 +86,86 @@ class GatewayTrap(Trap):
     avoids_hallways = True
 
 
+# Prison new traps
+class BurningTrap(Trap):
+    pass
+
+
+class PoisonDartTrap(Trap):
+    pass
+
+
+class GrippingTrap(Trap):
+    pass
+
+
+class GeyserTrap(Trap):
+    pass
+
+
+# Caves new
+class FrostTrap(Trap):
+    pass
+
+
+class StormTrap(Trap):
+    pass
+
+
+class CorrosionTrap(Trap):
+    pass
+
+
+class RockfallTrap(Trap):
+    pass
+
+
+class GuardianTrap(Trap):
+    pass
+
+
+class WarpingTrap(Trap):
+    pass
+
+
+class PitfallTrap(Trap):
+    avoids_hallways = True
+
+
+# City new
+class BlazingTrap(Trap):
+    pass
+
+
+class DisintegrationTrap(Trap):
+    pass
+
+
+class FlashingTrap(Trap):
+    pass
+
+
+class WeakeningTrap(Trap):
+    pass
+
+
+class DisarmingTrap(Trap):
+    pass
+
+
+class CursingTrap(Trap):
+    pass
+
+
+class DistortionTrap(Trap):
+    pass
+
+
+# Halls new
+class GrimTrap(Trap):
+    pass
+
+
 # SewerLevel.trapClasses()/trapChances() -- depth==1 vs depth>1 (Random.java
 # source confirms depth-1 sewers floors only ever roll WornDartTrap).
 _DEPTH1_TRAP_CLASSES = (WornDartTrap,)
@@ -111,3 +191,68 @@ def reveal_hidden_trap_chance() -> float:
     """TrapMechanism.revealHiddenTrapChance() -- depends on trinketLevel()
     (hero meta-state); fresh game -> 0 (no TrapMechanism trinket found)."""
     return 0.0
+
+
+# PrisonLevel.trapClasses()/trapChances()
+_PRISON_TRAP_CLASSES = (
+    ChillingTrap, ShockingTrap, ToxicTrap, BurningTrap, PoisonDartTrap,
+    AlarmTrap, OozeTrap, GrippingTrap,
+    ConfusionTrap, FlockTrap, SummoningTrap, TeleportationTrap, GatewayTrap, GeyserTrap,
+)
+_PRISON_TRAP_CHANCES = (4, 4, 4, 4, 4, 2, 2, 2, 1, 1, 1, 1, 1, 1)
+
+# CavesLevel.trapClasses()/trapChances()
+_CAVES_TRAP_CLASSES = (
+    BurningTrap, PoisonDartTrap, FrostTrap, StormTrap, CorrosionTrap,
+    GrippingTrap, RockfallTrap, GuardianTrap,
+    ConfusionTrap, SummoningTrap, WarpingTrap, PitfallTrap, GatewayTrap, GeyserTrap,
+)
+_CAVES_TRAP_CHANCES = (4, 4, 4, 4, 4, 2, 2, 2, 1, 1, 1, 1, 1, 1)
+
+# CityLevel.trapClasses()/trapChances()
+_CITY_TRAP_CLASSES = (
+    FrostTrap, StormTrap, CorrosionTrap, BlazingTrap, DisintegrationTrap,
+    RockfallTrap, FlashingTrap, GuardianTrap, WeakeningTrap,
+    DisarmingTrap, SummoningTrap, WarpingTrap, CursingTrap, PitfallTrap, DistortionTrap, GatewayTrap, GeyserTrap,
+)
+_CITY_TRAP_CHANCES = (4, 4, 4, 4, 4, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1)
+
+# HallsLevel.trapClasses()/trapChances()
+_HALLS_TRAP_CLASSES = (
+    FrostTrap, StormTrap, CorrosionTrap, BlazingTrap, DisintegrationTrap,
+    RockfallTrap, FlashingTrap, GuardianTrap, WeakeningTrap, GrimTrap,
+    DisarmingTrap, SummoningTrap, WarpingTrap, CursingTrap, PitfallTrap, DistortionTrap, GatewayTrap, GeyserTrap,
+)
+_HALLS_TRAP_CHANCES = (4, 4, 4, 4, 4, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1)
+
+
+def prison_trap_classes():
+    return _PRISON_TRAP_CLASSES
+
+
+def prison_trap_chances():
+    return _PRISON_TRAP_CHANCES
+
+
+def caves_trap_classes():
+    return _CAVES_TRAP_CLASSES
+
+
+def caves_trap_chances():
+    return _CAVES_TRAP_CHANCES
+
+
+def city_trap_classes():
+    return _CITY_TRAP_CLASSES
+
+
+def city_trap_chances():
+    return _CITY_TRAP_CHANCES
+
+
+def halls_trap_classes():
+    return _HALLS_TRAP_CLASSES
+
+
+def halls_trap_chances():
+    return _HALLS_TRAP_CHANCES
