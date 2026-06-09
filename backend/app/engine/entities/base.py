@@ -527,6 +527,83 @@ class FuryPotion(Potion):
     DESC: ClassVar[str] = "Drinking this potion fills you with rage, empowering your attacks for a short time."
 
 
+class PotionOfStrength(Potion):
+    kind: Literal["potion_of_strength"] = "potion_of_strength"
+    name: str = "Potion of Strength"
+    effect: str = "strength"
+    DESC: ClassVar[str] = "A fiery red liquid. Drinking it permanently increases your strength by 1."
+
+
+class PotionOfHaste(Potion):
+    kind: Literal["potion_of_haste"] = "potion_of_haste"
+    name: str = "Potion of Haste"
+    effect: str = "haste"
+    DESC: ClassVar[str] = "Drinking this potion briefly doubles your speed."
+
+
+class PotionOfInvisibility(Potion):
+    kind: Literal["potion_of_invisibility"] = "potion_of_invisibility"
+    name: str = "Potion of Invisibility"
+    effect: str = "invisibility"
+    DESC: ClassVar[str] = "Drinking this potion turns you invisible for a short time. Attacking breaks invisibility."
+
+
+class PotionOfLevitation(Potion):
+    kind: Literal["potion_of_levitation"] = "potion_of_levitation"
+    name: str = "Potion of Levitation"
+    effect: str = "levitation"
+    DESC: ClassVar[str] = "Drinking this potion causes you to levitate briefly, letting you fly over pits and traps."
+
+
+class PotionOfMindVision(Potion):
+    kind: Literal["potion_of_mind_vision"] = "potion_of_mind_vision"
+    name: str = "Potion of Mind Vision"
+    effect: str = "mind_vision"
+    DESC: ClassVar[str] = "Drinking this potion lets you sense the minds of nearby creatures through walls."
+
+
+class PotionOfFrost(Potion):
+    kind: Literal["potion_of_frost"] = "potion_of_frost"
+    name: str = "Potion of Frost"
+    effect: str = "frost"
+    DESC: ClassVar[str] = "A cool blue liquid. Drinking it chills you and nearby enemies."
+
+
+class PotionOfLiquidFlame(Potion):
+    kind: Literal["potion_of_liquid_flame"] = "potion_of_liquid_flame"
+    name: str = "Potion of Liquid Flame"
+    effect: str = "liquid_flame"
+    DESC: ClassVar[str] = "Throw or drink this to unleash a burst of fire."
+
+
+class PotionOfToxicGas(Potion):
+    kind: Literal["potion_of_toxic_gas"] = "potion_of_toxic_gas"
+    name: str = "Potion of Toxic Gas"
+    effect: str = "toxic_gas"
+    DESC: ClassVar[str] = "Smashing this potion releases a choking cloud of poison gas."
+
+
+class PotionOfParalyticGas(Potion):
+    kind: Literal["potion_of_paralytic_gas"] = "potion_of_paralytic_gas"
+    name: str = "Potion of Paralytic Gas"
+    effect: str = "paralytic_gas"
+    DESC: ClassVar[str] = "Smashing this releases a gas that paralyzes everything it touches."
+
+
+class PotionOfPurity(Potion):
+    kind: Literal["potion_of_purity"] = "potion_of_purity"
+    name: str = "Potion of Purity"
+    effect: str = "purity"
+    DESC: ClassVar[str] = "Drinking this removes all negative effects and clears nearby gas clouds."
+
+
+class PotionOfExperience(Potion):
+    kind: Literal["potion_of_experience"] = "potion_of_experience"
+    name: str = "Potion of Experience"
+    effect: str = "experience"
+    DESC: ClassVar[str] = "Drinking this immediately grants a full level's worth of experience."
+
+
 class Scroll(ItemBase):
     kind: Literal["scroll"] = "scroll"
     type: str = "scroll"
@@ -554,6 +631,7 @@ class Food(ItemBase):
     type: str = "food"
     category: ClassVar[str] = ItemCategory.FOOD
     stackable: ClassVar[bool] = True
+    energy: int = 0
     DESC: ClassVar[str] = "Edible provisions. Eat it to stave off hunger."
 
     def default_action(self) -> Optional[str]:
@@ -647,6 +725,72 @@ class ScrollOfMetamorphosis(Scroll):
         return [Action.READ, Action.THROW, Action.DROP]
 
 
+class ScrollOfUpgrade(Scroll):
+    kind: Literal["scroll_of_upgrade"] = "scroll_of_upgrade"
+    name: str = "Scroll of Upgrade"
+    DESC: ClassVar[str] = "Reading this scroll permanently upgrades one of your equipped items."
+
+
+class ScrollOfIdentify(Scroll):
+    kind: Literal["scroll_of_identify"] = "scroll_of_identify"
+    name: str = "Scroll of Identify"
+    DESC: ClassVar[str] = "Reading this scroll reveals the true nature of an unknown item."
+
+
+class ScrollOfMagicMapping(Scroll):
+    kind: Literal["scroll_of_magic_mapping"] = "scroll_of_magic_mapping"
+    name: str = "Scroll of Magic Mapping"
+    DESC: ClassVar[str] = "Reading this scroll reveals the entire layout of the current floor."
+
+
+class ScrollOfTeleportation(Scroll):
+    kind: Literal["scroll_of_teleportation"] = "scroll_of_teleportation"
+    name: str = "Scroll of Teleportation"
+    DESC: ClassVar[str] = "Reading this scroll teleports you to a random location on the floor."
+
+
+class ScrollOfRemoveCurse(Scroll):
+    kind: Literal["scroll_of_remove_curse"] = "scroll_of_remove_curse"
+    name: str = "Scroll of Remove Curse"
+    DESC: ClassVar[str] = "Reading this scroll removes all curses from your equipped items."
+
+
+class ScrollOfRecharging(Scroll):
+    kind: Literal["scroll_of_recharging"] = "scroll_of_recharging"
+    name: str = "Scroll of Recharging"
+    DESC: ClassVar[str] = "Reading this scroll fully recharges your wands."
+
+
+class ScrollOfLullaby(Scroll):
+    kind: Literal["scroll_of_lullaby"] = "scroll_of_lullaby"
+    name: str = "Scroll of Lullaby"
+    DESC: ClassVar[str] = "Reading this scroll causes nearby creatures to fall asleep."
+
+
+class ScrollOfTerror(Scroll):
+    kind: Literal["scroll_of_terror"] = "scroll_of_terror"
+    name: str = "Scroll of Terror"
+    DESC: ClassVar[str] = "Reading this scroll fills nearby enemies with overwhelming fear."
+
+
+class ScrollOfMirrorImage(Scroll):
+    kind: Literal["scroll_of_mirror_image"] = "scroll_of_mirror_image"
+    name: str = "Scroll of Mirror Image"
+    DESC: ClassVar[str] = "Reading this scroll creates illusory copies of yourself to confuse enemies."
+
+
+class ScrollOfRetribution(Scroll):
+    kind: Literal["scroll_of_retribution"] = "scroll_of_retribution"
+    name: str = "Scroll of Retribution"
+    DESC: ClassVar[str] = "Reading this scroll damages all nearby enemies proportional to your missing health."
+
+
+class ScrollOfTransmutation(Scroll):
+    kind: Literal["scroll_of_transmutation"] = "scroll_of_transmutation"
+    name: str = "Scroll of Transmutation"
+    DESC: ClassVar[str] = "Reading this scroll transforms a held item into another of the same category."
+
+
 class Throwable(ItemBase):
     kind: Literal["throwable"] = "throwable"
     type: str = "throwable"
@@ -718,7 +862,36 @@ class Dewdrop(ItemBase):
 class Berry(Food):
     kind: Literal["berry"] = "berry"
     name: str = "Berry"
+    energy: int = 100
     DESC: ClassVar[str] = "A sweet berry. Restores a small amount of food."
+
+
+class SmallRation(Food):
+    kind: Literal["small_ration"] = "small_ration"
+    name: str = "Small Ration"
+    energy: int = 150
+    DESC: ClassVar[str] = "A small bundle of provisions. Better than nothing."
+
+
+class Ration(Food):
+    kind: Literal["ration"] = "ration"
+    name: str = "Ration"
+    energy: int = 300
+    DESC: ClassVar[str] = "A satisfying portion of food. Keeps hunger at bay for a good while."
+
+
+class Pasty(Food):
+    kind: Literal["pasty"] = "pasty"
+    name: str = "Pasty"
+    energy: int = 450
+    DESC: ClassVar[str] = "A hearty pastry stuffed with vegetables and meat. Very filling."
+
+
+class ChargrilledMeat(Food):
+    kind: Literal["chargrilled_meat"] = "chargrilled_meat"
+    name: str = "Chargrilled Meat"
+    energy: int = 300
+    DESC: ClassVar[str] = "Properly cooked mystery meat. Smells delicious."
 
 
 class Scenery(ItemBase):
@@ -871,7 +1044,19 @@ AnyItem = Annotated[
     Union[
         MeleeWeapon, Dagger, WornShortsword, Bow, Staff, MissileWeapon,
         Armor, Ring, Artifact, BrokenSeal, CloakOfShadows, Wand,
-        HealthPotion, RevivingPotion, FuryPotion, Potion, Scroll, ScrollOfRage, ScrollOfMetamorphosis, Gold, Food, MysteryMeat, Berry, Key,
+        HealthPotion, RevivingPotion, FuryPotion,
+        PotionOfStrength, PotionOfHaste, PotionOfInvisibility, PotionOfLevitation,
+        PotionOfMindVision, PotionOfFrost, PotionOfLiquidFlame, PotionOfToxicGas,
+        PotionOfParalyticGas, PotionOfPurity, PotionOfExperience,
+        Potion,
+        ScrollOfRage, ScrollOfMetamorphosis,
+        ScrollOfUpgrade, ScrollOfIdentify, ScrollOfMagicMapping, ScrollOfTeleportation,
+        ScrollOfRemoveCurse, ScrollOfRecharging, ScrollOfLullaby, ScrollOfTerror,
+        ScrollOfMirrorImage, ScrollOfRetribution, ScrollOfTransmutation,
+        Scroll,
+        Gold,
+        MysteryMeat, Berry, SmallRation, Ration, Pasty, ChargrilledMeat, Food,
+        Key,
         Seed, Dewdrop, Stone, Boomerang, ThrowableDagger, Throwable,
         VelvetPouch, ScrollHolder, MagicalHolster, PotionBandolier, Bag,
     ],

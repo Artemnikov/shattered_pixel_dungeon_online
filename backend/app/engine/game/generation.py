@@ -32,10 +32,37 @@ from app.engine.entities.base import (
     EntityType,
     Faction,
     HealthPotion,
+    RevivingPotion,
+    FuryPotion,
+    PotionOfStrength,
+    PotionOfHaste,
+    PotionOfInvisibility,
+    PotionOfLevitation,
+    PotionOfMindVision,
+    PotionOfFrost,
+    PotionOfLiquidFlame,
+    PotionOfToxicGas,
+    PotionOfParalyticGas,
+    PotionOfPurity,
+    PotionOfExperience,
+    ScrollOfRage,
+    ScrollOfUpgrade,
+    ScrollOfIdentify,
+    ScrollOfMagicMapping,
+    ScrollOfTeleportation,
+    ScrollOfRemoveCurse,
+    ScrollOfRecharging,
+    ScrollOfLullaby,
+    ScrollOfTerror,
+    ScrollOfMirrorImage,
+    ScrollOfRetribution,
+    ScrollOfTransmutation,
+    SmallRation,
+    Ration,
+    Pasty,
     Key,
     Mob as MobEntity,
     Position,
-    RevivingPotion,
     Staff,
     Stone,
     ThrowableDagger,
@@ -274,6 +301,19 @@ class GenerationMixin:
                 mob = self._spawn_mob_at(cls, x, y)
                 floor.mobs[mob.id] = mob
 
+        _ALL_POTIONS = [
+            HealthPotion, RevivingPotion, FuryPotion,
+            PotionOfStrength, PotionOfHaste, PotionOfInvisibility, PotionOfLevitation,
+            PotionOfMindVision, PotionOfFrost, PotionOfLiquidFlame, PotionOfToxicGas,
+            PotionOfParalyticGas, PotionOfPurity, PotionOfExperience,
+        ]
+        _ALL_SCROLLS = [
+            ScrollOfRage, ScrollOfUpgrade, ScrollOfIdentify, ScrollOfMagicMapping,
+            ScrollOfTeleportation, ScrollOfRemoveCurse, ScrollOfRecharging, ScrollOfLullaby,
+            ScrollOfTerror, ScrollOfMirrorImage, ScrollOfRetribution, ScrollOfTransmutation,
+        ]
+        _ALL_FOOD = [SmallRation, Ration, Ration, Pasty]
+
         num_items = 4 + random.randint(0, 3)
         for _ in range(num_items):
             if not floor_tiles:
@@ -310,7 +350,7 @@ class GenerationMixin:
                     magic_damage=2 + random.randint(0, 2),
                     strength_requirement=10,
                 )
-            elif rand < 0.7:
+            elif rand < 0.6:
                 armor_tiers = [
                     ("Cloth Armor", 1, 10),
                     ("Leather Armor", 2, 12),
@@ -326,7 +366,7 @@ class GenerationMixin:
                     pos=Position(x=x, y=y),
                     strength_requirement=str_req,
                 )
-            elif rand < 0.8:
+            elif rand < 0.65:
                 t_rand = random.random()
                 if t_rand < 0.5:
                     floor.items[item_id] = Stone(id=item_id, pos=Position(x=x, y=y), damage=1, range=5)
@@ -334,10 +374,15 @@ class GenerationMixin:
                     floor.items[item_id] = ThrowableDagger(id=item_id, pos=Position(x=x, y=y), damage=4, range=4)
                 else:
                     floor.items[item_id] = Boomerang(id=item_id, pos=Position(x=x, y=y), damage=3, range=6)
-            elif rand < 0.9:
-                floor.items[item_id] = HealthPotion(id=item_id, pos=Position(x=x, y=y))
+            elif rand < 0.80:
+                cls = random.choice(_ALL_POTIONS)
+                floor.items[item_id] = cls(id=item_id, pos=Position(x=x, y=y))
+            elif rand < 0.93:
+                cls = random.choice(_ALL_SCROLLS)
+                floor.items[item_id] = cls(id=item_id, pos=Position(x=x, y=y))
             else:
-                floor.items[item_id] = RevivingPotion(id=item_id, pos=Position(x=x, y=y))
+                cls = random.choice(_ALL_FOOD)
+                floor.items[item_id] = cls(id=item_id, pos=Position(x=x, y=y))
 
     def _spawn_floor_keys(self, floor: FloorState):
         for key_id, (x, y) in floor.key_spawns.items():
