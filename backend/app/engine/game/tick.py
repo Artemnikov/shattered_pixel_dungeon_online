@@ -453,15 +453,16 @@ class TickMixin:
                 self.add_event("DWARF_KING_FIGHT_STARTED", {"mob": dk.id}, floor_id=floor_id)
             return
 
-        # Phase 2: become IMMOVABLE at 200 HP (and 4+ summons made)
-        if dk.phase == 1 and dk.hp <= 200 and dk.summons_made >= 4:
+        # Phase 2: become IMMOVABLE at 200 HP
+        if dk.phase == 1 and dk.hp <= 200:
             dk.phase = 2
+            # Runtime property mutation — DK becomes immovable in phase 2 (SPD DwarfKing.restoreFromBundle pattern)
             if "IMMOVABLE" not in dk.properties:
                 dk.properties.append("IMMOVABLE")
             self.add_event("DWARF_KING_PHASE2", {"mob": dk.id}, floor_id=floor_id)
 
-        # Phase 3: continuous summons at 100 HP (and 8+ summons made)
-        if dk.phase == 2 and dk.hp <= 100 and dk.summons_made >= 8:
+        # Phase 3: continuous summons at 100 HP
+        if dk.phase == 2 and dk.hp <= 100:
             dk.phase = 3
             self.add_event("DWARF_KING_PHASE3", {"mob": dk.id}, floor_id=floor_id)
 
@@ -471,6 +472,7 @@ class TickMixin:
             return
 
         # Determine minion type: every 4th is monk or warlock, rest are ghouls
+        # Every 4th summon is elite (DKMonk or DKWarlock), per DwarfKing.java non-challenge logic
         if dk.summons_made % 4 == 3:
             cls = DKMonk if random.randint(0, 1) == 0 else DKWarlock
         else:
