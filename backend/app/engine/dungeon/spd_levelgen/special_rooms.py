@@ -358,12 +358,12 @@ class PoolRoom(SpecialRoom):
         level.add_item_to_spawn(frozenset())  # PotionOfInvisibility -- never a findPrizeItem match-target
 
         for _ in range(3):
-            rng.Float()  # Piranha.random() altChance roll -- identity irrelevant (PhantomPiranha vs Piranha)
+            cls_name = "PhantomPiranha" if rng.Float() < 0.02 else "Piranha"
             while True:
                 ppos = level.point_to_cell(self.random(rng))
                 if level.map[ppos] == terrain.WATER and level.find_mob(ppos) is None:
                     break
-            level.mobs.append(GenMob(cls_name="Piranha", pos=ppos))
+            level.mobs.append(GenMob(cls_name=cls_name, pos=ppos, depth=level.depth))
 
 
 def _armory_prize(level, rng: SPDRandom, depth: int, prize_cats: list):
@@ -544,6 +544,8 @@ class SentryRoom(SpecialRoom):
 
 class StatueRoom(SpecialRoom):
     def paint(self, level, rng: SPDRandom) -> None:
+        from app.engine.dungeon.spd_levelgen.mob_spawner import GenMob
+
         Painter.fill(level, self, terrain.WALL)
         Painter.fill(level, self, 1, terrain.EMPTY)
 
@@ -569,8 +571,14 @@ class StatueRoom(SpecialRoom):
             Painter.fill(level, self.left + 1, self.top + 1, self.width() - 2, 1, terrain.STATUE)
             cy = self.top + 2
 
-        _consume_statue_random(rng, level.depth)
-        # Statue.pos assignment + level.mobs.add -- zero-RNG mob registration, omitted.
+        # Replicate _consume_statue_random inline so we can capture the altChance result
+        # rng.Float() -- altChance roll (ArmoredStatue vs Statue, threshold 1/10)
+        mob_cls = "ArmoredStatue" if rng.Float() < 0.1 else "Statue"
+        _consume_generator_random_weapon(rng, level.depth)
+        _consume_enchantment_random(rng)
+        # Place the statue mob at the center position
+        pos = cx + cy * level.width()
+        level.mobs.append(GenMob(cls_name=mob_cls, pos=pos, depth=level.depth))
 
 
 class CrystalVaultRoom(SpecialRoom):

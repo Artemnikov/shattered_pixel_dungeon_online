@@ -39,6 +39,7 @@ class GenMob:
     cls_name: str
     pos: int = -1
     items: List[object] = None
+    depth: int = 1
 
     def __post_init__(self) -> None:
         if self.items is None:
