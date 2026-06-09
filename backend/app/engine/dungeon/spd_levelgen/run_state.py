@@ -159,6 +159,18 @@ def is_boss_level(depth: int) -> bool:
     return depth in (5, 10, 15, 20, 25)
 
 
+def region_for_depth(depth: int) -> str:
+    if depth <= 5:
+        return "sewers"
+    if depth <= 10:
+        return "prison"
+    if depth <= 15:
+        return "caves"
+    if depth <= 20:
+        return "city"
+    return "halls"
+
+
 class RunState:
     """Mutable per-run state mirroring SpecialRoom/SecretRoom static fields
     plus the LimitedDrops.LAB_ROOM counter -- threaded across sequential

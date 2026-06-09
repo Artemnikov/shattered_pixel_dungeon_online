@@ -36,10 +36,21 @@ from app.engine.dungeon.spd_levelgen.mob_spawner import GenMob
 from app.engine.dungeon.spd_levelgen.room import Room
 from app.engine.dungeon.spd_levelgen.room_types import SpecialRoom, StandardRoom
 from app.engine.dungeon.spd_levelgen.run_state import (
-    RunState, SPAWN_GOLDEN_KEY, SPAWN_GUIDE_PAGE_INTRO, is_boss_level,
+    RunState, SPAWN_GOLDEN_KEY, SPAWN_GUIDE_PAGE_INTRO, is_boss_level, region_for_depth,
 )
+from app.engine.dungeon.spd_levelgen.caves_painter import CavesPainter
+from app.engine.dungeon.spd_levelgen.regular_painter import RegularPainter
+from app.engine.dungeon.spd_levelgen.city_painter import CityPainter
+from app.engine.dungeon.spd_levelgen.halls_painter import HallsPainter
+from app.engine.dungeon.spd_levelgen.prison_painter import PrisonPainter
 from app.engine.dungeon.spd_levelgen.sewer_painter import SewerPainter
-from app.engine.dungeon.spd_levelgen.traps import sewer_trap_chances, sewer_trap_classes
+from app.engine.dungeon.spd_levelgen.traps import (
+    caves_trap_chances, caves_trap_classes,
+    city_trap_chances, city_trap_classes,
+    halls_trap_chances, halls_trap_classes,
+    prison_trap_chances, prison_trap_classes,
+    sewer_trap_chances, sewer_trap_classes,
+)
 from app.engine.dungeon.spd_random import SPDRandom
 from app.engine.mechanics.shadowcaster import cast_shadow
 
@@ -65,17 +76,29 @@ def _builder(rng: SPDRandom) -> Builder:
 
 
 def _standard_rooms(rng: SPDRandom, depth: int, force_max: bool) -> int:
-    """Port of SewerLevel.standardRooms()."""
-    if force_max:
-        return 6
-    return 4 + rng.chances((1.0, 3.0, 1.0))
+    region = region_for_depth(depth)
+    if region == "sewers":
+        return 6 if force_max else 4 + rng.chances((1.0, 3.0, 1.0))
+    if region == "prison":
+        return 6 if force_max else 5 + rng.chances((1.0, 1.0))
+    if region == "caves":
+        return 7 if force_max else 6 + rng.chances((2.0, 1.0))
+    if region == "city":
+        return 8 if force_max else 6 + rng.chances((1.0, 3.0, 1.0))
+    return 9 if force_max else 8 + rng.chances((2.0, 1.0))
 
 
 def _special_rooms(rng: SPDRandom, depth: int, force_max: bool) -> int:
-    """Port of SewerLevel.specialRooms()."""
-    if force_max:
-        return 2
-    return 1 + rng.chances((1.0, 4.0))
+    region = region_for_depth(depth)
+    if region == "sewers":
+        return 2 if force_max else 1 + rng.chances((1.0, 4.0))
+    if region == "prison":
+        return 3 if force_max else 1 + rng.chances((1.0, 3.0, 1.0))
+    if region == "caves":
+        return 3 if force_max else 2 + rng.chances((4.0, 1.0))
+    if region == "city":
+        return 3 if force_max else 2 + rng.chances((2.0, 1.0))
+    return 3 if force_max else 2 + rng.chances((1.0, 1.0))
 
 
 def _n_traps(rng: SPDRandom, depth: int) -> int:
@@ -83,12 +106,34 @@ def _n_traps(rng: SPDRandom, depth: int) -> int:
     return rng.NormalIntRange(2, 3 + depth // 5)
 
 
-def _painter(rng: SPDRandom, depth: int, feeling: Feeling) -> SewerPainter:
-    """Port of SewerLevel.painter()."""
-    return (SewerPainter()
-            .set_water(0.85 if feeling == Feeling.WATER else 0.30, 5)
-            .set_grass(0.80 if feeling == Feeling.GRASS else 0.20, 4)
-            .set_traps(_n_traps(rng, depth), sewer_trap_classes(depth), sewer_trap_chances(depth)))
+def _painter(rng: SPDRandom, depth: int, feeling: Feeling) -> RegularPainter:
+    """Dispatch to the region-appropriate painter with correct water/grass/trap params."""
+    region = region_for_depth(depth)
+    n = _n_traps(rng, depth)
+    if region == "sewers":
+        return (SewerPainter()
+                .set_water(0.85 if feeling == Feeling.WATER else 0.30, 5)
+                .set_grass(0.80 if feeling == Feeling.GRASS else 0.20, 4)
+                .set_traps(n, sewer_trap_classes(depth), sewer_trap_chances(depth)))
+    if region == "prison":
+        return (PrisonPainter()
+                .set_water(0.90 if feeling == Feeling.WATER else 0.30, 4)
+                .set_grass(0.80 if feeling == Feeling.GRASS else 0.20, 3)
+                .set_traps(n, prison_trap_classes(), prison_trap_chances()))
+    if region == "caves":
+        return (CavesPainter()
+                .set_water(0.85 if feeling == Feeling.WATER else 0.30, 6)
+                .set_grass(0.65 if feeling == Feeling.GRASS else 0.15, 3)
+                .set_traps(n, caves_trap_classes(), caves_trap_chances()))
+    if region == "city":
+        return (CityPainter(depth)
+                .set_water(0.90 if feeling == Feeling.WATER else 0.30, 4)
+                .set_grass(0.80 if feeling == Feeling.GRASS else 0.20, 3)
+                .set_traps(n, city_trap_classes(), city_trap_chances()))
+    return (HallsPainter()
+            .set_water(0.70 if feeling == Feeling.WATER else 0.15, 6)
+            .set_grass(0.65 if feeling == Feeling.GRASS else 0.10, 3)
+            .set_traps(n, halls_trap_classes(), halls_trap_chances()))
 
 
 def _init_rooms(rng: SPDRandom, depth: int, feeling: Feeling, run_state: RunState) -> List[Room]:
@@ -113,6 +158,10 @@ def _init_rooms(rng: SPDRandom, depth: int, feeling: Feeling, run_state: RunStat
         i += s.size_factor() - 1
         init_rooms.append(s)
         i += 1
+
+    if depth in (6, 11, 16):
+        from app.engine.dungeon.spd_levelgen.room_types import ShopRoom
+        init_rooms.append(ShopRoom())
 
     # Dungeon.shopOnLevel() is only true for depths 6/11/16 -- never on sewers floors.
 

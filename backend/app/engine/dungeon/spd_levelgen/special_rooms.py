@@ -1783,8 +1783,8 @@ class SecretLarderRoom(SecretRoom):
 
 
 class SecretWellRoom(SecretRoom):
-    def can_connect(self, p: Point) -> bool:
-        return super().can_connect(p) and ((p.x > self.left + 1 and p.x < self.right - 1) or (p.y > self.top + 1 and p.y < self.bottom - 1))
+    def can_connect_point(self, p: Point) -> bool:
+        return super().can_connect_point(p) and ((p.x > self.left + 1 and p.x < self.right - 1) or (p.y > self.top + 1 and p.y < self.bottom - 1))
 
     def paint(self, level, rng: SPDRandom) -> None:
         Painter.fill(level, self, terrain.WALL)

@@ -46,6 +46,16 @@ def _stub_paint(self, level, rng) -> None:
         d = entrance()
         if d is not None:
             d.set(DoorType.REGULAR)
+    if self.is_entrance():
+        cell = level.point_to_cell(self.random(rng, 2))
+        for nb in _neighbours8(level.width()):
+            Painter.set(level, cell + nb, terrain.EMPTY)
+        Painter.set(level, cell, terrain.ENTRANCE)
+    elif self.is_exit():
+        cell = level.point_to_cell(self.random(rng, 2))
+        for nb in _neighbours8(level.width()):
+            Painter.set(level, cell + nb, terrain.EMPTY)
+        Painter.set(level, cell, terrain.EXIT)
 
 
 def _neighbours8(width: int) -> tuple:

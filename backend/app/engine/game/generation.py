@@ -57,7 +57,7 @@ class GenerationMixin:
         depth = max(1, min(MAX_FLOOR_ID, depth))
         self.depth = depth
 
-        if depth <= 5:
+        if depth <= 25:
             floor = self._generate_floor_spd(depth)
         else:
             floor = self._generate_floor_legacy(depth)
