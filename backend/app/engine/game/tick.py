@@ -153,6 +153,8 @@ class TickMixin:
             if player.berserk_cooldown > 0:
                 player.berserk_cooldown -= 1
 
+            self._apply_hunger_tick(player)
+
             player.decay_shields()
             if player.has_fury:
                 player.fury_turns_remaining -= 1
@@ -641,6 +643,22 @@ class TickMixin:
             {"target": player.id, "amount": int(amt), "x": player.pos.x, "y": player.pos.y},
             floor_id=player.floor_id,
         )
+
+    # SPD hunger thresholds (scaled from turn-based to real-time at 20 Hz)
+    _HUNGER_RATE = 1.0 / 20.0   # hunger units per tick (≈1 unit/s; full→starving ~450s)
+    _HUNGER_HUNGRY = 300.0
+    _HUNGER_STARVING = 450.0
+
+    def _apply_hunger_tick(self, player: Player):
+        if player.is_downed:
+            return
+        player.hunger = min(self._HUNGER_STARVING + 50, player.hunger + self._HUNGER_RATE)
+        if player.hunger >= self._HUNGER_STARVING:
+            dmg = max(1, player.max_hp // 100)
+            player.hp -= dmg
+            if player.hp <= 0:
+                player.hp = 0
+                player.is_downed = True
 
     def _apply_passive_regen(self, player: Player):
         floor = self.floors.get(player.floor_id)

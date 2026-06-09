@@ -1283,6 +1283,9 @@ class Player(Entity):
     # the cloak bleeds charge (see tick.py). `_cloak_drain_accum` accumulates
     # real seconds toward the next charge drain; `_cloak_recharge_accum` toward
     # the next regenerated charge while not stealthed.
+    # Hunger: 0=full, 300=hungry warning, 450=starving (takes damage)
+    hunger: float = 0.0
+
     cloak_stealth_active: bool = False
     _cloak_drain_accum: float = 0.0
     _cloak_recharge_accum: float = 0.0

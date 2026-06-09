@@ -135,6 +135,8 @@ class SerializationMixin:
             process(it)
         process(d.get("equipped_weapon"))
         process(d.get("equipped_wearable"))
+        hunger = d.get("hunger", 0.0)
+        d["hunger_pct"] = round(min(1.0, hunger / 450.0), 3)
         return d
 
     def _serialize_floor_item(self, item) -> dict:

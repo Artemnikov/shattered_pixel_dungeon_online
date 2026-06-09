@@ -307,6 +307,10 @@ class TalentsMixin:
     # ------------------------------------------------------------------
 
     def on_food_eaten(self, player: Player, food_item) -> None:
+        energy = getattr(food_item, "energy", 0)
+        if energy > 0:
+            player.hunger = max(0.0, player.hunger - energy)
+
         ti = player.subclass_info.talent_info
 
         # Iron Stomach (warrior T1): heal when HP < 1/3, +2 HP per point
