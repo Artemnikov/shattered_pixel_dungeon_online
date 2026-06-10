@@ -412,14 +412,6 @@ class DM300(MobEntity):
             self.supercharged = True
             self.pylons_activated += 1
             self.pending_pylon_activation = True
-        elif self.hp <= 0 and self.pylons_activated < self.total_pylons_to_activate():
-            # DM300.isAlive(): hp > 0 || pylonsActivated < total. With the
-            # default thresholds (200, then 100) this branch is normally
-            # unreachable -- the supercharge clamp above always fires first
-            # while pylons_activated < 2. Kept as a defensive fallback so
-            # DM300 never "dies" from hp alone before both pylons are spent.
-            self.hp = 1
-            self.is_alive = True
 
         return dealt
 

@@ -159,10 +159,7 @@ class MovementCombatMixin:
                         if target_entity.hp / target_entity.get_total_max_hp() <= 0.3:
                             self.add_event("PLAY_SOUND", {"sound": "HEALTH_WARN"}, player_id=target_entity.id)
 
-                if isinstance(target_entity, DM300) and target_entity.pending_pylon_activation:
-                    target_entity.pending_pylon_activation = False
-                    self.add_event("DM300_SUPERCHARGE", {"mob": target_entity.id}, floor_id=floor_id)
-                    self._activate_pylon(floor, floor_id, near_pos=entity.pos)
+                self._maybe_trigger_dm300_supercharge(target_entity, floor, floor_id, entity.pos)
 
                 # Warrior subclass: combo / berserk events after successful damage
                 if isinstance(entity, Player) and dmg > 0:
@@ -281,6 +278,13 @@ class MovementCombatMixin:
         if isinstance(entity, Player) and tile == TileType.STAIRS_UP and entity.floor_id > 1:
             self._move_player_to_floor(entity, entity.floor_id - 1, TileType.STAIRS_DOWN)
             self.add_event("STAIRS_UP", {"player": entity_id}, player_id=entity_id)
+
+    def _maybe_trigger_dm300_supercharge(self, target: "MobEntity", floor, floor_id: int, near_pos: Position):
+        """Trigger DM300 pylon activation if target is DM300 with pending activation."""
+        if isinstance(target, DM300) and target.pending_pylon_activation:
+            target.pending_pylon_activation = False
+            self.add_event("DM300_SUPERCHARGE", {"mob": target.id}, floor_id=floor_id)
+            self._activate_pylon(floor, floor_id, near_pos=near_pos)
 
     def perform_ranged_attack(self, player_id: str, item_id: str, target_x: int, target_y: int) -> Optional[int]:
         player = self.players.get(player_id)
@@ -424,10 +428,7 @@ class MovementCombatMixin:
                     if target_entity.hp / target_entity.get_total_max_hp() <= 0.3:
                         self.add_event("PLAY_SOUND", {"sound": "HEALTH_WARN"}, player_id=target_entity.id)
 
-            if isinstance(target_entity, DM300) and target_entity.pending_pylon_activation:
-                target_entity.pending_pylon_activation = False
-                self.add_event("DM300_SUPERCHARGE", {"mob": target_entity.id}, floor_id=floor_id)
-                self._activate_pylon(floor, floor_id, near_pos=player.pos)
+            self._maybe_trigger_dm300_supercharge(target_entity, floor, floor_id, player.pos)
 
             if not target_entity.is_alive:
                 if isinstance(target_entity, MobEntity):
