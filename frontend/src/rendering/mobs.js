@@ -59,6 +59,57 @@ export const SLIME_FW = 14;
 export const SLIME_FH = 12;
 export const SLIME_DEST = { dx: 2, dy: 8, dw: 28, dh: 24 };
 
+// --- New mobs (Wraith, Piranha, Mimics, Statues, Bee, DwarfKing arena, Yog-Dzewa arena) ---
+// All dest values follow the SPD centering formula: x=(col+0.5)*16-w/2, y=(row+1)*16-h, scaled 2x.
+
+export const WRAITH_FW = 14;
+export const WRAITH_FH = 15;
+export const WRAITH_DEST = { dx: 2, dy: 2, dw: 28, dh: 30 };
+
+export const PIRANHA_FW = 12;
+export const PIRANHA_FH = 16;
+export const PIRANHA_DEST = { dx: 4, dy: 0, dw: 24, dh: 32 };
+
+export const STATUE_FW = 12;
+export const STATUE_FH = 15;
+export const STATUE_DEST = { dx: 4, dy: 2, dw: 24, dh: 30 };
+
+export const GHOUL_FW = 12;
+export const GHOUL_FH = 14;
+export const GHOUL_DEST = { dx: 4, dy: 4, dw: 24, dh: 28 };
+
+export const MONK_FW = 15;
+export const MONK_FH = 14;
+export const MONK_DEST = { dx: 1, dy: 4, dw: 30, dh: 28 };
+
+export const WARLOCK_FW = 12;
+export const WARLOCK_FH = 15;
+export const WARLOCK_DEST = { dx: 4, dy: 2, dw: 24, dh: 30 };
+
+export const GOLEM_FW = 17;
+export const GOLEM_FH = 19;
+export const GOLEM_DEST = { dx: -1, dy: -6, dw: 34, dh: 38 };
+
+export const YOG_FW = 20;
+export const YOG_FH = 19;
+export const YOG_DEST = { dx: -4, dy: -6, dw: 40, dh: 38 };
+
+export const FIST_FW = 24;
+export const FIST_FH = 17;
+export const FIST_DEST = { dx: -8, dy: -2, dw: 48, dh: 34 };
+
+export const EYE_FW = 16;
+export const EYE_FH = 18;
+export const EYE_DEST = { dx: 0, dy: -4, dw: 32, dh: 36 };
+
+export const RIPPER_FW = 15;
+export const RIPPER_FH = 14;
+export const RIPPER_DEST = { dx: 1, dy: 4, dw: 30, dh: 28 };
+
+export const PYLON_FW = 10;
+export const PYLON_FH = 20;
+export const PYLON_DEST = { dx: 6, dy: -8, dw: 20, dh: 40 };
+
 const isEntityMoving = (mob) =>
   mob.targetPos &&
   (Math.abs(mob.targetPos.x - mob.renderPos.x) > 0.05 ||
@@ -271,6 +322,65 @@ export const getSnakeFrame = (mob, mobAnim, now) => {
   }
   return [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1,1,1, 2,3,2,1,1][Math.floor(now / 100) % 30] * SNAKE_FW;
 };
+
+// Wraith: simple 4-frame idle loop (wraith.png row 0).
+export const getWraithFrame = (mob, mobAnim, now) =>
+  [0, 1, 2, 1][Math.floor(now / 150) % 4] * WRAITH_FW;
+
+// Piranha / Phantom Piranha: 2-frame idle wiggle.
+export const getPiranhaFrame = (mob, mobAnim, now) =>
+  [0, 1][Math.floor(now / 250) % 2] * PIRANHA_FW;
+
+// Mimic variants: mostly static (mimics disguise as items until triggered).
+export const getMimicFrame = () => 0;
+
+// Bee: simple 2-frame wing flutter.
+export const getBeeFrame = (mob, mobAnim, now) =>
+  [0, 1][Math.floor(now / 100) % 2] * FRAME_W;
+
+// DwarfKing boss: 2-frame idle loop.
+export const getDwarfKingFrame = (mob, mobAnim, now) =>
+  [0, 1][Math.floor(now / 400) % 2] * FRAME_W;
+
+// DK Ghoul / Monk / Warlock minions: 2-frame idle loop.
+export const getGhoulFrame = (mob, mobAnim, now) =>
+  [0, 1][Math.floor(now / 300) % 2] * GHOUL_FW;
+
+export const getMonkFrame = (mob, mobAnim, now) =>
+  [0, 1][Math.floor(now / 300) % 2] * MONK_FW;
+
+export const getWarlockFrame = (mob, mobAnim, now) =>
+  [0, 1][Math.floor(now / 300) % 2] * WARLOCK_FW;
+
+// DK Golem: heavy, slow 2-frame idle.
+export const getGolemFrame = (mob, mobAnim, now) =>
+  [0, 1][Math.floor(now / 500) % 2] * GOLEM_FW;
+
+// Yog-Dzewa: slow pulsing idle loop.
+export const getYogFrame = (mob, mobAnim, now) =>
+  [0, 1, 2, 1][Math.floor(now / 250) % 4] * YOG_FW;
+
+// Yog's Fists: shared 2-frame idle loop across all 6 fist variants (rows differ via sy).
+export const getFistFrame = (mob, mobAnim, now) =>
+  [0, 1][Math.floor(now / 250) % 2] * FIST_FW;
+
+// Yog Eye: 2-frame idle loop.
+export const getEyeFrame = (mob, mobAnim, now) =>
+  [0, 1][Math.floor(now / 300) % 2] * EYE_FW;
+
+// Yog Ripper: 2-frame idle loop.
+export const getRipperFrame = (mob, mobAnim, now) =>
+  [0, 1][Math.floor(now / 250) % 2] * RIPPER_FW;
+
+// Demon Spawner: immobile, single static frame.
+export const getSpawnerFrame = () => 0;
+
+// Pylon: immobile, single static frame.
+export const getPylonFrame = () => 0;
+
+// Statue: static frame when inactive, simple idle loop once activated.
+export const getStatueFrame = (mob, mobAnim, now) =>
+  mob.activated ? [0, 1][Math.floor(now / 300) % 2] * STATUE_FW : 0;
 
 // dest (optional): in-tile placement {dx,dy,dw,dh} for sprites whose native frame is not a
 // full 32x32 tile (e.g. gnoll's 12x15 -> 24x30 @ +4,+2). Omitted = legacy full-tile draw.

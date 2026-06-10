@@ -26,6 +26,42 @@ import {
   SLIME_FW,
   SLIME_FH,
   SLIME_DEST,
+  WRAITH_FW,
+  WRAITH_FH,
+  WRAITH_DEST,
+  PIRANHA_FW,
+  PIRANHA_FH,
+  PIRANHA_DEST,
+  STATUE_FW,
+  STATUE_FH,
+  STATUE_DEST,
+  GHOUL_FW,
+  GHOUL_FH,
+  GHOUL_DEST,
+  MONK_FW,
+  MONK_FH,
+  MONK_DEST,
+  WARLOCK_FW,
+  WARLOCK_FH,
+  WARLOCK_DEST,
+  GOLEM_FW,
+  GOLEM_FH,
+  GOLEM_DEST,
+  YOG_FW,
+  YOG_FH,
+  YOG_DEST,
+  FIST_FW,
+  FIST_FH,
+  FIST_DEST,
+  EYE_FW,
+  EYE_FH,
+  EYE_DEST,
+  RIPPER_FW,
+  RIPPER_FH,
+  RIPPER_DEST,
+  PYLON_FW,
+  PYLON_FH,
+  PYLON_DEST,
   drawMobSprite,
   getCrabFrame,
   getHermitCrabFrame,
@@ -40,6 +76,22 @@ import {
   getDM100Frame,
   getGuardFrame,
   getNecromancerFrame,
+  getWraithFrame,
+  getPiranhaFrame,
+  getMimicFrame,
+  getBeeFrame,
+  getDwarfKingFrame,
+  getGhoulFrame,
+  getMonkFrame,
+  getWarlockFrame,
+  getGolemFrame,
+  getYogFrame,
+  getFistFrame,
+  getEyeFrame,
+  getRipperFrame,
+  getSpawnerFrame,
+  getPylonFrame,
+  getStatueFrame,
 } from '../mobs';
 
 // Gnoll's 12x15 frame, centered/bottom-aligned in the 32px tile per SPD placement
@@ -123,6 +175,60 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     } else if (mob.name === 'Necromancer') {
       mobSprite = assetImages.necromancer;
       sx = getNecromancerFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Wraith' || mob.name === 'Tormented Spirit') {
+      mobSprite = assetImages.wraith;
+      sx = getWraithFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Piranha' || mob.name === 'Phantom Piranha') {
+      mobSprite = assetImages.piranha;
+      sx = getPiranhaFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Mimic' || mob.name === 'Golden Mimic' || mob.name === 'Ebony Mimic') {
+      mobSprite = assetImages.mimic;
+      sx = getMimicFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Statue' || mob.name === 'Armored Statue') {
+      mobSprite = assetImages.statue;
+      sx = getStatueFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Bee') {
+      mobSprite = assetImages.bee;
+      sx = getBeeFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'DwarfKing') {
+      mobSprite = assetImages.king;
+      sx = getDwarfKingFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'DKGhoul') {
+      mobSprite = assetImages.ghoul;
+      sx = getGhoulFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'DKMonk') {
+      mobSprite = assetImages.monk;
+      sx = getMonkFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'DKWarlock') {
+      mobSprite = assetImages.warlock;
+      sx = getWarlockFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'DKGolem') {
+      mobSprite = assetImages.golem;
+      sx = getGolemFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Yog-Dzewa') {
+      mobSprite = assetImages.yog;
+      sx = getYogFrame(mob, mobAnimRef.current, now);
+    } else if (
+      mob.name === 'BurningFist' || mob.name === 'SoiledFist' || mob.name === 'RottingFist' ||
+      mob.name === 'RustedFist' || mob.name === 'BrightFist' || mob.name === 'DarkFist'
+    ) {
+      mobSprite = assetImages.fists;
+      sx = getFistFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Yog Eye') {
+      mobSprite = assetImages.eye;
+      sx = getEyeFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Yog Scorpio') {
+      mobSprite = assetImages.scorpio;
+      sx = getScorpioFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Yog Ripper') {
+      mobSprite = assetImages.ripper;
+      sx = getRipperFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Demon Spawner') {
+      mobSprite = assetImages.spawner;
+      sx = getSpawnerFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Pylon') {
+      mobSprite = assetImages.pylon;
+      sx = getPylonFrame(mob, mobAnimRef.current, now);
     }
 
     const isScorpio = mob.name === 'Scorpio';
@@ -137,6 +243,24 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     const isDM100 = mob.name === 'DM-100';
     const isGuard = mob.name === 'Guard';
     const isGoo = mob.name === 'Goo';
+    const isWraith = mob.name === 'Wraith' || mob.name === 'Tormented Spirit';
+    const isPiranha = mob.name === 'Piranha';
+    const isPhantomPiranha = mob.name === 'Phantom Piranha';
+    const isMimic = mob.name === 'Mimic';
+    const isGoldenMimic = mob.name === 'Golden Mimic';
+    const isEbonyMimic = mob.name === 'Ebony Mimic';
+    const isStatue = mob.name === 'Statue';
+    const isArmoredStatue = mob.name === 'Armored Statue';
+    const isGhoul = mob.name === 'DKGhoul';
+    const isMonk = mob.name === 'DKMonk';
+    const isWarlock = mob.name === 'DKWarlock';
+    const isGolem = mob.name === 'DKGolem';
+    const isYog = mob.name === 'Yog-Dzewa';
+    const fistRow = { BurningFist: 0, SoiledFist: 1, RottingFist: 2, RustedFist: 3, BrightFist: 4, DarkFist: 5 }[mob.name];
+    const isFist = fistRow !== undefined;
+    const isEye = mob.name === 'Yog Eye';
+    const isRipper = mob.name === 'Yog Ripper';
+    const isPylon = mob.name === 'Pylon';
     const flash = !!(mobAnimRef.current[mob.id]?.flashUntil && now < mobAnimRef.current[mob.id].flashUntil);
     if (isGnoll) {
       drawMobSprite(ctx, mob, mobSprite, sx, GNOLL_FW, GNOLL_FH, flash, GNOLL_DEST);
@@ -158,6 +282,37 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     } else if (isSlime || isCausticSlime) {
       // slime.png stacks variants in 12px rows: Slime = row 0, Caustic Slime = row 1.
       drawMobSprite(ctx, mob, mobSprite, sx, SLIME_FW, SLIME_FH, flash, SLIME_DEST, 1, isCausticSlime ? SLIME_FH : 0);
+    } else if (isWraith) {
+      drawMobSprite(ctx, mob, mobSprite, sx, WRAITH_FW, WRAITH_FH, flash, WRAITH_DEST);
+    } else if (isPiranha || isPhantomPiranha) {
+      // piranha.png stacks variants in 16px rows: Piranha = row 0, Phantom Piranha = row 1.
+      drawMobSprite(ctx, mob, mobSprite, sx, PIRANHA_FW, PIRANHA_FH, flash, PIRANHA_DEST, 1, isPhantomPiranha ? PIRANHA_FH : 0);
+    } else if (isMimic || isGoldenMimic || isEbonyMimic) {
+      // mimic.png stacks variants in 16px rows: Mimic = row 0, Golden = row 1, Ebony = row 2.
+      const sy = isGoldenMimic ? FRAME_H : isEbonyMimic ? FRAME_H * 2 : 0;
+      drawMobSprite(ctx, mob, mobSprite, sx, FRAME_W, FRAME_H, flash, null, 1, sy);
+    } else if (isStatue || isArmoredStatue) {
+      // statue.png stacks variants in 16px rows: Statue = row 0, Armored Statue = row 1.
+      drawMobSprite(ctx, mob, mobSprite, sx, STATUE_FW, STATUE_FH, flash, STATUE_DEST, 1, isArmoredStatue ? 16 : 0);
+    } else if (isGhoul) {
+      drawMobSprite(ctx, mob, mobSprite, sx, GHOUL_FW, GHOUL_FH, flash, GHOUL_DEST);
+    } else if (isMonk) {
+      drawMobSprite(ctx, mob, mobSprite, sx, MONK_FW, MONK_FH, flash, MONK_DEST);
+    } else if (isWarlock) {
+      drawMobSprite(ctx, mob, mobSprite, sx, WARLOCK_FW, WARLOCK_FH, flash, WARLOCK_DEST);
+    } else if (isGolem) {
+      drawMobSprite(ctx, mob, mobSprite, sx, GOLEM_FW, GOLEM_FH, flash, GOLEM_DEST);
+    } else if (isYog) {
+      drawMobSprite(ctx, mob, mobSprite, sx, YOG_FW, YOG_FH, flash, YOG_DEST);
+    } else if (isFist) {
+      // yog_fists.png stacks the 6 fist variants in rows of FIST_FH.
+      drawMobSprite(ctx, mob, mobSprite, sx, FIST_FW, FIST_FH, flash, FIST_DEST, 1, fistRow * FIST_FH);
+    } else if (isEye) {
+      drawMobSprite(ctx, mob, mobSprite, sx, EYE_FW, EYE_FH, flash, EYE_DEST);
+    } else if (isRipper) {
+      drawMobSprite(ctx, mob, mobSprite, sx, RIPPER_FW, RIPPER_FH, flash, RIPPER_DEST);
+    } else if (isPylon) {
+      drawMobSprite(ctx, mob, mobSprite, sx, PYLON_FW, PYLON_FH, flash, PYLON_DEST);
     } else {
       drawMobSprite(ctx, mob, mobSprite, sx,
         isScorpio ? SCORPIO_FW : FRAME_W,
