@@ -377,12 +377,51 @@ class DM300(MobEntity):
     rocket_cooldown: int = 0
     fight_started: bool = False
 
+    # Supercharge mechanic (DM300.java damage/supercharge/loseSupercharge).
+    pylons_activated: int = 0
+    supercharged: bool = False
+    # Set by take_damage when a supercharge threshold is crossed; the combat
+    # mixin reads/clears this to trigger CavesBossLevel.activatePylon (which
+    # needs floor/player context that take_damage doesn't have).
+    pending_pylon_activation: bool = False
+
     loot_table: List[DropEntry] = [
         DropEntry(item_kind="overloaded_charger", chance=1.0, max_global=0),
     ]
 
     def is_enraged(self) -> bool:
         return self.hp * 2 <= self.max_hp
+
+    def total_pylons_to_activate(self) -> int:
+        # SPD: Challenges.STRONGER_BOSSES would raise this to 3; not implemented.
+        return 2
+
+    def take_damage(self, amount: int):
+        # DM300.isInvulnerable(): true while supercharged.
+        if self.supercharged:
+            return 0
+
+        dealt = super().take_damage(amount)
+
+        # DM300.damage(): after applying damage, check the supercharge
+        # threshold for the *next* pylon (HT/3 * (2 - pylonsActivated)).
+        threshold = self.max_hp // 3 * (2 - self.pylons_activated)
+        if self.hp <= threshold and threshold > 0:
+            self.hp = threshold
+            self.is_alive = True
+            self.supercharged = True
+            self.pylons_activated += 1
+            self.pending_pylon_activation = True
+        elif self.hp <= 0 and self.pylons_activated < self.total_pylons_to_activate():
+            # DM300.isAlive(): hp > 0 || pylonsActivated < total. With the
+            # default thresholds (200, then 100) this branch is normally
+            # unreachable -- the supercharge clamp above always fires first
+            # while pylons_activated < 2. Kept as a defensive fallback so
+            # DM300 never "dies" from hp alone before both pylons are spent.
+            self.hp = 1
+            self.is_alive = True
+
+        return dealt
 
 
 # ---------------------------------------------------------------------------
@@ -1326,7 +1365,8 @@ class Pylon(MobEntity):
     bolt_cooldown: int = 5
     linked_pylon_id: str = ""
     activated: bool = False
-    fire_target_idx: int = 0
+    # Pylon.targetNeighbor = Random.Int(8) at spawn.
+    fire_target_idx: int = Field(default_factory=lambda: random.randint(0, 7))
 
     def take_damage(self, amount: int):
         # Immune to all damage while inactive (Pylon.isInvulnerable: alignment == NEUTRAL).

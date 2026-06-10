@@ -168,10 +168,11 @@ def test_activated_pylon_takes_damage_with_dr_cap():
 
 
 # ---------------------------------------------------------------------------
-# DM-300 fight start activates a Pylon; Pylon death re-activates the next.
+# DM-300 supercharge mechanic: damage-threshold pylon activation, invulnerability
+# while supercharged, and de-supercharge on activated-pylon death.
 # ---------------------------------------------------------------------------
 
-def test_dm300_fight_start_activates_one_pylon():
+def test_dm300_supercharge_triggers_at_two_thirds_hp_and_activates_one_pylon():
     floor = make_floor()
     game = make_game(floor)
 
@@ -184,22 +185,41 @@ def test_dm300_fight_start_activates_one_pylon():
         floor.mobs[p.id] = p
         pylons.append(p)
 
-    player = game.add_player("p1", "Hero")
-    player.floor_id = floor.floor_id
-    player.pos = Position(x=4, y=5)
-
     assert all(not p.activated for p in pylons)
-    assert dm300.fight_started is False
+    assert dm300.pylons_activated == 0
+    assert dm300.supercharged is False
 
-    game.update_tick()
+    # threshold = 300/3 * (2 - 0) = 200 -- damage that drops HP to <= 200
+    # crosses the first supercharge threshold.
+    taken = dm300.take_damage(150)
 
-    assert dm300.fight_started is True
-    assert sum(1 for p in pylons if p.activated) == 1
+    assert taken == 150
+    assert dm300.hp == 200  # clamped to threshold
+    assert dm300.supercharged is True
+    assert dm300.pylons_activated == 1
+    assert dm300.pending_pylon_activation is True
+    assert dm300.is_alive is True
 
 
-def test_pylon_death_reactivates_next_pylon():
+def test_dm300_invulnerable_while_supercharged():
+    dm300 = DM300(id="dm300", pos=Position(x=5, y=5), faction=Faction.DUNGEON)
+    dm300.supercharged = True
+    hp_before = dm300.hp
+
+    taken = dm300.take_damage(50)
+
+    assert taken == 0
+    assert dm300.hp == hp_before
+
+
+def test_pylon_death_desupercharges_dm300_without_chain_activation():
     floor = make_floor()
     game = make_game(floor)
+
+    dm300 = DM300(id="dm300", pos=Position(x=5, y=5), faction=Faction.DUNGEON)
+    dm300.supercharged = True
+    dm300.pylons_activated = 1
+    floor.mobs[dm300.id] = dm300
 
     pylon_a = Pylon(id="pylon_a", pos=Position(x=1, y=1), faction=Faction.DUNGEON)
     pylon_a.activated = True
@@ -222,4 +242,37 @@ def test_pylon_death_reactivates_next_pylon():
     game.update_tick()
 
     assert pylon_a.is_alive is False
-    assert pylon_b.activated is True
+    # No chain-activation of the next pylon (CavesBossLevel.eliminatePylon
+    # only calls DM300.loseSupercharge).
+    assert pylon_b.activated is False
+    # DM300 becomes vulnerable again.
+    assert dm300.supercharged is False
+
+
+def test_dm300_overkill_hit_clamps_to_threshold_instead_of_dying():
+    # With pylonsActivated < 2, the supercharge thresholds (200, then 100) are
+    # always > 0, so even a massive overkill hit clamps HP to the threshold
+    # and supercharges rather than killing DM300 outright.
+    dm300 = DM300(id="dm300", pos=Position(x=5, y=5), faction=Faction.DUNGEON)
+
+    taken = dm300.take_damage(1000)
+
+    assert taken == 1000  # take_damage reports the raw amount (matches Entity.take_damage)
+    assert dm300.hp == 200  # clamped to the first threshold, not 0
+    assert dm300.supercharged is True
+    assert dm300.pylons_activated == 1
+    assert dm300.is_alive is True
+
+
+def test_dm300_dies_normally_once_both_pylons_activated():
+    # threshold = HT/3 * (2 - pylonsActivated) == 0 once both pylons have
+    # been activated -- the "isAlive" override no longer applies and a
+    # killing blow behaves like a normal mob death.
+    dm300 = DM300(id="dm300", pos=Position(x=5, y=5), faction=Faction.DUNGEON)
+    dm300.hp = 50
+    dm300.pylons_activated = 2
+
+    dm300.take_damage(50)
+
+    assert dm300.hp == 0
+    assert dm300.is_alive is False

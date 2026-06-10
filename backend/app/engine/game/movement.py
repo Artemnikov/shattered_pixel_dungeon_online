@@ -33,6 +33,7 @@ from app.engine.entities.base import (
     Wand,
     Weapon,
 )
+from app.engine.entities.mobs import DM300
 from app.engine.systems.combat import resolve_melee_attack, resolve_ranged_attack
 from app.engine.systems.loot import roll_drops
 from app.engine.game.constants import MAX_FLOOR_ID
@@ -157,6 +158,11 @@ class MovementCombatMixin:
                         self.add_event("PLAY_SOUND", {"sound": "HIT_BODY"}, floor_id=floor_id, source_player_id=target_entity.id)
                         if target_entity.hp / target_entity.get_total_max_hp() <= 0.3:
                             self.add_event("PLAY_SOUND", {"sound": "HEALTH_WARN"}, player_id=target_entity.id)
+
+                if isinstance(target_entity, DM300) and target_entity.pending_pylon_activation:
+                    target_entity.pending_pylon_activation = False
+                    self.add_event("DM300_SUPERCHARGE", {"mob": target_entity.id}, floor_id=floor_id)
+                    self._activate_pylon(floor, floor_id, near_pos=entity.pos)
 
                 # Warrior subclass: combo / berserk events after successful damage
                 if isinstance(entity, Player) and dmg > 0:
@@ -417,6 +423,11 @@ class MovementCombatMixin:
                     self.add_event("PLAY_SOUND", {"sound": "HIT_BODY"}, floor_id=floor_id, source_player_id=target_entity.id)
                     if target_entity.hp / target_entity.get_total_max_hp() <= 0.3:
                         self.add_event("PLAY_SOUND", {"sound": "HEALTH_WARN"}, player_id=target_entity.id)
+
+            if isinstance(target_entity, DM300) and target_entity.pending_pylon_activation:
+                target_entity.pending_pylon_activation = False
+                self.add_event("DM300_SUPERCHARGE", {"mob": target_entity.id}, floor_id=floor_id)
+                self._activate_pylon(floor, floor_id, near_pos=player.pos)
 
             if not target_entity.is_alive:
                 if isinstance(target_entity, MobEntity):

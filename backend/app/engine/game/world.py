@@ -35,15 +35,15 @@ class WorldInteractionMixin:
         key is dropped here because it needs the floor-specific lock id, and it
         must drop no matter how Goo died (melee or bleed) so progression can't
         soft-lock."""
-        from app.engine.entities.mobs import Goo, Pylon
+        from app.engine.entities.mobs import DM300, Goo, Pylon
 
-        # CavesBossLevel.eliminatePylon: when an activated Pylon dies, activate
-        # the next remaining inactive Pylon on the floor (if any).
+        # CavesBossLevel.eliminatePylon -> DM300.loseSupercharge: when an
+        # activated Pylon dies, DM300 becomes vulnerable again. No
+        # chain-activation of another pylon.
         if isinstance(mob, Pylon):
             for other in floor.mobs.values():
-                if isinstance(other, Pylon) and other.is_alive and not other.activated:
-                    other.activated = True
-                    self.add_event("PYLON_ACTIVATED", {"mob": other.id}, floor_id=floor_id)
+                if isinstance(other, DM300):
+                    other.supercharged = False
                     break
 
         if not isinstance(mob, Goo):

@@ -20,11 +20,11 @@ status effects (bleed/ooze), mob respawns, and difficulty-scaled mob AI.
 
 import random
 import time
-from typing import List
+from typing import List, Optional
 
 from app.engine.dungeon.generator import TileType
 from app.engine.dungeon.spd_levelgen.level import _CIRCLE8_OFFSETS
-from app.engine.entities.base import Difficulty, Effect, Faction, Player
+from app.engine.entities.base import Difficulty, Effect, Faction, Player, Position
 from app.engine.entities.buffs import process_buffs
 from app.engine.game.blobs import tick_foliage_blobs
 from app.engine.entities.mobs import (
@@ -205,17 +205,22 @@ class TickMixin:
                     self._update_yog_dzewa(mob, floor, floor_id)
                     continue
 
-                # DM-300 boss: on fight start, activate one Pylon (CavesBossLevel.activatePylon).
+                # DM-300 boss: track fight start (used for AI gating elsewhere);
+                # supercharge/pylon activation is now damage-triggered (see
+                # DM300.take_damage / _activate_pylon), not proximity-triggered.
                 if isinstance(mob, DM300):
                     if not mob.fight_started:
                         target = self._find_nearest_player(mob.pos, floor_id)
                         if target is not None:
                             mob.fight_started = True
-                            for other in floor.mobs.values():
-                                if isinstance(other, Pylon) and not other.activated:
-                                    other.activated = True
-                                    self.add_event("PYLON_ACTIVATED", {"mob": other.id}, floor_id=floor_id)
-                                    break
+
+                    if mob.supercharged:
+                        # DM300.supercharge(): 2x speed, suppress gas/rock
+                        # abilities, just chase the hero. Approximate the speed
+                        # boost by running the chase/attack step twice.
+                        self._update_dm300_chase(mob, floor, floor_id)
+                        self._update_dm300_chase(mob, floor, floor_id)
+                        continue
 
                 # DemonSpawner: immovable, periodically spawns RipperDemons in
                 # adjacent free cells (DemonSpawner.act).
@@ -759,6 +764,49 @@ class TickMixin:
 
         pylon.fire_target_idx = (pylon.fire_target_idx + 1) % 8
         pylon.bolt_cooldown = 1
+
+    # ------------------------------------------------------------------
+    # DM-300 supercharge / pylon activation (CavesBossLevel.activatePylon).
+    # ------------------------------------------------------------------
+    def _activate_pylon(self, floor: FloorState, floor_id: int, near_pos: Optional[Position] = None):
+        """Activate one currently-inactive Pylon. If more than one remains,
+        the one closest to `near_pos` is excluded from the random pool
+        (CavesBossLevel.activatePylon)."""
+        candidates = [m for m in floor.mobs.values() if isinstance(m, Pylon) and not m.activated]
+        if not candidates:
+            return
+
+        if len(candidates) > 1 and near_pos is not None:
+            closest = min(candidates, key=lambda p: self._get_distance(p.pos, near_pos))
+            pool = [p for p in candidates if p.id != closest.id]
+        else:
+            pool = candidates
+
+        chosen = random.choice(pool) if pool else candidates[0]
+        chosen.activated = True
+        self.add_event("PYLON_ACTIVATED", {"mob": chosen.id}, floor_id=floor_id)
+
+    # ------------------------------------------------------------------
+    # DM-300 supercharged chase (DM300.supercharge() AI: 2x speed, just
+    # chase the hero, gas/rock abilities suppressed).
+    # ------------------------------------------------------------------
+    def _update_dm300_chase(self, mob: "DM300", floor: FloorState, floor_id: int):
+        target_player = self._find_nearest_player(mob.pos, floor_id)
+        if target_player is None:
+            return
+
+        dist = self._get_distance(mob.pos, target_player.pos)
+        atk_range = getattr(mob, "attack_range", 1)
+
+        if dist <= atk_range:
+            current_time = time.time()
+            if current_time - mob.last_attack_time >= mob.attack_cooldown:
+                dx, dy = target_player.pos.x - mob.pos.x, target_player.pos.y - mob.pos.y
+                self.move_entity(mob.id, dx, dy)
+        elif self._is_in_los(mob.pos, target_player.pos, floor_id=floor_id):
+            step = self._get_next_step_to(mob.pos, target_player.pos, floor_id=floor_id)
+            if step:
+                self.move_entity(mob.id, step[0], step[1])
 
     def _update_shadow_ally(self, ally, floor: FloorState, floor_id: int):
         # Shadow Clone AI: attack the nearest enemy mob in sight, else regroup
