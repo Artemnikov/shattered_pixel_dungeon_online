@@ -16,7 +16,7 @@ import math
 import random
 from typing import Optional, List, TYPE_CHECKING
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from app.engine.entities.base import (
     Mob as MobEntity,
@@ -1083,8 +1083,8 @@ class YogDzewa(MobEntity):
 
     # Boss runtime state
     phase: int = 0
-    fist_ids: List[str] = Field(default_factory=list)
-    fist_order: List[str] = Field(default_factory=list)
+    fist_ids: List[str] = Field(default_factory=list)  # currently-alive spawned fist instance IDs
+    fist_order: List[str] = Field(default_factory=list)  # ordered fist class names yet to be spawned
     ability_cooldown: float = 10.0
     summon_cooldown: float = 10.0
     fight_started: bool = False
@@ -1099,17 +1099,34 @@ class YogDzewa(MobEntity):
         return damage
 
 
-def _fist_near_yog(self, floor_mobs: dict) -> bool:
-    """Return True when this fist is within 4 tiles of its Yog (Manhattan)."""
-    if not self.yog_id:
+# Fists are invincible while standing within this many tiles (Manhattan) of
+# their Yog-Dzewa.
+FIST_INVINCIBILITY_RADIUS = 4
+
+
+def _is_fist_near_yog(fist, floor_mobs: dict) -> bool:
+    """Return True when `fist` is within FIST_INVINCIBILITY_RADIUS tiles of its Yog (Manhattan)."""
+    if not fist.yog_id:
         return False
-    yog = floor_mobs.get(self.yog_id)
+    yog = floor_mobs.get(fist.yog_id)
     if yog is None or not yog.is_alive:
         return False
-    return abs(self.pos.x - yog.pos.x) + abs(self.pos.y - yog.pos.y) <= 4
+    return (abs(fist.pos.x - yog.pos.x) + abs(fist.pos.y - yog.pos.y)
+            <= FIST_INVINCIBILITY_RADIUS)
 
 
-class BurningFist(MobEntity):
+class _YogFistMixin(BaseModel):
+    """Shared state/behavior for YogDzewa's six fist minions."""
+    paired_fist_id: str = ""
+    yog_id: str = ""
+
+    def defense_proc(self, damage: int, attacker, floor_mobs: dict, tile_x: int, tile_y: int) -> int:
+        if _is_fist_near_yog(self, floor_mobs):
+            return 0
+        return damage
+
+
+class BurningFist(_YogFistMixin, MobEntity):
     """YogDzewa fist. HP=300. FIERY+DEMONIC. Ranged fire attack."""
     type: str = "boss"
     name: str = "Burning Fist"
@@ -1128,17 +1145,10 @@ class BurningFist(MobEntity):
     loot_table: List[DropEntry] = []
 
     # Boss runtime state
-    paired_fist_id: str = ""
-    yog_id: str = ""
     ranged_cooldown: float = 0.0
 
-    def defense_proc(self, damage: int, attacker, floor_mobs: dict, tile_x: int, tile_y: int) -> int:
-        if _fist_near_yog(self, floor_mobs):
-            return 0
-        return damage
 
-
-class SoiledFist(MobEntity):
+class SoiledFist(_YogFistMixin, MobEntity):
     """YogDzewa fist. HP=300. DEMONIC. Roots enemies, spreads grass."""
     type: str = "boss"
     name: str = "Soiled Fist"
@@ -1156,17 +1166,10 @@ class SoiledFist(MobEntity):
     attack_range: int = 8
     loot_table: List[DropEntry] = []
 
-    paired_fist_id: str = ""
-    yog_id: str = ""
     ranged_cooldown: float = 0.0
 
-    def defense_proc(self, damage: int, attacker, floor_mobs: dict, tile_x: int, tile_y: int) -> int:
-        if _fist_near_yog(self, floor_mobs):
-            return 0
-        return damage
 
-
-class RottingFist(MobEntity):
+class RottingFist(_YogFistMixin, MobEntity):
     """YogDzewa fist. HP=300. ACIDIC+DEMONIC. Converts damage to bleeding; zap=toxic gas."""
     type: str = "boss"
     name: str = "Rotting Fist"
@@ -1184,17 +1187,10 @@ class RottingFist(MobEntity):
     attack_range: int = 8
     loot_table: List[DropEntry] = []
 
-    paired_fist_id: str = ""
-    yog_id: str = ""
     ranged_cooldown: float = 0.0
 
-    def defense_proc(self, damage: int, attacker, floor_mobs: dict, tile_x: int, tile_y: int) -> int:
-        if _fist_near_yog(self, floor_mobs):
-            return 0
-        return damage
 
-
-class RustedFist(MobEntity):
+class RustedFist(_YogFistMixin, MobEntity):
     """YogDzewa fist. HP=300. INORGANIC+DEMONIC. Defers all damage as viscosity. Higher damage (22-44)."""
     type: str = "boss"
     name: str = "Rusted Fist"
@@ -1212,18 +1208,11 @@ class RustedFist(MobEntity):
     attack_range: int = 8
     loot_table: List[DropEntry] = []
 
-    paired_fist_id: str = ""
-    yog_id: str = ""
     ranged_cooldown: float = 0.0
     viscosity_stacks: int = 0
 
-    def defense_proc(self, damage: int, attacker, floor_mobs: dict, tile_x: int, tile_y: int) -> int:
-        if _fist_near_yog(self, floor_mobs):
-            return 0
-        return damage
 
-
-class BrightFist(MobEntity):
+class BrightFist(_YogFistMixin, MobEntity):
     """YogDzewa fist. HP=300. ELECTRIC+DEMONIC. Light beam blinds; teleports at half HP."""
     type: str = "boss"
     name: str = "Bright Fist"
@@ -1241,18 +1230,11 @@ class BrightFist(MobEntity):
     attack_range: int = 8
     loot_table: List[DropEntry] = []
 
-    paired_fist_id: str = ""
-    yog_id: str = ""
     ranged_cooldown: float = 0.0
     teleport_used: bool = False
 
-    def defense_proc(self, damage: int, attacker, floor_mobs: dict, tile_x: int, tile_y: int) -> int:
-        if _fist_near_yog(self, floor_mobs):
-            return 0
-        return damage
 
-
-class DarkFist(MobEntity):
+class DarkFist(_YogFistMixin, MobEntity):
     """YogDzewa fist. HP=300. DEMONIC. Dark bolt extinguishes light; teleports at half HP."""
     type: str = "boss"
     name: str = "Dark Fist"
@@ -1270,15 +1252,8 @@ class DarkFist(MobEntity):
     attack_range: int = 8
     loot_table: List[DropEntry] = []
 
-    paired_fist_id: str = ""
-    yog_id: str = ""
     ranged_cooldown: float = 0.0
     teleport_used: bool = False
-
-    def defense_proc(self, damage: int, attacker, floor_mobs: dict, tile_x: int, tile_y: int) -> int:
-        if _fist_near_yog(self, floor_mobs):
-            return 0
-        return damage
 
 
 class YogEye(Eye):

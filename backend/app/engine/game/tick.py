@@ -550,11 +550,15 @@ class TickMixin:
         alive_fists = [m for m in floor.mobs.values()
                        if m.id in yog.fist_ids and m.is_alive]
 
+        # HP floor per phase: Yog can't drop below this while the phase's fist
+        # is still alive (phases 1-3 also trigger a transition + fist spawn;
+        # phase 4's floor just holds Yog at 100 until the last fist dies).
+        HP_FLOORS = {1: 700, 2: 400, 3: 100, 4: 100}
+
         # Phase transitions at HP thresholds — each spawns the next fist.
-        HP_THRESHOLDS = {1: 700, 2: 400, 3: 100}
-        if yog.phase in HP_THRESHOLDS and yog.hp <= HP_THRESHOLDS[yog.phase]:
+        if yog.phase in (1, 2, 3) and yog.hp <= HP_FLOORS[yog.phase]:
             # Enforce HP floor so Yog can't drop below threshold while fist lives.
-            yog.hp = HP_THRESHOLDS[yog.phase]
+            yog.hp = HP_FLOORS[yog.phase]
             # Spawn next fist from the pre-shuffled order.
             if yog.fist_order:
                 next_cls_name = yog.fist_order[0]
@@ -585,9 +589,9 @@ class TickMixin:
             yog.phase = 5
             self.add_event("YOG_FINAL_PHASE", {"mob": yog.id}, floor_id=floor_id)
 
-        # Phase 4 HP floor: Yog can't die while the last fist still lives.
-        if yog.phase == 4 and yog.hp < 100:
-            yog.hp = 100
+        # HP floor while fists remain (phases 1-4): Yog can't die yet.
+        if yog.phase < 5 and yog.hp < HP_FLOORS[yog.phase]:
+            yog.hp = HP_FLOORS[yog.phase]
 
         # No target → do nothing else.
         target = self._find_nearest_player(yog.pos, floor_id)
