@@ -79,6 +79,7 @@ from app.engine.entities.mobs import (
     Piranha,
     PurpleShaman,
     Pylon,
+    RatKing,
     Rat,
     RedShaman,
     RipperDemon,
@@ -232,6 +233,7 @@ _MOB_CLASSES: Dict[str, type[MobEntity]] = {
     # Static spawners
     "DemonSpawner": DemonSpawner,
     "Pylon": Pylon,
+    "RatKing": RatKing,
 }
 
 # Trap class (SPD) -> remake TrapType

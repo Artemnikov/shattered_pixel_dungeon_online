@@ -188,7 +188,8 @@ def test_key_unlocks_the_boss_door():
     player.inventory.append(Key(id="k1", name="Worn Key", pos=Position(x=dx - 1, y=dy), key_id=key_id))
 
     assert game._try_unlock_locked_door(player, floor, dx, dy) is True
-    assert floor.grid[dy][dx] == TileType.DOOR
+    # Boss-arena exit (goo_door) unlocks into stairs down, not a regular door.
+    assert floor.grid[dy][dx] == TileType.STAIRS_DOWN
     assert floor.locked_doors == {}
     assert floor.flags.passable[dy][dx] is True
     assert player.inventory == []
@@ -204,3 +205,43 @@ def test_locked_door_blocks_without_matching_key():
     assert game._try_unlock_locked_door(player, floor, dx, dy) is False
     assert floor.grid[dy][dx] == TileType.LOCKED_DOOR
     assert (dx, dy) in floor.locked_doors
+
+
+def test_unlock_non_goo_door_stays_a_door():
+    floor, rooms = make_goo_floor()
+    (dx, dy), _key_id = next(iter(floor.locked_doors.items()))
+    floor.locked_doors[(dx, dy)] = "iron"
+
+    game = GameInstance("test-iron-unlock")
+    player = Player(id="p1", name="Hero", pos=Position(x=dx - 1, y=dy), hp=50, max_hp=50, faction=Faction.PLAYER)
+    player.inventory.append(Key(id="k1", name="Iron Key", pos=Position(x=dx - 1, y=dy), key_id="iron"))
+
+    assert game._try_unlock_locked_door(player, floor, dx, dy) is True
+    assert floor.grid[dy][dx] == TileType.DOOR
+
+
+# ---------------------------------------------------------------------------
+# Rat King (sewer boss secret room NPC)
+# ---------------------------------------------------------------------------
+
+def test_floor5_spawns_rat_king_npc():
+    from app.engine.entities.mobs import RatKing
+
+    game = GameInstance("test-ratking")
+    floor = game.generate_floor(5)
+
+    rat_kings = [m for m in floor.mobs.values() if isinstance(m, RatKing)]
+    assert len(rat_kings) == 1
+    rat_king = rat_kings[0]
+    assert rat_king.name == "Rat King"
+
+    # Immune to all damage.
+    assert rat_king.take_damage(9999) == 0
+    assert rat_king.hp == rat_king.max_hp
+    assert rat_king.is_alive is True
+
+    # Always sleeping, never wakes/hunts.
+    assert rat_king.ai_state == "sleeping"
+    assert getattr(rat_king, "never_wakes", False) is True
+    hunting_mobs = [m for m in floor.mobs.values() if m.ai_state == "hunting"]
+    assert rat_king not in hunting_mobs

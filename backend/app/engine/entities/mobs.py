@@ -1407,3 +1407,38 @@ class Pylon(MobEntity):
         if amount >= 15:
             amount = 14 + int((math.sqrt(8 * (amount - 14) + 1) - 1) / 2)
         return super().take_damage(amount)
+
+
+# ---------------------------------------------------------------------------
+# Sewer Boss (floor 5) hidden room NPC
+# ---------------------------------------------------------------------------
+
+class RatKing(MobEntity):
+    """Cosmetic NPC in the sewer boss secret treasure room (RatKing.java).
+    Sleeps forever, never wakes/attacks, takes no damage and dodges everything."""
+    name: str = "Rat King"
+    type: str = "npc"
+    faction: str = Faction.PLAYER
+    hp: int = 1
+    max_hp: int = 1
+    attack_skill: int = 0
+    defense_skill: int = 0
+    damage_min: int = 0
+    damage_max: int = 0
+    dr_min: int = 0
+    dr_max: int = 0
+    exp: int = 0
+    max_lvl: int = -2
+    loot_table: List[DropEntry] = []
+    ai_state: str = "sleeping"
+    # Mirrors RatKing.java: never transitions out of SLEEPING (chooseEnemy()
+    # always returns null), so the generic wake-up check in tick.py skips it.
+    never_wakes: bool = True
+
+    def take_damage(self, amount: int):
+        # RatKing.damage(): does nothing — immune to all damage.
+        return 0
+
+    def get_effective_defense_skill(self) -> int:
+        # RatKing.defenseSkill(): INFINITE_EVASION — always dodges.
+        return 10 ** 9

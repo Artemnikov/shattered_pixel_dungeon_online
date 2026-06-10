@@ -323,7 +323,9 @@ class TickMixin:
                     target_player = None
 
                 # Sleeping mob detection: only wake if detection check passes
-                if target_player and getattr(mob, "ai_state", "") in ("idle", "sleeping"):
+                if target_player and getattr(mob, "never_wakes", False):
+                    target_player = None
+                elif target_player and getattr(mob, "ai_state", "") in ("idle", "sleeping"):
                     dist = self._get_distance(mob.pos, target_player.pos)
                     stealth = target_player.get_stealth()
                     detect_chance = 1.0 / max(0.01, dist + stealth)

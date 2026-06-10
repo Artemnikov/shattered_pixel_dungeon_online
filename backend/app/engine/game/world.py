@@ -142,12 +142,15 @@ class WorldInteractionMixin:
 
         player.inventory.pop(key_idx)
         floor.locked_doors.pop((x, y), None)
-        floor.grid[y][x] = TileType.DOOR
-        # Tile mutated from LOCKED_DOOR to DOOR — refresh flag maps so
-        # LOS/pathfinding sees the door as passable now.
+        # The boss-arena exit (SPD's LOCKED_EXIT -> UNLOCKED_EXIT) becomes the
+        # level's stairs down once unlocked, not a regular door.
+        new_tile = TileType.STAIRS_DOWN if key_id == "goo_door" else TileType.DOOR
+        floor.grid[y][x] = new_tile
+        # Tile mutated from LOCKED_DOOR to DOOR/STAIRS_DOWN — refresh flag maps
+        # so LOS/pathfinding sees the door as passable now.
         floor.rebuild_flags()
 
-        self.add_event("MAP_PATCH", {"tiles": [{"x": x, "y": y, "tile": TileType.DOOR}]}, floor_id=player.floor_id)
+        self.add_event("MAP_PATCH", {"tiles": [{"x": x, "y": y, "tile": new_tile}]}, floor_id=player.floor_id)
         self.add_event("UNLOCK", {"player": player.id, "x": x, "y": y}, floor_id=player.floor_id)
         return True
 
