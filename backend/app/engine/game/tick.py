@@ -25,7 +25,7 @@ from typing import List, Optional, Type
 from app.engine.dungeon.generator import TileType
 from app.engine.dungeon.spd_levelgen.level import _CIRCLE8_OFFSETS
 from app.engine.entities.base import Difficulty, Effect, Faction, Player, Position
-from app.engine.entities.buffs import process_buffs
+from app.engine.entities.buffs import add_buff, process_buffs
 from app.engine.game.blobs import tick_foliage_blobs
 from app.engine.entities.mobs import (
     Rat, Goo, DwarfKing, DKGhoul, DKMonk, DKWarlock, DKGolem,
@@ -292,6 +292,13 @@ class TickMixin:
                 if isinstance(mob, Pylon):
                     self._update_pylon(mob, floor, floor_id)
                     continue
+
+                # YogDzewa fist minions: ranged zap attacks (BurningFist etc.)
+                # plus per-fist quirks (viscosity release, water regen, teleport).
+                if isinstance(mob, (BurningFist, SoiledFist, RottingFist,
+                                     RustedFist, BrightFist, DarkFist)):
+                    if self._update_yog_fist(mob, floor, floor_id):
+                        continue
 
                 target_player = self._find_nearest_player(mob.pos, floor_id)
                 # Fleeing mob: run away from nearest player, don't attack
@@ -743,6 +750,205 @@ class TickMixin:
             yog.summon_cooldown = max(1, cooldown)
             if yog.phase == 5:
                 yog.summon_cooldown = min(yog.summon_cooldown, 3)
+
+    # ------------------------------------------------------------------
+    # YogDzewa fist minions (mirrors YogFist.java's ranged-attack dispatch
+    # plus per-fist quirks). Terrain mutation systems (Blob/Fire/ToxicGas/
+    # grass-spread) are not ported -- simplifications are noted per-fist.
+    # ------------------------------------------------------------------
+    def _update_yog_fist(self, fist, floor: FloorState, floor_id: int) -> bool:
+        # YogFist.act(): rangedCooldown ticks down each turn (no paralysis
+        # field on these mobs, so always decrement).
+        if fist.ranged_cooldown > 0:
+            fist.ranged_cooldown -= 1
+
+        # RustedFist: release deferred (viscosity) damage gradually, 10% per
+        # tick (minimum 1 while stacks remain). Direct hp manipulation --
+        # take_damage would re-defer it.
+        if isinstance(fist, RustedFist) and fist.viscosity_stacks > 0:
+            released = max(1, fist.viscosity_stacks // 10)
+            released = min(released, fist.viscosity_stacks)
+            fist.hp = max(0, fist.hp - released)
+            fist.viscosity_stacks -= released
+            if fist.hp <= 0:
+                fist.is_alive = False
+                fist.die(floor_mobs=floor.mobs, tile_x=fist.pos.x, tile_y=fist.pos.y,
+                         players=self._players_on_floor(floor_id))
+
+        # RottingFist: regen HP/50 per tick while standing in water (mirrors
+        # RottingFist.act's `if (Dungeon.level.water[pos] && HP < HT)`).
+        if isinstance(fist, RottingFist) and fist.is_alive:
+            if floor.grid[fist.pos.y][fist.pos.x] == TileType.FLOOR_WATER and fist.hp < fist.max_hp:
+                fist.hp = min(fist.max_hp, fist.hp + fist.max_hp // 50)
+
+        # BrightFist/DarkFist: handle a pending post-damage teleport before
+        # acting this tick (mirrors the teleport triggered in damage()).
+        if isinstance(fist, (BrightFist, DarkFist)) and getattr(fist, "pending_teleport", False):
+            self._yog_fist_teleport(fist, floor, floor_id)
+
+        if not fist.is_alive:
+            return True
+
+        target = self._find_nearest_player(fist.pos, floor_id)
+        if target is None:
+            return False
+
+        dist = self._get_distance(fist.pos, target.pos)
+
+        # BrightFist/DarkFist: canRangedInMelee = False -- always zap, never
+        # melee. If no LOS, fall through to generic chase AI to close in.
+        if isinstance(fist, (BrightFist, DarkFist)):
+            if self._is_in_los(fist.pos, target.pos, floor_id=floor_id):
+                if isinstance(fist, BrightFist):
+                    self._fist_zap_bright(fist, target, floor_id)
+                else:
+                    self._fist_zap_dark(fist, target, floor_id)
+                return True
+            return False
+
+        # Other 4 fists: ranged zap when not adjacent, on cooldown==0, and in
+        # LOS; otherwise fall through to generic melee/chase AI.
+        if dist > 1 and fist.ranged_cooldown <= 0 and self._is_in_los(fist.pos, target.pos, floor_id=floor_id):
+            if isinstance(fist, BurningFist):
+                self._fist_zap_burning(fist, target, floor_id)
+            elif isinstance(fist, SoiledFist):
+                self._fist_zap_soiled(fist, target, floor_id)
+            elif isinstance(fist, RottingFist):
+                self._fist_zap_rotting(fist, target, floor_id)
+            elif isinstance(fist, RustedFist):
+                self._fist_zap_rusted(fist, target, floor_id)
+            fist.ranged_cooldown = random.uniform(8, 12)
+            return True
+
+        return False
+
+    def _yog_fist_teleport(self, fist, floor: FloorState, floor_id: int):
+        """BrightFist/DarkFist post-damage teleport (SPD: teleport self away,
+        apply a stronger Blindness to the hero, state -> WANDERING)."""
+        floor_tiles = [
+            (x, y) for y in range(floor.height) for x in range(floor.width)
+            if floor.grid[y][x] in [TileType.FLOOR, TileType.FLOOR_WOOD, TileType.FLOOR_WATER,
+                                     TileType.FLOOR_COBBLE, TileType.FLOOR_GRASS]
+            and not any(m.is_alive and m.pos.x == x and m.pos.y == y for m in floor.mobs.values())
+            and not any(p.is_alive and p.pos.x == x and p.pos.y == y for p in self._players_on_floor(floor_id))
+        ]
+        if floor_tiles:
+            x, y = random.choice(floor_tiles)
+            fist.pos = Position(x=x, y=y)
+            fist.ai_state = "wandering"
+
+            target = self._find_nearest_player(fist.pos, floor_id)
+            if target is not None:
+                add_buff(target.buffs, "blindness", duration=15.0, level=2, stack_mode="extend")
+
+            self.add_event("FIST_TELEPORT", {"mob": fist.id, "x": x, "y": y}, floor_id=floor_id)
+
+        fist.pending_teleport = False
+
+    def _fist_zap_burning(self, fist: "BurningFist", target, floor_id: int):
+        """BurningFist.zap(): hit-roll; on hit, apply fire damage and
+        (re)ignite Burning. (Java also evaporates water / ignites fire blobs
+        around the target -- terrain mutation, out of scope.)"""
+        acu = random.random() * fist.attack_skill
+        df = random.random() * target.get_effective_defense_skill()
+        if acu < df:
+            self.add_event("ATTACK", {"source": fist.id, "target": target.id,
+                                      "damage": 0, "surprise": False, "fire": True}, floor_id=floor_id)
+            self.add_event("MISS", {"source": fist.id, "target": target.id,
+                                    "defense_verb": target.defense_verb}, floor_id=floor_id)
+            return
+        dmg = target.take_damage(random.randint(8, 16))
+        add_buff(target.buffs, "burning", duration=3.0, level=1, stack_mode="extend")
+        self.add_event("ATTACK", {"source": fist.id, "target": target.id,
+                                  "damage": dmg, "surprise": False, "fire": True}, floor_id=floor_id)
+        if dmg > 0:
+            self.add_event("DAMAGE", {"target": target.id, "amount": dmg}, floor_id=floor_id)
+
+    def _fist_zap_soiled(self, fist: "SoiledFist", target, floor_id: int):
+        """SoiledFist.zap(): hit-roll; on hit, root the target (no direct
+        damage). (Java also spreads grass around the target -- out of scope.)"""
+        acu = random.random() * fist.attack_skill
+        df = random.random() * target.get_effective_defense_skill()
+        if acu < df:
+            self.add_event("ATTACK", {"source": fist.id, "target": target.id,
+                                      "damage": 0, "surprise": False}, floor_id=floor_id)
+            self.add_event("MISS", {"source": fist.id, "target": target.id,
+                                    "defense_verb": target.defense_verb}, floor_id=floor_id)
+            return
+        add_buff(target.buffs, "rooted", duration=3.0, level=1)
+        self.add_event("ATTACK", {"source": fist.id, "target": target.id,
+                                  "damage": 0, "surprise": False, "root": True}, floor_id=floor_id)
+
+    def _fist_zap_rotting(self, fist: "RottingFist", target, floor_id: int):
+        """RottingFist.zap(): seeds a ToxicGas blob on the target (Blob system
+        not ported -- approximated as direct gas damage), with a 50% chance of
+        applying Ooze on hit (mirrors RottingFist.attackProc)."""
+        acu = random.random() * fist.attack_skill
+        df = random.random() * target.get_effective_defense_skill()
+        if acu < df:
+            self.add_event("ATTACK", {"source": fist.id, "target": target.id,
+                                      "damage": 0, "surprise": False, "gas": True}, floor_id=floor_id)
+            self.add_event("MISS", {"source": fist.id, "target": target.id,
+                                    "defense_verb": target.defense_verb}, floor_id=floor_id)
+            return
+        dmg = target.take_damage(random.randint(10, 20))
+        if random.random() < 0.5:
+            add_buff(target.buffs, "ooze", duration=5.0, level=1)
+        self.add_event("ATTACK", {"source": fist.id, "target": target.id,
+                                  "damage": dmg, "surprise": False, "gas": True}, floor_id=floor_id)
+        if dmg > 0:
+            self.add_event("DAMAGE", {"target": target.id, "amount": dmg}, floor_id=floor_id)
+
+    def _fist_zap_rusted(self, fist: "RustedFist", target, floor_id: int):
+        """RustedFist.zap(): hit-roll; on hit, apply Cripple (no direct
+        damage)."""
+        acu = random.random() * fist.attack_skill
+        df = random.random() * target.get_effective_defense_skill()
+        if acu < df:
+            self.add_event("ATTACK", {"source": fist.id, "target": target.id,
+                                      "damage": 0, "surprise": False}, floor_id=floor_id)
+            self.add_event("MISS", {"source": fist.id, "target": target.id,
+                                    "defense_verb": target.defense_verb}, floor_id=floor_id)
+            return
+        add_buff(target.buffs, "cripple", duration=4.0, level=1)
+        self.add_event("ATTACK", {"source": fist.id, "target": target.id,
+                                  "damage": 0, "surprise": False, "cripple": True}, floor_id=floor_id)
+
+    def _fist_zap_bright(self, fist: "BrightFist", target, floor_id: int):
+        """BrightFist.zap(): hit-roll; on hit, LightBeam damage + Blindness."""
+        acu = random.random() * fist.attack_skill
+        df = random.random() * target.get_effective_defense_skill()
+        if acu < df:
+            self.add_event("ATTACK", {"source": fist.id, "target": target.id,
+                                      "damage": 0, "surprise": False, "light_beam": True}, floor_id=floor_id)
+            self.add_event("MISS", {"source": fist.id, "target": target.id,
+                                    "defense_verb": target.defense_verb}, floor_id=floor_id)
+            return
+        dmg = target.take_damage(random.randint(10, 20))
+        add_buff(target.buffs, "blindness", duration=10.0, level=1, stack_mode="extend")
+        self.add_event("ATTACK", {"source": fist.id, "target": target.id,
+                                  "damage": dmg, "surprise": False, "light_beam": True}, floor_id=floor_id)
+        if dmg > 0:
+            self.add_event("DAMAGE", {"target": target.id, "amount": dmg}, floor_id=floor_id)
+
+    def _fist_zap_dark(self, fist: "DarkFist", target, floor_id: int):
+        """DarkFist.zap(): hit-roll; on hit, DarkBolt damage. Java also weakens
+        the hero's Light buff -- Light isn't ported, so simplified to the same
+        Blindness debuff as BrightFist's zap."""
+        acu = random.random() * fist.attack_skill
+        df = random.random() * target.get_effective_defense_skill()
+        if acu < df:
+            self.add_event("ATTACK", {"source": fist.id, "target": target.id,
+                                      "damage": 0, "surprise": False, "dark_bolt": True}, floor_id=floor_id)
+            self.add_event("MISS", {"source": fist.id, "target": target.id,
+                                    "defense_verb": target.defense_verb}, floor_id=floor_id)
+            return
+        dmg = target.take_damage(random.randint(10, 20))
+        add_buff(target.buffs, "blindness", duration=10.0, level=1, stack_mode="extend")
+        self.add_event("ATTACK", {"source": fist.id, "target": target.id,
+                                  "damage": dmg, "surprise": False, "dark_bolt": True}, floor_id=floor_id)
+        if dmg > 0:
+            self.add_event("DAMAGE", {"target": target.id, "amount": dmg}, floor_id=floor_id)
 
     # ------------------------------------------------------------------
     # DemonSpawner (mirrors DemonSpawner.act -- immovable miniboss that

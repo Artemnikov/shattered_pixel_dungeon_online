@@ -1199,6 +1199,15 @@ class SoiledFist(_YogFistMixin, MobEntity):
 
     ranged_cooldown: float = 0.0
 
+    def take_damage(self, amount: int):
+        # SoiledFist.damage(): SPD reduces damage based on nearby grass cells
+        # (0-6 -> up to 100% reduction). Grass spread isn't ported, so apply a
+        # flat 25% reduction as a documented simplification. (SPD also makes
+        # Soiled immune to Burning-sourced damage, but take_damage here has no
+        # damage-source param to check, so that part is omitted.)
+        amount = round(amount * 0.75)
+        return super().take_damage(amount)
+
 
 class RottingFist(_YogFistMixin, MobEntity):
     """YogDzewa fist. HP=300. ACIDIC+DEMONIC. Converts damage to bleeding; zap=toxic gas."""
@@ -1242,6 +1251,14 @@ class RustedFist(_YogFistMixin, MobEntity):
     ranged_cooldown: float = 0.0
     viscosity_stacks: int = 0
 
+    def take_damage(self, amount: int):
+        # RustedFist.damage(): all incoming damage is deferred via the
+        # Viscosity.DeferedDamage buff and released gradually (10%/tick) by
+        # _update_yog_fist in tick.py. No immediate HP loss.
+        if amount > 0:
+            self.viscosity_stacks += amount
+        return 0
+
 
 class BrightFist(_YogFistMixin, MobEntity):
     """YogDzewa fist. HP=300. ELECTRIC+DEMONIC. Light beam blinds; teleports at half HP."""
@@ -1263,6 +1280,18 @@ class BrightFist(_YogFistMixin, MobEntity):
 
     ranged_cooldown: float = 0.0
     teleport_used: bool = False
+    pending_teleport: bool = False
+
+    def take_damage(self, amount: int):
+        dealt = super().take_damage(amount)
+        # BrightFist.damage(): on first crossing below 50% HP, clamp to
+        # exactly half HP and teleport away (handled in _update_yog_fist).
+        if self.hp <= self.max_hp // 2 and not self.teleport_used:
+            self.hp = self.max_hp // 2
+            self.is_alive = self.hp > 0
+            self.teleport_used = True
+            self.pending_teleport = True
+        return dealt
 
 
 class DarkFist(_YogFistMixin, MobEntity):
@@ -1285,6 +1314,17 @@ class DarkFist(_YogFistMixin, MobEntity):
 
     ranged_cooldown: float = 0.0
     teleport_used: bool = False
+    pending_teleport: bool = False
+
+    def take_damage(self, amount: int):
+        dealt = super().take_damage(amount)
+        # DarkFist.damage(): same 50%-HP teleport pattern as BrightFist.
+        if self.hp <= self.max_hp // 2 and not self.teleport_used:
+            self.hp = self.max_hp // 2
+            self.is_alive = self.hp > 0
+            self.teleport_used = True
+            self.pending_teleport = True
+        return dealt
 
 
 class YogEye(Eye):
