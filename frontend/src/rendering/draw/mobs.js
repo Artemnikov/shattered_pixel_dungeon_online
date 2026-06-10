@@ -62,6 +62,15 @@ import {
   PYLON_FW,
   PYLON_FH,
   PYLON_DEST,
+  TENGU_FW,
+  TENGU_FH,
+  TENGU_DEST,
+  DM300_FW,
+  DM300_FH,
+  DM300_DEST,
+  BRUTE_FW,
+  BRUTE_FH,
+  BRUTE_DEST,
   drawMobSprite,
   getCrabFrame,
   getHermitCrabFrame,
@@ -92,6 +101,9 @@ import {
   getSpawnerFrame,
   getPylonFrame,
   getStatueFrame,
+  getTenguFrame,
+  getDM300Frame,
+  getBruteFrame,
 } from '../mobs';
 
 // Gnoll's 12x15 frame, centered/bottom-aligned in the 32px tile per SPD placement
@@ -229,6 +241,15 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     } else if (mob.name === 'Pylon') {
       mobSprite = assetImages.pylon;
       sx = getPylonFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Tengu') {
+      mobSprite = assetImages.tengu;
+      sx = getTenguFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'DM-300') {
+      mobSprite = assetImages.dm300;
+      sx = getDM300Frame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Brute' || mob.name === 'Armored Brute') {
+      mobSprite = assetImages.brute;
+      sx = getBruteFrame(mob, mobAnimRef.current, now);
     }
 
     const isScorpio = mob.name === 'Scorpio' || mob.name === 'Yog Scorpio';
@@ -261,6 +282,10 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     const isEye = mob.name === 'Yog Eye';
     const isRipper = mob.name === 'Yog Ripper';
     const isPylon = mob.name === 'Pylon';
+    const isTengu = mob.name === 'Tengu';
+    const isDM300 = mob.name === 'DM-300';
+    const isBrute = mob.name === 'Brute';
+    const isArmoredBrute = mob.name === 'Armored Brute';
     const flash = !!(mobAnimRef.current[mob.id]?.flashUntil && now < mobAnimRef.current[mob.id].flashUntil);
     if (isGnoll) {
       drawMobSprite(ctx, mob, mobSprite, sx, GNOLL_FW, GNOLL_FH, flash, GNOLL_DEST);
@@ -313,6 +338,14 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
       drawMobSprite(ctx, mob, mobSprite, sx, RIPPER_FW, RIPPER_FH, flash, RIPPER_DEST);
     } else if (isPylon) {
       drawMobSprite(ctx, mob, mobSprite, sx, PYLON_FW, PYLON_FH, flash, PYLON_DEST);
+    } else if (isTengu) {
+      drawMobSprite(ctx, mob, mobSprite, sx, TENGU_FW, TENGU_FH, flash, TENGU_DEST);
+    } else if (isDM300) {
+      const sy = mob.supercharged ? DM300_FH : 0;
+      drawMobSprite(ctx, mob, mobSprite, sx, DM300_FW, DM300_FH, flash, DM300_DEST, 1, sy);
+    } else if (isBrute || isArmoredBrute) {
+      // brute.png stacks variants in 16px rows: Brute = row 0, Armored Brute = row 1.
+      drawMobSprite(ctx, mob, mobSprite, sx, BRUTE_FW, BRUTE_FH, flash, BRUTE_DEST, 1, isArmoredBrute ? BRUTE_FH : 0);
     } else {
       drawMobSprite(ctx, mob, mobSprite, sx,
         isScorpio ? SCORPIO_FW : FRAME_W,
@@ -374,9 +407,12 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     const isDM100Death = mob.name === 'DM-100';
     const isGuardDeath = mob.name === 'Guard';
     const isNecromancerDeath = mob.name === 'Necromancer';
+    const isTenguDeath = mob.name === 'Tengu';
+    const isDM300Death = mob.name === 'DM-300';
+    const isBruteDeath = mob.name === 'Brute' || mob.name === 'Armored Brute';
     // Gnoll: die frames [8,9,10] over 250ms, then a 3s alpha fade (SPD AlphaTweener).
     // Snake: die frames [11,12,13] over 300ms, then a 3s alpha fade.
-    const deathDuration = isScorpioDeath ? 417 : isGooDeath ? 300 : isRatDeath ? 400 : (isCrabDeath || isHermitCrabDeath) ? 333 : (isSlimeDeath || isCausticSlimeDeath) ? 400 : isSnakeDeath ? 3300 : isSkeletonDeath ? 332 : isThiefDeath ? 500 : isDM100Death ? 498 : isGuardDeath ? 500 : isNecromancerDeath ? 400 : 3250;
+    const deathDuration = isScorpioDeath ? 417 : isGooDeath ? 300 : isRatDeath ? 400 : (isCrabDeath || isHermitCrabDeath) ? 333 : (isSlimeDeath || isCausticSlimeDeath) ? 400 : isSnakeDeath ? 3300 : isSkeletonDeath ? 332 : isThiefDeath ? 500 : isDM100Death ? 498 : isGuardDeath ? 500 : isNecromancerDeath ? 400 : isTenguDeath ? 1000 : isDM300Death ? 1000 : isBruteDeath ? 250 : 3250;
     if (elapsed > deathDuration) { delete dyingMobsRef.current[id]; return; }
     if (!visionRef.current.visible.has(`${Math.round(mob.renderPos.x)},${Math.round(mob.renderPos.y)}`)) return;
     if (isScorpioDeath) {
@@ -416,6 +452,23 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
       const sx = [11, 12, 13][fi] * SNAKE_FW;
       const alpha = elapsed <= 300 ? 1 : Math.max(0, 1 - (elapsed - 300) / 3000);
       drawMobSprite(ctx, mob, assetImages.snake, sx, SNAKE_FW, SNAKE_FH, false, SNAKE_DEST, alpha);
+    } else if (isTenguDeath) {
+      // Tengu death: [8,9,10,10,10,10,10,10] @ 8fps (~125ms/frame), last frame holds.
+      const fi = Math.min(Math.floor(elapsed / 125), 7);
+      const sx = [8, 9, 10, 10, 10, 10, 10, 10][fi] * TENGU_FW;
+      drawMobSprite(ctx, mob, assetImages.tengu, sx, TENGU_FW, TENGU_FH, false, TENGU_DEST);
+    } else if (isDM300Death) {
+      // DM-300 death: alternate frames [0,1] (row-relative) over ~1000ms.
+      const sy = mob.supercharged ? DM300_FH : 0;
+      const fi = Math.floor(elapsed / 50) % 2;
+      const sx = [0, 1][fi] * DM300_FW;
+      drawMobSprite(ctx, mob, assetImages.dm300, sx, DM300_FW, DM300_FH, false, DM300_DEST, 1, sy);
+    } else if (isBruteDeath) {
+      // Brute / Armored Brute death: [8,9,10] @ 12fps (~83ms/frame, ~250ms total).
+      const sy = mob.name === 'Armored Brute' ? BRUTE_FH : 0;
+      const fi = Math.min(Math.floor(elapsed / 83), 2);
+      const sx = [8, 9, 10][fi] * BRUTE_FW;
+      drawMobSprite(ctx, mob, assetImages.brute, sx, BRUTE_FW, BRUTE_FH, false, BRUTE_DEST, 1, sy);
     } else {
       // Gnoll death: [8,9,10] @ 83ms, then hold frame 10 and fade alpha 1->0 over 3s.
       const fi = Math.min(Math.floor(elapsed / 83), 2);

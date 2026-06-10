@@ -110,6 +110,24 @@ export const PYLON_FW = 10;
 export const PYLON_FH = 20;
 export const PYLON_DEST = { dx: 6, dy: -8, dw: 20, dh: 40 };
 
+// Tengu (floor 10 boss): 14x16 frames (TenguSprite TextureFilm(texture, 14, 16)), tengu.png
+// is a single row (256x16 -> 18 frames). 16x16 cell, 2x scale -> dx=2, dy=0, dw=28, dh=32.
+export const TENGU_FW = 14;
+export const TENGU_FH = 16;
+export const TENGU_DEST = { dx: 2, dy: 0, dw: 28, dh: 32 };
+
+// DM-300 (floor 15 boss): 25x22 frames (DM300Sprite TextureFilm(texture, 25, 22)), dm300.png
+// is 256x64 = 2 rows of 10 columns (row 0 = normal, row 1 = supercharged/enraged).
+export const DM300_FW = 25;
+export const DM300_FH = 22;
+export const DM300_DEST = { dx: -9, dy: -6, dw: 50, dh: 44 };
+
+// Brute / Armored Brute: 12x16 frames (BruteSprite TextureFilm(texture, 12, 16)), brute.png
+// is 256x32 = 2 rows (Brute = row 0, Armored Brute = row 1).
+export const BRUTE_FW = 12;
+export const BRUTE_FH = 16;
+export const BRUTE_DEST = { dx: 4, dy: 0, dw: 24, dh: 32 };
+
 const isEntityMoving = (mob) =>
   mob.targetPos &&
   (Math.abs(mob.targetPos.x - mob.renderPos.x) > 0.05 ||
@@ -381,6 +399,67 @@ export const getPylonFrame = () => 0;
 // Statue: static frame when inactive, simple idle loop once activated.
 export const getStatueFrame = (mob, mobAnim, now) =>
   mob.activated ? [0, 1][Math.floor(now / 300) % 2] * STATUE_FW : 0;
+
+// Faithful to original SPD TenguSprite (14x16 frames, single row of tengu.png):
+//   idle    2fps loop  [0,0,0,1]
+//   run    15fps loop  [2,3,4,5,0]
+//   attack 15fps once  [6,7,7,0]    (death handled in draw/mobs.js)
+export const getTenguFrame = (mob, mobAnim, now) => {
+  const anim = mobAnim[mob.id] || {};
+  const isAttacking = anim.attackUntil && now < anim.attackUntil;
+  if (isAttacking) {
+    const elapsed = now - (anim.attackUntil - 200);
+    const fi = Math.min(Math.floor(elapsed / 67), 3);
+    return [6, 7, 7, 0][fi] * TENGU_FW;
+  }
+  if (isEntityMoving(mob)) {
+    return [2, 3, 4, 5, 0][Math.floor(now / 67) % 5] * TENGU_FW;
+  }
+  return [0, 0, 0, 1][Math.floor(now / 500) % 4] * TENGU_FW;
+};
+
+// Faithful to original SPD DM300Sprite (25x22 frames, dm300.png is 2 rows of 10 columns:
+// row 0 = normal, row 1 = supercharged/enraged):
+//   idle    10fps loop  [0,1]
+//   run     10fps loop  [0,2]
+//   attack  15fps once  [3,4,5]
+//   zap     15fps loop  [6,7,7,6]    (die handled in draw/mobs.js)
+export const getDM300Frame = (mob, mobAnim, now) => {
+  const anim = mobAnim[mob.id] || {};
+  const isAttacking = anim.attackUntil && now < anim.attackUntil;
+  const isZapping = anim.zapUntil && now < anim.zapUntil;
+  if (isAttacking) {
+    const elapsed = now - (anim.attackUntil - 200);
+    const fi = Math.min(Math.floor(elapsed / 67), 2);
+    return [3, 4, 5][fi] * DM300_FW;
+  }
+  if (isZapping) {
+    return [6, 7, 7, 6][Math.floor(now / 67) % 4] * DM300_FW;
+  }
+  if (isEntityMoving(mob)) {
+    return [0, 2][Math.floor(now / 100) % 2] * DM300_FW;
+  }
+  return [0, 1][Math.floor(now / 100) % 2] * DM300_FW;
+};
+
+// Faithful to original SPD BruteSprite (12x16 frames, brute.png is 2 rows: Brute = row 0,
+// Armored Brute = row 1):
+//   idle    2fps loop  [0,0,0,1,0,0,1,1]
+//   run    12fps loop  [4,5,6,7]
+//   attack 12fps once  [2,3,0]    (die handled in draw/mobs.js)
+export const getBruteFrame = (mob, mobAnim, now) => {
+  const anim = mobAnim[mob.id] || {};
+  const isAttacking = anim.attackUntil && now < anim.attackUntil;
+  if (isAttacking) {
+    const elapsed = now - (anim.attackUntil - 250);
+    const fi = Math.min(Math.floor(elapsed / 83), 2);
+    return [2, 3, 0][fi] * BRUTE_FW;
+  }
+  if (isEntityMoving(mob)) {
+    return [4, 5, 6, 7][Math.floor(now / 83) % 4] * BRUTE_FW;
+  }
+  return [0, 0, 0, 1, 0, 0, 1, 1][Math.floor(now / 500) % 8] * BRUTE_FW;
+};
 
 // dest (optional): in-tile placement {dx,dy,dw,dh} for sprites whose native frame is not a
 // full 32x32 tile (e.g. gnoll's 12x15 -> 24x30 @ +4,+2). Omitted = legacy full-tile draw.

@@ -45,6 +45,9 @@ import eyeSprite from '../assets/pixel-dungeon/sprites/eye.png';
 import ripperSprite from '../assets/pixel-dungeon/sprites/ripper.png';
 import spawnerSprite from '../assets/pixel-dungeon/sprites/spawner.png';
 import pylonSprite from '../assets/pixel-dungeon/sprites/pylon.png';
+import tenguSprite from '../assets/pixel-dungeon/sprites/tengu.png';
+import dm300Sprite from '../assets/pixel-dungeon/sprites/dm300.png';
+import bruteSprite from '../assets/pixel-dungeon/sprites/brute.png';
 
 export default function useAssetImages() {
   const [assetImages, setAssetImages] = useState({
@@ -92,6 +95,9 @@ export default function useAssetImages() {
     ripper: null,
     spawner: null,
     pylon: null,
+    tengu: null,
+    dm300: null,
+    brute: null,
   });
 
   useEffect(() => {
@@ -174,6 +180,9 @@ export default function useAssetImages() {
     loadImage(ripperSprite, 'ripper');
     loadImage(spawnerSprite, 'spawner');
     loadImage(pylonSprite, 'pylon');
+    loadImage(tenguSprite, 'tengu');
+    loadImage(dm300Sprite, 'dm300');
+    loadImage(bruteSprite, 'brute');
   }, []);
 
   return assetImages;
