@@ -254,7 +254,7 @@ def resolve_melee_attack(
     if prep is not None:
         effective_damage = int(effective_damage * prep["dmg_mult"])
     if getattr(attacker, "is_admin", False):
-        effective_damage *= 2
+        effective_damage *= 4
 
     hp_before = defender.hp
     actual_damage = defender.take_damage(max(0, effective_damage))
@@ -331,7 +331,7 @@ def resolve_ranged_attack(
     # Post-DR multipliers (ranged)
     effective_damage = _apply_post_dr_multipliers(raw_damage, attacker, defender, result, is_ranged=True)
     if getattr(attacker, "is_admin", False):
-        effective_damage *= 2
+        effective_damage *= 4
 
     hp_before = defender.hp
     actual_damage = defender.take_damage(max(0, effective_damage))

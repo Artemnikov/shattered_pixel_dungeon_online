@@ -10,8 +10,8 @@ def _kill_adjacent_mob(mob_exp):
     player = game.add_player(pid, "Tester")
     player.pos = Position(x=1, y=1)
     # Override weapon with a 50-damage weapon for one-shot kill
-    from app.engine.entities.base import Weapon
-    player.belongings.weapon = Weapon(
+    from app.engine.entities.base import KindOfWeapon
+    player.belongings.weapon = KindOfWeapon(
         id="big_sword", name="Big Sword", damage=50,
         strength_requirement=10, attack_cooldown=0.0,
     )

@@ -22,6 +22,12 @@ import chargeupSound from '../assets/pixel-dungeon/audio/chargeup.mp3';
 import burningSound from '../assets/pixel-dungeon/audio/burning.mp3';
 import bossSound from '../assets/pixel-dungeon/audio/boss.mp3';
 import alertSound from '../assets/pixel-dungeon/audio/alert.mp3';
+import unlockSound from '../assets/sounds/unlock.mp3';
+import readSound from '../assets/sounds/read.mp3';
+import raySound from '../assets/sounds/ray.mp3';
+import blastSound from '../assets/sounds/blast.mp3';
+import lightningSound from '../assets/sounds/lightning.mp3';
+import puffSound from '../assets/sounds/puff.mp3';
 import { effectiveSfxVolume } from '../menu/menuSettings';
 
 class AudioManager {
@@ -61,6 +67,12 @@ class AudioManager {
         this.loadSound('BURNING', burningSound);
         this.loadSound('BOSS', bossSound);
         this.loadSound('ALERT', alertSound);
+        this.loadSound('UNLOCK', unlockSound);
+        this.loadSound('READ', readSound);
+        this.loadSound('RAY', raySound);
+        this.loadSound('BLAST', blastSound);
+        this.loadSound('LIGHTNING', lightningSound);
+        this.loadSound('PUFF', puffSound);
 
         const doorSounds = import.meta.glob('../assets/sounds/door_open.mp3', { eager: true, query: '?url' });
         const doorUrl = doorSounds['../assets/sounds/door_open.mp3']?.default;

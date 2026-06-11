@@ -1,21 +1,40 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 ArtemNikov
+#
+# Adapted from Shattered Pixel Dungeon (C) 2014-2024 Evan Debenham
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
 """The per-tick game loop for GameInstance.
 
 Advances death processing, buff sync, player auto-movement, healing/regen,
-status effects (bleed/ooze), mob respawns, and difficulty-scaled mob AI.
+status effects (bleed/ooze), mob respawns, and delegates boss AI to sub-mixins.
 """
 
 import random
 import time
-from typing import List
+from typing import List, Optional, Type
 
 from app.engine.dungeon.generator import TileType
-from app.engine.entities.base import Difficulty, Effect, Faction, Player
+from app.engine.entities.base import Difficulty, Effect, Faction, Player, Position
 from app.engine.entities.buffs import process_buffs
 from app.engine.game.blobs import tick_foliage_blobs
-from app.engine.entities.mobs import Rat, Goo
+from app.engine.entities.mobs import (
+    Rat, Goo, DwarfKing,
+    YogDzewa, BurningFist, SoiledFist, RottingFist, RustedFist, BrightFist, DarkFist,
+    DemonSpawner, Pylon, DM300,
+    Wraith, TormentedSpirit, Bee, EbonyMimic, MobEntity,
+    Necromancer, Tengu,
+)
 from app.engine.game.constants import (
     AUTO_MOVE_INTERVAL,
-    GOO_WATER_HEAL_INTERVAL,
     HEAL_TICK_INTERVAL,
     NO_RESPAWN_FLOORS,
     OOZE_TICK_INTERVAL,
@@ -29,14 +48,56 @@ from app.engine.game.floor_state import FloorState
 from app.engine.systems.loot import roll_drops
 
 
+def _apply_floor_scaling(mob: MobEntity, floor_id: int) -> None:
+    level = floor_id
+    if isinstance(mob, TormentedSpirit):
+        attack = 10 + round(1.5 * level)
+        mob.floor_level = level
+        mob.attack_skill = attack
+        mob.defense_skill = attack * 5
+        mob.damage_min = 1 + (round(1.5 * level) // 2)
+        mob.damage_max = 2 + round(1.5 * level)
+    elif isinstance(mob, Wraith):
+        attack = 10 + level
+        mob.floor_level = level
+        mob.attack_skill = attack
+        mob.defense_skill = attack * 5
+        mob.damage_min = 1 + level // 2
+        mob.damage_max = 2 + level
+    elif isinstance(mob, Bee):
+        max_hp = (2 + level) * 4
+        mob.floor_level = level
+        mob.max_hp = max_hp
+        mob.hp = max_hp
+        mob.defense_skill = 9 + level
+        mob.attack_skill = mob.defense_skill
+        mob.damage_min = max(1, max_hp // 10)
+        mob.damage_max = max(1, max_hp // 4)
+    elif isinstance(mob, EbonyMimic):
+        max_hp = (1 + level) * 6
+        mob.floor_level = level
+        mob.max_hp = max_hp
+        mob.hp = max_hp
+        mob.defense_skill = 2 + level // 2
+        mob.attack_skill = 6 + level
+        mob.disguised = False
+
+
+def _universal_extra_pool(floor_id: int) -> List[Type[MobEntity]]:
+    extras: List[Type[MobEntity]] = [
+        TormentedSpirit if random.random() < 0.01 else Wraith,
+        Bee,
+    ]
+    if floor_id > 1:
+        extras.append(EbonyMimic)
+    return extras
+
+
 class TickMixin:
     def update_tick(self):
-        # Occupancy (and thus open doors / FOV sources) may have changed since
-        # the last tick; start each tick with fresh shadowcasting caches.
         self._invalidate_fov_cache()
 
-        # Process buffs on all entities (decrement timers, remove expired)
-        dt = 0.05  # assume 20Hz tick
+        dt = 0.05
         for player in self.players.values():
             removed = process_buffs(player.buffs, dt)
             if "invisibility" in removed or "shadows" in removed:
@@ -46,18 +107,17 @@ class TickMixin:
                 if mob.is_alive:
                     process_buffs(mob.buffs, dt)
 
-        # Tick foliage blob areas (grant Shadows buff to entities in foliage)
         blob_events = tick_foliage_blobs(self.floors, self.players)
         for ev in blob_events:
             self.add_event(ev["type"], ev["data"])
 
-        # Process any players that died since the last tick (from any source).
+        for floor_id, floor in self.floors.items():
+            self._tick_tengu_blobs(floor, floor_id)
+
         for player in self.players.values():
             if not player.is_alive and not player.death_processed:
                 self._kill_player(player, self._get_or_create_floor(player.floor_id), player.floor_id)
 
-        # Keep each player's active_effects list in sync with current state so the
-        # client can render the buff indicator (mirrors SPD's BuffIndicator).
         for player in self.players.values():
             self._sync_effects(player)
 
@@ -66,10 +126,6 @@ class TickMixin:
                 continue
 
             if player.move_intent:
-                # Held keyboard direction: step at the same cadence as tap-to-path so
-                # movement speed is server-authoritative (not tied to OS key-repeat).
-                # move_entity no-ops on walls and bump-attacks mobs, so holding into an
-                # obstacle is safe.
                 now = time.time()
                 if now - player.last_auto_move_time >= AUTO_MOVE_INTERVAL:
                     dx, dy = player.move_intent
@@ -81,9 +137,6 @@ class TickMixin:
                     dx, dy = player.path_queue.pop(0)
                     floor = self._get_or_create_floor(player.floor_id)
                     nx, ny = player.pos.x + dx, player.pos.y + dy
-                    # Stop (don't auto-attack/desync) if a live mob physically blocks the
-                    # next tile. Travel that leads away from enemies never hits this, so the
-                    # player can always walk away even with an enemy right next to them.
                     if any(m.is_alive and m.pos.x == nx and m.pos.y == ny for m in floor.mobs.values()):
                         player.path_queue = []
                     else:
@@ -94,7 +147,6 @@ class TickMixin:
             self._apply_room_heal_tick(player)
             self._apply_passive_regen(player)
 
-            # Warrior shield from Broken Seal (artifact slot)
             seal = player.belongings.artifact
             has_seal = seal is not None and getattr(seal, "kind", "") == "broken_seal"
             if player.belongings.armor is not None and has_seal:
@@ -104,16 +156,12 @@ class TickMixin:
                 else:
                     player.add_shield("warrior_shield", 2, priority=2, decay=600)
 
-            # Armor charge generation (2 per tick, cap 100)
             if player.armor_charge < 100:
                 player.armor_charge = min(100, player.armor_charge + 2)
 
-            # Rogue: cloak stealth drain/recharge, Preparation accrual, Momentum
-            # decay. `moved` is whether the player stepped this tick.
             moved = bool(player.move_intent or player.path_queue)
             self.tick_rogue(player, dt, moved=moved)
 
-            # Berserk decay (berserk_duration talent slows decay)
             if player.berserk_active:
                 hp_ratio = player.hp / max(player.get_total_max_hp(), 1)
                 decay = 0.05 * (hp_ratio ** 2)
@@ -125,7 +173,6 @@ class TickMixin:
                     player.berserk_active = False
                     player.berserk_cooldown = 200
 
-            # Combo timer decay (slow_combo talent slows decay)
             if player.combo_count > 0:
                 combo_dt = dt
                 sc = player.subclass_info.talent_info.level("slow_combo")
@@ -138,6 +185,8 @@ class TickMixin:
 
             if player.berserk_cooldown > 0:
                 player.berserk_cooldown -= 1
+
+            self._apply_hunger_tick(player)
 
             player.decay_shields()
             if player.has_fury:
@@ -153,26 +202,61 @@ class TickMixin:
 
             self._process_bleed_ooze(floor_id, active_players)
             self._process_respawns(floor_id, floor, active_players)
+            self._update_prison_boss(floor, floor_id)
 
             for mob in list(floor.mobs.values()):
                 if not mob.is_alive:
                     continue
 
-                # Player-faction summons (Rogue's Shadow Clone) fight FOR the
-                # party; they use a separate ally AI, not the hunt-the-player loop.
                 if mob.faction == Faction.PLAYER:
                     self._update_shadow_ally(mob, floor, floor_id)
                     continue
 
-                # Goo boss: water-heal, enrage and the pumped-up charge are handled
-                # specially. If it consumes the turn (charging/releasing) skip the
-                # generic AI; otherwise fall through so it still chases / melees.
                 if isinstance(mob, Goo):
                     if self._update_goo(mob, floor, floor_id):
                         continue
 
+                if isinstance(mob, DwarfKing):
+                    self._update_dwarf_king(mob, floor, floor_id)
+                    if "IMMOVABLE" in getattr(mob, "properties", []):
+                        continue
+
+                if isinstance(mob, YogDzewa):
+                    self._update_yog_dzewa(mob, floor, floor_id)
+                    continue
+
+                if isinstance(mob, DM300):
+                    if not mob.fight_started:
+                        target = self._find_nearest_player(mob.pos, floor_id)
+                        if target is not None:
+                            mob.fight_started = True
+                    if mob.supercharged:
+                        self._update_dm300_chase(mob, floor, floor_id)
+                        self._update_dm300_chase(mob, floor, floor_id)
+                        continue
+
+                if isinstance(mob, DemonSpawner):
+                    self._update_demon_spawner(mob, floor, floor_id)
+                    continue
+
+                if isinstance(mob, Pylon):
+                    self._update_pylon(mob, floor, floor_id)
+                    continue
+
+                if isinstance(mob, (BurningFist, SoiledFist, RottingFist,
+                                     RustedFist, BrightFist, DarkFist)):
+                    if self._update_yog_fist(mob, floor, floor_id):
+                        continue
+
+                if isinstance(mob, Necromancer):
+                    if self._update_necromancer(mob, floor, floor_id):
+                        continue
+
+                if isinstance(mob, Tengu):
+                    if self._update_tengu(mob, floor, floor_id):
+                        continue
+
                 target_player = self._find_nearest_player(mob.pos, floor_id)
-                # Fleeing mob: run away from nearest player, don't attack
                 if mob.ai_state == "fleeing":
                     if target_player:
                         dx = mob.pos.x - target_player.pos.x
@@ -188,17 +272,15 @@ class TickMixin:
                                 self.move_entity(mob.id, step[0], step[1])
                     continue
 
-                # Stealth/invisibility check: skip players who are invisible
                 if target_player and target_player.invisible > 0:
-                    # Also check if Shadows buff — if active, mob can't see the player at all
                     target_player = None
 
-                # Sleeping mob detection: only wake if detection check passes
-                if target_player and getattr(mob, "ai_state", "") in ("idle", "sleeping"):
+                if target_player and getattr(mob, "never_wakes", False):
+                    target_player = None
+                elif target_player and getattr(mob, "ai_state", "") in ("idle", "sleeping"):
                     dist = self._get_distance(mob.pos, target_player.pos)
                     stealth = target_player.get_stealth()
                     detect_chance = 1.0 / max(0.01, dist + stealth)
-                    # Silent Steps talent: cannot wake sleeping mobs from far away
                     subclass_info = getattr(target_player, "subclass_info", None)
                     if subclass_info:
                         silent_level = subclass_info.talent_info.level("silent_steps")
@@ -209,11 +291,9 @@ class TickMixin:
                     else:
                         mob.ai_state = "hunting"
 
-                # Wandering mob detection: easier to detect
                 if target_player and getattr(mob, "ai_state", "") == "wandering":
                     dist = self._get_distance(mob.pos, target_player.pos)
                     stealth = target_player.get_stealth()
-                    # Heightened Senses talent boosts stealth vs wandering mobs
                     subclass_info = getattr(target_player, "subclass_info", None)
                     if subclass_info:
                         stealth += subclass_info.talent_info.level("heightened_senses") * 2
@@ -223,19 +303,6 @@ class TickMixin:
                     else:
                         mob.ai_state = "hunting"
 
-                # SPD's Goo.notice() (called once Goo is in the hero's FOV) locks
-                # the boss room and starts the boss track. The generic wake-up
-                # check above is purely distance-based (no LOS), so it can flip
-                # Goo to "hunting" from clear across the level — gate the actual
-                # "fight start" announcement on mutual visibility so it lines up
-                # with the moment the hero can actually see Goo notice them.
-                # _is_in_los defaults to shadowcaster.MAX_DISTANCE (20) when no
-                # distance is given, which is *not* the hero's rendered sight
-                # radius (view_distance, normally 8) — across the open boss
-                # arena that let Goo count as "seen" while still off-screen, so
-                # the track started the moment the hero stepped into the room.
-                # Cap the check at the hero's actual view distance to match what
-                # they can see on screen.
                 if (isinstance(mob, Goo) and mob.ai_state == "hunting" and not mob.fight_started
                         and target_player is not None
                         and self._is_in_los(mob.pos, target_player.pos, floor_id=floor_id,
@@ -253,7 +320,6 @@ class TickMixin:
                         self.move_entity(mob.id, dx, dy)
                     continue
 
-                # First-strike windup
                 in_attack_range = target_player is not None and dist <= atk_range
                 if in_attack_range:
                     if not mob.engaged:
@@ -299,127 +365,7 @@ class TickMixin:
                         dx, dy = random.choice([(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)])
                         self.move_entity(mob.id, dx, dy)
 
-    # ------------------------------------------------------------------
-    # Goo boss AI (mirrors SPD Goo.act / doAttack / canAttack)
-    # ------------------------------------------------------------------
-    def _update_goo(self, goo: Goo, floor: FloorState, floor_id: int) -> bool:
-        """Drive Goo's boss-specific behaviour. Returns True when it consumed the
-        turn (charging or releasing) so the caller skips the generic chase/melee."""
-        self._goo_sync_enrage(goo, floor_id)
-        self._goo_water_heal(goo, floor, floor_id)
-
-        target = self._find_nearest_player(goo.pos, floor_id)
-        if target is None:
-            self._goo_cancel_charge(goo, floor_id)
-            return False
-
-        dist = self._get_distance(goo.pos, target.pos)
-        charge_ok = dist <= 2 and self._is_in_los(goo.pos, target.pos, floor_id=floor_id)
-        now = time.time()
-
-        # Already winding up: hold position and release on the next beat.
-        if goo.pumped_up >= 1:
-            if not charge_ok:
-                self._goo_cancel_charge(goo, floor_id)  # lost the line — resume chase
-                return False
-            if now - goo.last_attack_time >= goo.attack_cooldown:
-                goo.last_attack_time = now
-                goo.pumped_up += 1
-                if goo.pumped_up >= 2:
-                    self._goo_release_charge(goo, target, floor_id)
-                    goo.pumped_up = 0
-            return True
-
-        # Idle: sometimes begin a charge instead of a normal swing.
-        if charge_ok and now - goo.last_attack_time >= goo.attack_cooldown:
-            odds = 2 if goo.is_enraged() else 5  # 1/2 enraged, else 1/5 (SPD doAttack)
-            if random.randint(0, odds - 1) == 0:
-                goo.last_attack_time = now
-                goo.pumped_up = 1
-                self._goo_begin_charge(goo, target, floor_id)
-                return True
-        return False
-
-    def _goo_sync_enrage(self, goo: Goo, floor_id: int):
-        enraged = goo.is_enraged()
-        goo.attack_skill = 15 if enraged else 10
-        if enraged and not goo.enraged_announced:
-            goo.enraged_announced = True
-            self.add_event("GOO_ENRAGE", {"mob": goo.id}, floor_id=floor_id)
-
-    def _goo_water_heal(self, goo: Goo, floor: FloorState, floor_id: int):
-        if goo.flying or goo.hp >= goo.max_hp:
-            goo.heal_cooldown = 0
-            return
-        if floor.grid[goo.pos.y][goo.pos.x] != TileType.FLOOR_WATER:
-            goo.heal_cooldown = 0
-            return
-        if goo.heal_cooldown > 0:
-            goo.heal_cooldown -= 1
-            return
-        goo.hp = min(goo.max_hp, goo.hp + goo.heal_inc)
-        goo.heal_cooldown = GOO_WATER_HEAL_INTERVAL
-        self.add_event("HEAL", {"target": goo.id, "amount": goo.heal_inc,
-                                "x": goo.pos.x, "y": goo.pos.y}, floor_id=floor_id)
-
-    def _goo_threatened_tiles(self, goo: Goo, floor_id: int):
-        """Cells within charge range (<=2) of Goo with clear line of sight — the
-        tiles the telegraphed strike can reach (SPD GooSprite.updateEmitters)."""
-        tiles = []
-        for dy in range(-2, 3):
-            for dx in range(-2, 3):
-                if dx == 0 and dy == 0:
-                    continue
-                if abs(dx) + abs(dy) > 2:
-                    continue
-                x, y = goo.pos.x + dx, goo.pos.y + dy
-                from app.engine.entities.base import Position
-                if self._is_in_los(goo.pos, Position(x=x, y=y), floor_id=floor_id):
-                    tiles.append([x, y])
-        return tiles
-
-    def _goo_begin_charge(self, goo: Goo, target, floor_id: int):
-        tiles = self._goo_threatened_tiles(goo, floor_id)
-        self.add_event("GOO_CHARGE", {"mob": goo.id, "tiles": tiles,
-                                      "duration_ms": int(goo.attack_cooldown * 1000)},
-                       floor_id=floor_id)
-        self.add_event("PLAY_SOUND", {"sound": "CHARGEUP"}, floor_id=floor_id)
-
-    def _goo_cancel_charge(self, goo: Goo, floor_id: int):
-        if goo.pumped_up > 0:
-            goo.pumped_up = 0
-            self.add_event("GOO_CHARGE", {"mob": goo.id, "tiles": []}, floor_id=floor_id)
-
-    def _goo_release_charge(self, goo: Goo, target, floor_id: int):
-        # Clear the telegraph regardless of outcome.
-        self.add_event("GOO_CHARGE", {"mob": goo.id, "tiles": []}, floor_id=floor_id)
-        # Accuracy roll at double attack skill (SPD pumped attack).
-        acu = random.random() * goo.attack_skill * 2
-        df = random.random() * target.get_effective_defense_skill()
-        if acu < df:
-            self.add_event("ATTACK", {"source": goo.id, "target": target.id,
-                                      "damage": 0, "surprise": False}, floor_id=floor_id)
-            self.add_event("MISS", {"source": goo.id, "target": target.id,
-                                    "defense_verb": target.defense_verb}, floor_id=floor_id)
-            return
-        # 3x damage burst (SPD Goo.damageRoll pumped branch).
-        dmg_roll = random.randint(goo.get_damage_min() * 3, goo.get_damage_max() * 3)
-        dr = random.randint(target.get_dr_min(), target.get_dr_max())
-        dmg = target.take_damage(max(0, dmg_roll - dr))
-        self.add_event("ATTACK", {"source": goo.id, "target": target.id,
-                                  "damage": dmg, "surprise": False, "pumped": True}, floor_id=floor_id)
-        self.add_event("SCREEN_SHAKE", {"intensity": 3, "duration_ms": 200}, floor_id=floor_id)
-        self.add_event("PLAY_SOUND", {"sound": "BURNING"}, floor_id=floor_id)
-        if dmg > 0:
-            self.add_event("DAMAGE", {"target": target.id, "amount": dmg}, floor_id=floor_id)
-            self.add_event("PLAY_SOUND", {"sound": "HIT_BODY"}, floor_id=floor_id, source_player_id=target.id)
-            goo.attack_proc(target)  # ooze can still apply on the pumped hit
-        # Player death (grave drop + DEATH event) is finalised by the tick's
-        # _kill_player pass next tick, so we don't emit a DEATH event here.
-
     def _update_shadow_ally(self, ally, floor: FloorState, floor_id: int):
-        # Shadow Clone AI: attack the nearest enemy mob in sight, else regroup
-        # on its owner. Paced at the player step cadence so it doesn't zoom.
         move_times = getattr(self, "_ally_move_times", None)
         if move_times is None:
             move_times = self._ally_move_times = {}
@@ -439,7 +385,6 @@ class TickMixin:
         if target is not None:
             move_times[ally.id] = now
             if best <= 1:
-                # Adjacent: bump-attack (move_entity resolves the ally->enemy hit).
                 ally.last_attack_time = now - ally.attack_cooldown
                 adx = (target.pos.x > ally.pos.x) - (target.pos.x < ally.pos.x)
                 ady = (target.pos.y > ally.pos.y) - (target.pos.y < ally.pos.y)
@@ -450,7 +395,6 @@ class TickMixin:
                     self.move_entity(ally.id, step[0], step[1])
             return
 
-        # No enemy: follow the owner.
         owner = self.players.get(getattr(ally, "owner_id", None) or "")
         if owner is not None and owner.floor_id == floor_id:
             if self._get_distance(ally.pos, owner.pos) > 1:
@@ -470,8 +414,6 @@ class TickMixin:
                 if player.bleed_turns <= 0:
                     player.bleed_amount = 0
 
-            # Caustic ooze: ~1 dmg per in-game turn, washed off by stepping into
-            # water (SPD Ooze.act). Throttled so it ticks once per "turn".
             if player.ooze_amount > 0:
                 if floor.grid[player.pos.y][player.pos.x] == TileType.FLOOR_WATER:
                     player.ooze_amount = 0
@@ -501,8 +443,6 @@ class TickMixin:
                             players=list(self._players_on_floor(floor_id)),
                         )
                         self.add_event("DEATH", {"target": mob.id}, floor_id=floor_id)
-                        # Boss key + loot must drop even on a bleed kill, else the
-                        # sealed arena exit can never be opened.
                         self.handle_mob_death(mob, floor, floor_id)
                         for item in roll_drops(mob, self.drop_counters, mob.pos.x, mob.pos.y):
                             floor.items[item.id] = item
@@ -520,13 +460,18 @@ class TickMixin:
         if floor.respawn_counter < RESPAWN_TURNS:
             return
         floor.respawn_counter = 0
-        if floor_id <= SEWERS_MAX_FLOOR:
+        universal_extra = random.random() < 0.01
+        if universal_extra:
+            cls = random.choice(_universal_extra_pool(floor_id))
+        elif floor_id <= SEWERS_MAX_FLOOR:
             rotation = self._get_sewers_rotation(floor_id)
+            cls = random.choice(rotation) if rotation else Rat
         elif floor_id <= PRISON_MAX_FLOOR:
             rotation = self._get_prison_rotation(floor_id)
+            cls = random.choice(rotation) if rotation else Rat
         else:
             rotation = self._get_sewers_rotation(floor_id)
-        cls = random.choice(rotation) if rotation else Rat
+            cls = random.choice(rotation) if rotation else Rat
         floor_tiles = [
             (x, y) for y in range(floor.height) for x in range(floor.width)
             if floor.grid[y][x] in [TileType.FLOOR, TileType.FLOOR_WOOD, TileType.FLOOR_WATER, TileType.FLOOR_COBBLE, TileType.FLOOR_GRASS]
@@ -537,9 +482,12 @@ class TickMixin:
             return
         x, y = random.choice(floor_tiles)
         mob = self._spawn_mob_at(cls, x, y)
+        if universal_extra:
+            _apply_floor_scaling(mob, floor_id)
         floor.mobs[mob.id] = mob
 
     def _sync_effects(self, player: Player):
+        from app.engine.entities.buffs import has_buff
         existing = {e.key: e for e in player.active_effects}
         effects = []
         if player.heal_left > 0:
@@ -554,7 +502,6 @@ class TickMixin:
                 key="berserk", name="Berserk", icon=13,
                 remaining=player.berserk_power, duration=1.0,
             ))
-        from app.engine.entities.buffs import has_buff
         if has_buff(player.buffs, "endure"):
             effects.append(Effect(
                 key="endure", name="Endure", icon=6,
@@ -568,9 +515,6 @@ class TickMixin:
         player.active_effects = effects
 
     def _apply_heal_tick(self, player: Player):
-        # Mirrors Healing.act() from the original game: heal a decaying chunk of the
-        # remaining pool each application, emitting a HEAL event for the floating
-        # number + sparkle particles on the client.
         if player.heal_left <= 0:
             return
 
@@ -599,15 +543,12 @@ class TickMixin:
             player.heal_flat_per_tick = 0.0
 
     def _apply_room_heal_tick(self, player: Player):
-        # Passive sanctuary healing: standing in a floor's entrance (up-stairs) room
-        # restores ROOM_HEAL_AMOUNT HP per second, reusing the same green HEAL event
-        # as health potions for the floating number + sparkles on the client.
         floor = self.floors.get(player.floor_id)
         if floor is None or not floor.rooms:
             return
 
         if not self._is_in_entrance_room(floor, player.pos.x, player.pos.y):
-            player.room_heal_cooldown = 0  # next heal fires immediately on re-entry
+            player.room_heal_cooldown = 0
             return
 
         max_hp = player.get_total_max_hp()
@@ -627,6 +568,18 @@ class TickMixin:
             {"target": player.id, "amount": int(amt), "x": player.pos.x, "y": player.pos.y},
             floor_id=player.floor_id,
         )
+
+    _HUNGER_RATE = 1.0 / 20.0
+    _HUNGER_HUNGRY = 300.0
+    _HUNGER_STARVING = 450.0
+
+    def _apply_hunger_tick(self, player: Player):
+        if player.is_downed:
+            return
+        player.hunger = min(self._HUNGER_STARVING + 50, player.hunger + self._HUNGER_RATE)
+        if player.hunger >= self._HUNGER_STARVING:
+            dmg = max(1, player.max_hp // 100)
+            player.take_damage(dmg)
 
     def _apply_passive_regen(self, player: Player):
         floor = self.floors.get(player.floor_id)

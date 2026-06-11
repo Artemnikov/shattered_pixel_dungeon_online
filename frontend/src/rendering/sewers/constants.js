@@ -1,3 +1,17 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 ArtemNikov
+//
+// Adapted from Shattered Pixel Dungeon (C) 2014-2024 Evan Debenham
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU General Public License for more details.
+//
 export const SOURCE_TILE_SIZE = 16;
 export const DEST_TILE_SIZE = 32;
 export const ATLAS_COLUMNS = 16;
@@ -17,7 +31,7 @@ export const BACKEND_TILE = {
   WALL: { id: 1, atlasIndex: atlasIndex(0, 5), seethrough: false },
   FLOOR: { id: 2, atlasIndex: null, seethrough: true },
   DOOR: { id: 3, atlasIndex: atlasIndex(8, 3), seethrough: false },
-  OPEN_DOOR: { id: 3, atlasIndex: atlasIndex(9, 3), seethrough: true },
+  OPEN_DOOR: { id: 22, atlasIndex: atlasIndex(9, 3), seethrough: true },
   STAIRS_UP: { id: 4, atlasIndex: atlasIndex(0, 1), seethrough: true },
   STAIRS_DOWN: { id: 5, atlasIndex: atlasIndex(1, 1), seethrough: true },
   FLOOR_WOOD: { id: 6, atlasIndex: atlasIndex(4, 0), seethrough: true },
@@ -61,13 +75,11 @@ export const TERRAIN_INDEX = {
     br: atlasIndex(4, 2),
   },
 
-  WATER_CENTER: [atlasIndex(3, 7), atlasIndex(11, 3)],
-  WATER_EDGE: {
-    tl: atlasIndex(8, 7),
-    tr: atlasIndex(9, 7),
-    bl: atlasIndex(10, 7),
-    br: atlasIndex(11, 7),
-  },
+  // SPD DungeonTileSheet: WATER = xy(1,3) (16-slot block). Tile is picked by a
+  // 4-bit mask of the 4 cardinal neighbours: +1 top, +2 right, +4 bottom,
+  // +8 left if that neighbour is "ground-like" (stitcheable). Mask 0 = pure
+  // water (no overlay needed).
+  WATER_STITCH_BASE: atlasIndex(0, 2),
 };
 
 /*
@@ -135,6 +147,10 @@ export const WALL_INDEX = {
   DOOR_SIDEWAYS: atlasIndex(3, 14),
   DOOR_SIDEWAYS_LOCKED: atlasIndex(4, 14),
 
+  RAISED_DOOR: atlasIndex(0, 7),
+  RAISED_DOOR_OPEN: atlasIndex(1, 7),
+  RAISED_DOOR_LOCKED: atlasIndex(2, 7),
+  RAISED_DOOR_CRYSTAL: atlasIndex(3, 7),
   RAISED_DOOR_SIDEWAYS: atlasIndex(4, 7),
 };
 
@@ -187,9 +203,25 @@ export const isWallStitcheable = (tile) =>
   tile === BACKEND_TILE.SECRET_DOOR.id;
 
 export const isDoorTile = (tile) =>
-  tile === BACKEND_TILE.DOOR.id || tile === BACKEND_TILE.LOCKED_DOOR.id;
+  tile === BACKEND_TILE.DOOR.id ||
+  tile === BACKEND_TILE.OPEN_DOOR.id ||
+  tile === BACKEND_TILE.LOCKED_DOOR.id;
+
+// A door cell is "sideways" (set into a vertical wall, body sprite facing
+// the player from the side) only when the cell above is a wall AND at least
+// one side is open. A door walled in on both sides too (e.g. the Goo boss
+// arena's locked-exit pedestal alcove) is front-facing despite the wall
+// above it. `getTile(grid, x, y)` must handle out-of-bounds cells.
+export const isSidewaysDoor = (grid, x, y, getTile) =>
+  isWallStitcheable(getTile(grid, x, y - 1)) &&
+  (!isWallStitcheable(getTile(grid, x - 1, y)) || !isWallStitcheable(getTile(grid, x + 1, y)));
 
 export const isWaterTile = (tile) => tile === BACKEND_TILE.FLOOR_WATER.id;
+
+// Mirrors SPD's DungeonTileSheet.waterStitcheable: anything except water and
+// walls counts as "ground" that water shores stitch against (including
+// VOID/out-of-bounds, matching SPD's EMPTY being stitcheable).
+export const isWaterStitcheable = (tile) => !isWaterTile(tile) && !isWallTile(tile);
 export const isGrassTile = (tile) =>
   tile === BACKEND_TILE.FLOOR_GRASS.id ||
   tile === BACKEND_TILE.HIGH_GRASS.id ||

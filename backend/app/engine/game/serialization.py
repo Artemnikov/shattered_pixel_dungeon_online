@@ -1,3 +1,17 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 ArtemNikov
+#
+# Adapted from Shattered Pixel Dungeon (C) 2014-2024 Evan Debenham
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
 """Client state serialization and per-run identification masking.
 
 Builds the per-player game-state snapshot sent over the WebSocket, and scrambles
@@ -121,6 +135,8 @@ class SerializationMixin:
             process(it)
         process(d.get("equipped_weapon"))
         process(d.get("equipped_wearable"))
+        hunger = d.get("hunger", 0.0)
+        d["hunger_pct"] = round(min(1.0, hunger / 450.0), 3)
         return d
 
     def _serialize_floor_item(self, item) -> dict:

@@ -1,7 +1,21 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 ArtemNikov
+#
+# Adapted from Shattered Pixel Dungeon (C) 2014-2024 Evan Debenham
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
 """Floor generation and content spawning for GameInstance.
 
-Generates each depth's layout (sewers / boss / legacy), then populates it with
-mobs (rotation + rare alts + bosses), floor keys, and random loot.
+Generates each depth's layout using SPD-parity generation (sewers floors 1-5)
+or the legacy generator (prison+), then populates it with mobs, items, traps.
 """
 
 import random
@@ -10,6 +24,7 @@ import zlib
 from typing import List, Tuple, Type
 
 from app.engine.dungeon.generator import DungeonGenerator, SewersProfile, TileType
+from app.engine.dungeon.dungeon_seed import seed_for_depth
 from app.engine.entities.base import (
     Armor,
     Boomerang,
@@ -17,10 +32,37 @@ from app.engine.entities.base import (
     EntityType,
     Faction,
     HealthPotion,
+    RevivingPotion,
+    FuryPotion,
+    PotionOfStrength,
+    PotionOfHaste,
+    PotionOfInvisibility,
+    PotionOfLevitation,
+    PotionOfMindVision,
+    PotionOfFrost,
+    PotionOfLiquidFlame,
+    PotionOfToxicGas,
+    PotionOfParalyticGas,
+    PotionOfPurity,
+    PotionOfExperience,
+    ScrollOfRage,
+    ScrollOfUpgrade,
+    ScrollOfIdentify,
+    ScrollOfMagicMapping,
+    ScrollOfTeleportation,
+    ScrollOfRemoveCurse,
+    ScrollOfRecharging,
+    ScrollOfLullaby,
+    ScrollOfTerror,
+    ScrollOfMirrorImage,
+    ScrollOfRetribution,
+    ScrollOfTransmutation,
+    SmallRation,
+    Ration,
+    Pasty,
     Key,
     Mob as MobEntity,
     Position,
-    RevivingPotion,
     Staff,
     Stone,
     ThrowableDagger,
@@ -34,6 +76,7 @@ from app.engine.entities.mobs import (
 )
 from app.engine.game.constants import MAP_HEIGHT, MAP_WIDTH, MAX_FLOOR_ID, SEWERS_MAX_FLOOR, PRISON_MAX_FLOOR
 from app.engine.game.floor_state import FloorState
+from app.engine.game.spd_adapter import gen_level_to_floor_state
 
 
 class GenerationMixin:
@@ -41,11 +84,32 @@ class GenerationMixin:
         depth = max(1, min(MAX_FLOOR_ID, depth))
         self.depth = depth
 
-        # Deterministic per-(game_id, depth) seed so reconnects/reloads see the
-        # same layout. Mirrors SPD's Dungeon.seedCurDepth(). Using CRC32
-        # instead of Python's built-in hash() because hash() is randomised
-        # per-process (PYTHONHASHSEED) — cross-process stability matters for
-        # server restarts during a live game session.
+        if depth <= 25:
+            floor = self._generate_floor_spd(depth)
+        else:
+            floor = self._generate_floor_legacy(depth)
+
+        self.floors[depth] = floor
+        return floor
+
+    def _generate_floor_spd(self, depth: int) -> FloorState:
+        from app.engine.dungeon.spd_random import SPDRandom
+        from app.engine.dungeon.spd_levelgen.boss_level import build_boss_floor
+        from app.engine.dungeon.spd_levelgen.regular_level import build_floor
+        from app.engine.dungeon.spd_levelgen.run_state import is_boss_level
+
+        floor_seed = seed_for_depth(self.master_seed, depth, 0)
+        rng = SPDRandom()
+        rng.push_generator(floor_seed)
+        if is_boss_level(depth):
+            gen_level, _rooms = build_boss_floor(rng, depth, self.run_state)
+        else:
+            gen_level, _rooms = build_floor(rng, depth, self.run_state)
+        rng.pop_generator()
+
+        return gen_level_to_floor_state(gen_level, depth)
+
+    def _generate_floor_legacy(self, depth: int) -> FloorState:
         floor_seed = zlib.crc32(f"{self.game_id}:{depth}".encode("utf-8"))
         generator = DungeonGenerator(MAP_WIDTH, MAP_HEIGHT, seed=floor_seed)
         floor: FloorState
@@ -104,7 +168,6 @@ class GenerationMixin:
             )
 
         floor.rebuild_flags()
-        self.floors[depth] = floor
         self._spawn_content(floor)
         return floor
 
@@ -238,6 +301,19 @@ class GenerationMixin:
                 mob = self._spawn_mob_at(cls, x, y)
                 floor.mobs[mob.id] = mob
 
+        _ALL_POTIONS = [
+            HealthPotion, RevivingPotion, FuryPotion,
+            PotionOfStrength, PotionOfHaste, PotionOfInvisibility, PotionOfLevitation,
+            PotionOfMindVision, PotionOfFrost, PotionOfLiquidFlame, PotionOfToxicGas,
+            PotionOfParalyticGas, PotionOfPurity, PotionOfExperience,
+        ]
+        _ALL_SCROLLS = [
+            ScrollOfRage, ScrollOfUpgrade, ScrollOfIdentify, ScrollOfMagicMapping,
+            ScrollOfTeleportation, ScrollOfRemoveCurse, ScrollOfRecharging, ScrollOfLullaby,
+            ScrollOfTerror, ScrollOfMirrorImage, ScrollOfRetribution, ScrollOfTransmutation,
+        ]
+        _ALL_FOOD = [SmallRation, Ration, Ration, Pasty]
+
         num_items = 4 + random.randint(0, 3)
         for _ in range(num_items):
             if not floor_tiles:
@@ -274,7 +350,7 @@ class GenerationMixin:
                     magic_damage=2 + random.randint(0, 2),
                     strength_requirement=10,
                 )
-            elif rand < 0.7:
+            elif rand < 0.6:
                 armor_tiers = [
                     ("Cloth Armor", 1, 10),
                     ("Leather Armor", 2, 12),
@@ -290,7 +366,7 @@ class GenerationMixin:
                     pos=Position(x=x, y=y),
                     strength_requirement=str_req,
                 )
-            elif rand < 0.8:
+            elif rand < 0.65:
                 t_rand = random.random()
                 if t_rand < 0.5:
                     floor.items[item_id] = Stone(id=item_id, pos=Position(x=x, y=y), damage=1, range=5)
@@ -298,10 +374,15 @@ class GenerationMixin:
                     floor.items[item_id] = ThrowableDagger(id=item_id, pos=Position(x=x, y=y), damage=4, range=4)
                 else:
                     floor.items[item_id] = Boomerang(id=item_id, pos=Position(x=x, y=y), damage=3, range=6)
-            elif rand < 0.9:
-                floor.items[item_id] = HealthPotion(id=item_id, pos=Position(x=x, y=y))
+            elif rand < 0.80:
+                cls = random.choice(_ALL_POTIONS)
+                floor.items[item_id] = cls(id=item_id, pos=Position(x=x, y=y))
+            elif rand < 0.93:
+                cls = random.choice(_ALL_SCROLLS)
+                floor.items[item_id] = cls(id=item_id, pos=Position(x=x, y=y))
             else:
-                floor.items[item_id] = RevivingPotion(id=item_id, pos=Position(x=x, y=y))
+                cls = random.choice(_ALL_FOOD)
+                floor.items[item_id] = cls(id=item_id, pos=Position(x=x, y=y))
 
     def _spawn_floor_keys(self, floor: FloorState):
         for key_id, (x, y) in floor.key_spawns.items():
@@ -314,10 +395,9 @@ class GenerationMixin:
             )
 
     def _spawn_boss(self, floor: FloorState, floor_tiles: List[Tuple[int, int]]):
-        if floor.floor_id == 5:
-            x, y = floor.rooms[1].center
-            mob = Goo(id=str(uuid.uuid4()), pos=Position(x=x, y=y))
-            floor.mobs[mob.id] = mob
+        if floor.floor_id in (5, 10, 15, 20, 25):
+            # Bosses for these floors are placed by the boss floor builder (spd_adapter)
+            return
         else:
             if not floor_tiles:
                 return

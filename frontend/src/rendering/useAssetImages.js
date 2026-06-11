@@ -29,6 +29,26 @@ import thiefSprite from '../assets/pixel-dungeon/sprites/thief.png';
 import dm100Sprite from '../assets/pixel-dungeon/sprites/dm100.png';
 import guardSprite from '../assets/pixel-dungeon/sprites/guard.png';
 import necromancerSprite from '../assets/pixel-dungeon/sprites/necromancer.png';
+import wraithSprite from '../assets/pixel-dungeon/sprites/wraith.png';
+import piranhaSprite from '../assets/pixel-dungeon/sprites/piranha.png';
+import mimicSprite from '../assets/pixel-dungeon/sprites/mimic.png';
+import statueSprite from '../assets/pixel-dungeon/sprites/statue.png';
+import beeSprite from '../assets/pixel-dungeon/sprites/bee.png';
+import kingSprite from '../assets/pixel-dungeon/sprites/king.png';
+import ghoulSprite from '../assets/pixel-dungeon/sprites/ghoul.png';
+import monkSprite from '../assets/pixel-dungeon/sprites/monk.png';
+import warlockSprite from '../assets/pixel-dungeon/sprites/warlock.png';
+import golemSprite from '../assets/pixel-dungeon/sprites/golem.png';
+import yogSprite from '../assets/pixel-dungeon/sprites/yog.png';
+import fistsSprite from '../assets/pixel-dungeon/sprites/yog_fists.png';
+import eyeSprite from '../assets/pixel-dungeon/sprites/eye.png';
+import ripperSprite from '../assets/pixel-dungeon/sprites/ripper.png';
+import spawnerSprite from '../assets/pixel-dungeon/sprites/spawner.png';
+import pylonSprite from '../assets/pixel-dungeon/sprites/pylon.png';
+import tenguSprite from '../assets/pixel-dungeon/sprites/tengu.png';
+import dm300Sprite from '../assets/pixel-dungeon/sprites/dm300.png';
+import bruteSprite from '../assets/pixel-dungeon/sprites/brute.png';
+import swarmSprite from '../assets/pixel-dungeon/sprites/swarm.png';
 
 export default function useAssetImages() {
   const [assetImages, setAssetImages] = useState({
@@ -60,6 +80,26 @@ export default function useAssetImages() {
     dm100: null,
     guard: null,
     necromancer: null,
+    wraith: null,
+    piranha: null,
+    mimic: null,
+    statue: null,
+    bee: null,
+    king: null,
+    ghoul: null,
+    monk: null,
+    warlock: null,
+    golem: null,
+    yog: null,
+    fists: null,
+    eye: null,
+    ripper: null,
+    spawner: null,
+    pylon: null,
+    tengu: null,
+    dm300: null,
+    brute: null,
+    swarm: null,
   });
 
   useEffect(() => {
@@ -126,6 +166,26 @@ export default function useAssetImages() {
     loadImage(dm100Sprite, 'dm100');
     loadImage(guardSprite, 'guard');
     loadImage(necromancerSprite, 'necromancer');
+    loadImage(wraithSprite, 'wraith');
+    loadImage(piranhaSprite, 'piranha');
+    loadImage(mimicSprite, 'mimic');
+    loadImage(statueSprite, 'statue');
+    loadImage(beeSprite, 'bee');
+    loadImage(kingSprite, 'king');
+    loadImage(ghoulSprite, 'ghoul');
+    loadImage(monkSprite, 'monk');
+    loadImage(warlockSprite, 'warlock');
+    loadImage(golemSprite, 'golem');
+    loadImage(yogSprite, 'yog');
+    loadImage(fistsSprite, 'fists');
+    loadImage(eyeSprite, 'eye');
+    loadImage(ripperSprite, 'ripper');
+    loadImage(spawnerSprite, 'spawner');
+    loadImage(pylonSprite, 'pylon');
+    loadImage(tenguSprite, 'tengu');
+    loadImage(dm300Sprite, 'dm300');
+    loadImage(bruteSprite, 'brute');
+    loadImage(swarmSprite, 'swarm');
   }, []);
 
   return assetImages;

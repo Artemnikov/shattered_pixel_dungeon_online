@@ -8,7 +8,6 @@ import cursorControllerUrl from './assets/cursors/cursor_controller.png';
 
 import { TILE_SIZE } from './constants';
 import useAudioUnlock from './audio/useAudioUnlock';
-import AudioManager from './audio/AudioManager';
 import useMusicByDepth from './audio/useMusicByDepth';
 import useAssetImages from './rendering/useAssetImages';
 import useGameRenderer from './rendering/useGameRenderer';
@@ -301,8 +300,9 @@ function App() {
             ...prev,
             [tierKey]: Math.max(0, (prev[tierKey] || 0) - 1),
           }));
+          // TalentButton's burst effect plays the LEVELUP sound when
+          // upgradedTalentId matches it — don't double it here.
           setUpgradedTalentId(talent);
-          AudioManager.play('LEVELUP', 1.2);
           return;
         }
       }
@@ -710,8 +710,8 @@ function App() {
   if (gameState === 'WELCOME') {
     return (
       <>
-        <title>SPD Online — Play Shattered Pixel Dungeon in your browser</title>
-        <meta name="description" content="Play the roguelike dungeon crawler Shattered Pixel Dungeon online, for free in your browser. Multiplayer real-time, no download required." />
+        <title>Online Pixel Dungeon — multiplayer roguelike</title>
+        <meta name="description" content="A multiplayer roguelike dungeon crawler based on Shattered Pixel Dungeon. Play online for free in your browser, no download required." />
         <div className={isDesktop ? 'desktop-mode' : ''}
              style={isDesktop ? { '--cursor-mouse': `url(${cursorMouseUrl}) 1 1, pointer` } : {}}>
           <MainMenu onStart={() => setGameState('SELECT')} />
@@ -723,7 +723,7 @@ function App() {
   if (gameState === 'SELECT') {
     return (
       <>
-        <title>SPD Online — Choose your class</title>
+        <title>Online Pixel Dungeon — Choose your class</title>
         <meta name="description" content="Select your hero class — Warrior, Mage, Rogue, or Archer — and descend into the dungeon." />
         <div className={isDesktop ? 'desktop-mode' : ''}
              style={isDesktop ? { '--cursor-mouse': `url(${cursorMouseUrl}) 1 1, pointer` } : {}}>
@@ -759,8 +759,8 @@ function App() {
 
   return (
     <>
-      <title>SPD Online — Floor {depth}</title>
-      <meta name="description" content={`Playing SPD Online — exploring floor ${depth} of the dungeon.`} />
+      <title>Online Pixel Dungeon — Floor {depth}</title>
+      <meta name="description" content={`Playing Online Pixel Dungeon — exploring floor ${depth} of the dungeon.`} />
       <div className={`game-container ${isDesktop ? 'desktop-mode' : ''}`}
            style={isDesktop ? { '--cursor-mouse': `url(${cursorMouseUrl}) 1 1, pointer` } : {}}>
       <LoadingOverlay visible={grid.length === 0} />

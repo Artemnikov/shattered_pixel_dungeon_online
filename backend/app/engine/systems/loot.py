@@ -15,6 +15,7 @@ from app.engine.entities.base import (
     Armor,
     Potion,
     Key,
+    TenguMask,
 )
 
 TIER2_WEAPONS = [
@@ -92,4 +93,6 @@ def _make_item(item_kind: str) -> Optional[ItemBase]:
         return Potion(name="Potion", effect=effect)
     elif item_kind == "goo_blob":
         return ItemBase(name="Goo Blob", type="scenery")
+    elif item_kind == "tengu_mask":
+        return TenguMask(name="Tengu's Mask")
     return None

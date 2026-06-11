@@ -30,9 +30,56 @@ class FloorState:
     mob_limit: int = 0
     plants: Dict[Tuple[int, int], Any] = field(default_factory=dict)
     blob_areas: Dict[str, Any] = field(default_factory=dict)
+    dk_summon_spots: List[Tuple[int, int]] = field(default_factory=list)
+    yog_pos: Optional[Tuple[int, int]] = None
+
+    # PrisonBossLevel (floor 10, Tengu) state machine -- mirrors
+    # PrisonBossLevel.State (START/FIGHT_START/FIGHT_PAUSE/FIGHT_ARENA/WON)
+    # and the storedItems list preserved across map rebuilds.
+    tengu_state: str = "START"
+    map_version: int = 0
+    prison_stored_items: List[Item] = field(default_factory=list)
 
     def rebuild_flags(self) -> None:
         self.flags = build_flag_maps(self.grid)
+
+    def update_open_space(self) -> None:
+        """Recompute open_space in-place (lighter than full rebuild_flags).
+        Call after door open/close or similar single-cell solid changes."""
+        if self.flags is None:
+            self.rebuild_flags()
+            return
+        w, h = self.width, self.height
+        solid = self.flags.solid
+        CIRCLE8 = (
+            (0, -1), (1, -1), (1, 0), (1, 1),
+            (0, 1), (-1, 1), (-1, 0), (-1, -1),
+        )
+        for y in range(h):
+            for x in range(w):
+                if solid[y][x]:
+                    self.flags.open_space[y][x] = False
+                    continue
+                found = False
+                for j in range(1, 8, 2):
+                    dcx, dcy = CIRCLE8[j]
+                    cx, cy = x + dcx, y + dcy
+                    if not (0 <= cx < w and 0 <= cy < h) or solid[cy][cx]:
+                        continue
+                    dax, day = CIRCLE8[(j + 1) % 8]
+                    dbx, dby = CIRCLE8[(j + 2) % 8]
+                    ax, ay = x + dax, y + day
+                    bx, by = x + dbx, y + dby
+                    if not (0 <= ax < w and 0 <= ay < h):
+                        continue
+                    if not (0 <= bx < w and 0 <= by < h):
+                        continue
+                    if not solid[ay][ax] and not solid[by][bx]:
+                        self.flags.open_space[y][x] = True
+                        found = True
+                        break
+                if not found:
+                    self.flags.open_space[y][x] = False
 
     @property
     def width(self) -> int:

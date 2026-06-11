@@ -1,3 +1,17 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 ArtemNikov
+#
+# Adapted from Shattered Pixel Dungeon (C) 2014-2024 Evan Debenham
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
 """Vision / line-of-sight / pathfinding for GameInstance.
 
 Shadowcasting-based FOV (mirrors Shattered Pixel Dungeon), per-tick caches, and
@@ -31,33 +45,12 @@ class VisionMixin:
     def _get_distance(self, p1: Position, p2: Position) -> int:
         return abs(p1.x - p2.x) + abs(p1.y - p2.y)
 
-    def _is_door_open(self, floor: FloorState, x: int, y: int) -> bool:
-        for player in self.players.values():
-            if player.floor_id == floor.floor_id and player.pos.x == x and player.pos.y == y:
-                return True
-        for mob in floor.mobs.values():
-            if mob.is_alive and mob.pos.x == x and mob.pos.y == y:
-                return True
-        for item in floor.items.values():
-            if item.pos and item.pos.x == x and item.pos.y == y:
-                return True
-        return False
-
     def _get_open_doors(self, floor: FloorState):
-        occupied = set()
-        for player in self.players.values():
-            if player.floor_id == floor.floor_id:
-                occupied.add((player.pos.x, player.pos.y))
-        for mob in floor.mobs.values():
-            if mob.is_alive:
-                occupied.add((mob.pos.x, mob.pos.y))
-        for item in floor.items.values():
-            if item.pos:
-                occupied.add((item.pos.x, item.pos.y))
         return [
-            [x, y] for x, y in occupied
-            if 0 <= x < floor.width and 0 <= y < floor.height
-            and floor.grid[y][x] == TileType.DOOR
+            [x, y]
+            for y in range(floor.height)
+            for x in range(floor.width)
+            if floor.grid[y][x] == TileType.OPEN_DOOR
         ]
 
     def _invalidate_fov_cache(self):
@@ -82,9 +75,9 @@ class VisionMixin:
         """Flat (y*w+x) LOS-blocking map with open doors cleared and Warden
         exception for high grass.
 
-        SPD bakes door open-state into losBlocking; here doors are statically
-        LOS-blocking in flags and "open" when occupied (_is_door_open), so we
-        derive the effective map per tick and memoise it.
+        SPD bakes door open-state into losBlocking; here DOOR tiles are always
+        LOS-blocking and OPEN_DOOR tiles (22) are not, so we just read the flag
+        map directly without any occupancy-based override.
 
         If `viewer_id` is a Warden, HIGH_GRASS and FURROWED_GRASS cells do not
         block LOS."""
@@ -112,8 +105,6 @@ class VisionMixin:
             base = y * w
             for x in range(w):
                 block = row[x] if row else True
-                if block and grid_row[x] == TileType.DOOR and self._is_door_open(floor, x, y):
-                    block = False
                 # Warden sees through high/furrowed grass
                 if block and is_warden and grid_row[x] in (TileType.HIGH_GRASS, TileType.FURROWED_GRASS):
                     block = False

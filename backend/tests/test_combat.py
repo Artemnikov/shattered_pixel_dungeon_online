@@ -1,6 +1,6 @@
 import pytest
 from app.engine.manager import GameInstance
-from app.engine.entities.base import Mob as MobEntity, Player, Position, Weapon
+from app.engine.entities.base import KindOfWeapon, Mob as MobEntity, Player, Position
 
 
 def test_combat_logic():
@@ -15,7 +15,7 @@ def test_combat_logic():
     player.pos = Position(x=1, y=1)
     # Ensure guaranteed hit + known damage
     player.attack_skill = 100
-    player.belongings.weapon = Weapon(
+    player.belongings.weapon = KindOfWeapon(
         id="sword", name="Test Sword", damage=5,
         strength_requirement=10, attack_cooldown=0.0,
     )
@@ -179,8 +179,8 @@ def test_crit_damage_bonus():
                     hp=20, max_hp=20, attack=3, defense=1,
                     attack_skill=100, defense_skill=0,
                     crit_damage_bonus=0.5)  # +50% on surprise
-    player.belongings.weapon = Weapon(id="sw", name="Sword", damage=10,
-                                       strength_requirement=10, attack_cooldown=0)
+    player.belongings.weapon = KindOfWeapon(id="sw", name="Sword", damage=10,
+                                             strength_requirement=10, attack_cooldown=0)
 
     mob = MobEntity(
         id="mob", name="Rat",
@@ -206,8 +206,8 @@ def test_fury_multiplier():
                     hp=20, max_hp=20, attack=3, defense=1,
                     attack_skill=100, defense_skill=0,
                     has_fury=True)
-    player.belongings.weapon = Weapon(id="sw", name="Sword", damage=10,
-                                       strength_requirement=10, attack_cooldown=0)
+    player.belongings.weapon = KindOfWeapon(id="sw", name="Sword", damage=10,
+                                             strength_requirement=10, attack_cooldown=0)
 
     mob = MobEntity(
         id="mob", name="Rat",
@@ -233,8 +233,8 @@ def test_grim_execute():
                     hp=20, max_hp=20, attack=3, defense=1,
                     attack_skill=100, defense_skill=0,
                     grim_max_chance=1.0)
-    player.belongings.weapon = Weapon(id="sw", name="Sword", damage=20,
-                                       strength_requirement=10, attack_cooldown=0)
+    player.belongings.weapon = KindOfWeapon(id="sw", name="Sword", damage=20,
+                                             strength_requirement=10, attack_cooldown=0)
 
     mob = MobEntity(
         id="mob", name="Rat",
@@ -260,7 +260,7 @@ def test_kinetic_conserve():
                     hp=20, max_hp=20, attack=3, defense=1,
                     attack_skill=100, defense_skill=0,
                     damage_min=1, damage_max=5)
-    player.belongings.weapon = Weapon(id="sw", name="Sword", damage=5,
+    player.belongings.weapon = KindOfWeapon(id="sw", name="Sword", damage=5,
                                        strength_requirement=10, attack_cooldown=0)
 
     mob = MobEntity(
@@ -289,8 +289,8 @@ def test_no_crit_when_not_surprise():
                     hp=20, max_hp=20, attack=3, defense=1,
                     attack_skill=100, defense_skill=0,
                     crit_damage_bonus=0.5)
-    player.belongings.weapon = Weapon(id="sw", name="Sword", damage=10,
-                                       strength_requirement=10, attack_cooldown=0)
+    player.belongings.weapon = KindOfWeapon(id="sw", name="Sword", damage=10,
+                                             strength_requirement=10, attack_cooldown=0)
 
     mob = MobEntity(
         id="mob", name="Rat",

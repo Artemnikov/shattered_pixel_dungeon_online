@@ -211,6 +211,10 @@ class TalentMetamorphData(_EventData):
     new_talent: str
 
 
+class TenguBadgeQualifiedData(_EventData):
+    pass  # no required payload
+
+
 # event "type" -> payload model. Used by the opt-in dev validation hook.
 EVENT_MODELS = {
     "ATTACK": AttackData,
@@ -245,4 +249,5 @@ EVENT_MODELS = {
     "METAMORPH_OPEN": MetamorphOpenData,
     "METAMORPH_OPTIONS": MetamorphOptionsData,
     "TALENT_METAMORPHED": TalentMetamorphData,
+    "TENGU_BADGE_QUALIFIED": TenguBadgeQualifiedData,
 }

@@ -95,7 +95,8 @@ def test_locked_door_requires_matching_key_and_unlocks_with_patch():
     game.move_entity(player.id, door_x - player.pos.x, door_y - player.pos.y)
 
     assert (player.pos.x, player.pos.y) == (door_x, door_y)
-    assert floor.grid[door_y][door_x] == TileType.DOOR
+    # Player stands on the door → it's OPEN_DOOR (runtime door-enter mutation)
+    assert floor.grid[door_y][door_x] == TileType.OPEN_DOOR
     assert not any(isinstance(item, Key) and item.key_id == key_id for item in player.inventory)
 
     events = game.flush_events()

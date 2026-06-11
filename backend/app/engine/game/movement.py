@@ -1,3 +1,17 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 ArtemNikov
+#
+# Adapted from Shattered Pixel Dungeon (C) 2014-2024 Evan Debenham
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
 """Movement and combat for GameInstance.
 
 Handles held-direction intent, stepping (with bump-attacks, pickups, door
@@ -19,6 +33,7 @@ from app.engine.entities.base import (
     Wand,
     Weapon,
 )
+from app.engine.entities.mobs import DM300
 from app.engine.systems.combat import resolve_melee_attack, resolve_ranged_attack
 from app.engine.systems.loot import roll_drops
 from app.engine.game.constants import MAX_FLOOR_ID
@@ -144,6 +159,8 @@ class MovementCombatMixin:
                         if target_entity.hp / target_entity.get_total_max_hp() <= 0.3:
                             self.add_event("PLAY_SOUND", {"sound": "HEALTH_WARN"}, player_id=target_entity.id)
 
+                self._maybe_trigger_dm300_supercharge(target_entity, floor, floor_id, entity.pos)
+
                 # Warrior subclass: combo / berserk events after successful damage
                 if isinstance(entity, Player) and dmg > 0:
                     if entity.subclass_info.subclass == "gladiator":
@@ -191,9 +208,33 @@ class MovementCombatMixin:
         if not isinstance(entity, Player) and self._is_in_safe_room(floor, new_x, new_y):
             return
 
+        old_x, old_y = entity.pos.x, entity.pos.y
         entity.move(dx, dy)
-        # Position changed: source cells and occupancy-based open doors moved,
-        # so any cached shadowcasting is stale.
+
+        # Door enter/leave tile mutation: stepping onto a closed DOOR opens it;
+        # leaving an open door closes it (if no other entity is on it).
+        door_changed = False
+        if floor.grid[entity.pos.y][entity.pos.x] == TileType.DOOR:
+            floor.grid[entity.pos.y][entity.pos.x] = TileType.OPEN_DOOR
+            door_changed = True
+        if floor.grid[old_y][old_x] == TileType.OPEN_DOOR:
+            has_entity = any(
+                p.pos.x == old_x and p.pos.y == old_y
+                for p in self._players_on_floor(floor_id)
+            )
+            if not has_entity:
+                has_entity = any(
+                    m.is_alive and m.pos.x == old_x and m.pos.y == old_y
+                    for m in floor.mobs.values()
+                )
+            if not has_entity:
+                floor.grid[old_y][old_x] = TileType.DOOR
+                door_changed = True
+
+        if door_changed:
+            floor.rebuild_flags()
+
+        # Position changed: door mutation may have changed flags and FOV.
         self._invalidate_fov_cache()
 
         # Terrain interaction (trample grass, trigger plants, etc.)
@@ -237,6 +278,13 @@ class MovementCombatMixin:
         if isinstance(entity, Player) and tile == TileType.STAIRS_UP and entity.floor_id > 1:
             self._move_player_to_floor(entity, entity.floor_id - 1, TileType.STAIRS_DOWN)
             self.add_event("STAIRS_UP", {"player": entity_id}, player_id=entity_id)
+
+    def _maybe_trigger_dm300_supercharge(self, target: "MobEntity", floor, floor_id: int, near_pos: Position):
+        """Trigger DM300 pylon activation if target is DM300 with pending activation."""
+        if isinstance(target, DM300) and target.pending_pylon_activation:
+            target.pending_pylon_activation = False
+            self.add_event("DM300_SUPERCHARGE", {"mob": target.id}, floor_id=floor_id)
+            self._activate_pylon(floor, floor_id, near_pos=near_pos)
 
     def perform_ranged_attack(self, player_id: str, item_id: str, target_x: int, target_y: int) -> Optional[int]:
         player = self.players.get(player_id)
@@ -379,6 +427,8 @@ class MovementCombatMixin:
                     self.add_event("PLAY_SOUND", {"sound": "HIT_BODY"}, floor_id=floor_id, source_player_id=target_entity.id)
                     if target_entity.hp / target_entity.get_total_max_hp() <= 0.3:
                         self.add_event("PLAY_SOUND", {"sound": "HEALTH_WARN"}, player_id=target_entity.id)
+
+            self._maybe_trigger_dm300_supercharge(target_entity, floor, floor_id, player.pos)
 
             if not target_entity.is_alive:
                 if isinstance(target_entity, MobEntity):

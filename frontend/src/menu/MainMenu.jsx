@@ -1,3 +1,17 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 ArtemNikov
+//
+// Adapted from Shattered Pixel Dungeon (C) 2014-2024 Evan Debenham
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU General Public License for more details.
+//
 // Title scene for Online Pixel Dungeon — a faithful re-implementation of
 // Shattered Pixel Dungeon's TitleScene. An animated <canvas> (parallax
 // background + banner with glow + two torches) sits behind a DOM overlay with
@@ -21,7 +35,7 @@ import { RankingsPanel, NewsPanel } from './StubPanels';
 
 import themeMusic from '../assets/pixel-dungeon/themes/theme_1.ogg';
 
-const SUPPORT_URL = 'https://shatteredpixel.com/';
+const SUPPORT_URL = 'https://github.com/Artemnikov/shattered_pixel_dungeon_online';
 
 export default function MainMenu({ onStart }) {
   const canvasRef = useRef(null);

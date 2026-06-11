@@ -234,7 +234,35 @@ test('getSewerDoorCap — locked side-door cell with wall below returns DOOR_SID
   );
 });
 
-test('getSewerDoorCap — wall above a locked door returns DOOR_SIDEWAYS_LOCKED', () => {
+test('getSewerDoorCap — wall above a locked side-door (floor on both sides) returns DOOR_SIDEWAYS_LOCKED', () => {
+  const grid = g(
+    [W, W, W],
+    [F, LD, F],
+    [W, W, W],
+  );
+  assert.equal(
+    getSewerDoorCap(grid, 1, 0, W, new Set()),
+    WALL_INDEX.DOOR_SIDEWAYS_LOCKED,
+  );
+});
+
+test('getSewerDoorCap — wall above a closed side-door (floor on both sides) returns DOOR_SIDEWAYS', () => {
+  const grid = g(
+    [W, W, W],
+    [F, D, F],
+    [W, W, W],
+  );
+  assert.equal(
+    getSewerDoorCap(grid, 1, 0, W, new Set()),
+    WALL_INDEX.DOOR_SIDEWAYS,
+  );
+});
+
+test('getSewerDoorCap — wall above a locked door walled in on both sides (alcove) returns DOOR_OVERHANG', () => {
+  // Mirrors the Goo boss arena's locked-exit pedestal: walls on both sides
+  // and above the door, so the door renders front-facing (RAISED_DOOR_LOCKED)
+  // rather than as a side-door body — the cell above gets the regular
+  // door-overhang cap, not a sideways one.
   const grid = g(
     [W, W, W],
     [W, W, W],
@@ -242,19 +270,7 @@ test('getSewerDoorCap — wall above a locked door returns DOOR_SIDEWAYS_LOCKED'
   );
   assert.equal(
     getSewerDoorCap(grid, 1, 1, W, new Set()),
-    WALL_INDEX.DOOR_SIDEWAYS_LOCKED,
-  );
-});
-
-test('getSewerDoorCap — wall above a closed door returns DOOR_SIDEWAYS', () => {
-  const grid = g(
-    [W, W, W],
-    [W, W, W],
-    [W, D, W],
-  );
-  assert.equal(
-    getSewerDoorCap(grid, 1, 1, W, new Set()),
-    WALL_INDEX.DOOR_SIDEWAYS,
+    WALL_INDEX.DOOR_OVERHANG,
   );
 });
 

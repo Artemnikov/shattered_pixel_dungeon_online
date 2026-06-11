@@ -1,3 +1,17 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 ArtemNikov
+#
+# Adapted from Shattered Pixel Dungeon (C) 2014-2024 Evan Debenham
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
 """Generic item-action dispatch — the Python analogue of SPD's
 Item.execute(hero, action).
 
@@ -171,6 +185,25 @@ def action_eat_handler(game, player, item, tx=None, ty=None) -> None:
     game.add_event("EAT", {"player": player.id, "item": item.id}, floor_id=player.floor_id)
 
 
+def action_wear_mask(game, player, item, tx=None, ty=None) -> None:
+    """TengusMask: consume the item and open subclass selection (SPD:
+    WndChooseSubclass). Triggers the same SUBCLASS_CHOICE_AVAILABLE
+    flow as level 6 milestone."""
+    from app.engine.entities.subclasses import CLASS_SUBCLASSES
+    if player.subclass_info.subclass is not None:
+        return  # already chosen
+    options = list(CLASS_SUBCLASSES.get(player.class_type, ()))
+    if not options:
+        return
+    removed = player.belongings.backpack.detach(item.id)
+    if removed is not None:
+        if player.belongings.get_item(item.id) is None:
+            player.quickslot.convert_to_placeholder(removed)
+    game.add_event("SUBCLASS_CHOICE_AVAILABLE", {
+        "player": player.id, "options": options,
+    }, floor_id=player.floor_id, source_player_id=player.id)
+
+
 def action_noop(game, player, item, tx=None, ty=None) -> None:
     # OPEN (bag) are handled client-side or are no-ops.
     return
@@ -187,6 +220,7 @@ ITEM_ACTION_DISPATCH = {
     Action.AFFIX: action_affix,
     Action.STEALTH: action_stealth,
     Action.EAT: action_eat_handler,
+    Action.WEAR: action_wear_mask,
     Action.OPEN: action_noop,
     Action.INFO: action_noop,
 }

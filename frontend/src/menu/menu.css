@@ -193,6 +193,9 @@
 .opd-about p { color: #ddd; margin: 10px 0; }
 .opd-about-links a { color: #5dade2; text-decoration: none; }
 .opd-about-links a:hover { text-decoration: underline; }
+.opd-about-copy { color: #777; font-size: 12px; margin-top: 16px; }
+.opd-about-copy a { color: #777; text-decoration: none; }
+.opd-about-copy a:hover { color: #5dade2; }
 
 /* empty states */
 .opd-empty { text-align: center; padding: 24px 0; color: #ccc; }

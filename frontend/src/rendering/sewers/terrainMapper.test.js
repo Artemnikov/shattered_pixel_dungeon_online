@@ -27,18 +27,23 @@ test('maps base terrain IDs to non-empty instruction sets', () => {
   }
 });
 
-test('water mapping produces quadrant composition and shoreline on isolated water', () => {
+test('water surrounded by floor renders the fully-stitched shore tile', () => {
   const grid = gridOfIds(BACKEND_TILE.FLOOR.id);
   grid[1][1] = BACKEND_TILE.FLOOR_WATER.id;
 
   const instructions = getSewerTerrainInstructions(grid, 1, 1, BACKEND_TILE.FLOOR_WATER.id);
-  const quadrantInstructions = instructions.filter((item) => item.quadrant !== QUADRANT.FULL);
 
-  assert.equal(quadrantInstructions.length, 4);
-  assert.ok(
-    quadrantInstructions.some((item) => Object.values(TERRAIN_INDEX.WATER_EDGE).includes(item.srcIndex)),
-    'isolated water should include shoreline quadrants'
-  );
+  assert.equal(instructions.length, 1);
+  assert.equal(instructions[0].quadrant, QUADRANT.FULL);
+  assert.equal(instructions[0].srcIndex, TERRAIN_INDEX.WATER_STITCH_BASE + 15);
+});
+
+test('water surrounded by water renders no overlay (mask 0)', () => {
+  const grid = gridOfIds(BACKEND_TILE.FLOOR_WATER.id, 5, 5);
+
+  const instructions = getSewerTerrainInstructions(grid, 2, 2, BACKEND_TILE.FLOOR_WATER.id);
+
+  assert.equal(instructions.length, 0);
 });
 
 test('grass center uses center tiles when surrounded by grass', () => {

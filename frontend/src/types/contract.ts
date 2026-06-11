@@ -378,6 +378,60 @@ export interface GooFightStartedEvent {
   data: { mob: string };
 }
 
+/** Tengu spawns and the prison cell seals behind it (mirrors PrisonBossLevel's START -> FIGHT_START). */
+export interface TenguFightStartedEvent {
+  type: 'TENGU_FIGHT_STARTED';
+  data: { mob: string };
+}
+
+/** Necromancer zaps a cell — summon, heal, or buff its NecroSkeleton (mirrors NecromancerSprite.zap). */
+export interface ZapSummonEvent {
+  type: 'ZAP_SUMMON';
+  data: { mob: string; x: number; y: number };
+}
+
+/** Necromancer's NecroSkeleton appears/teleports to a cell. */
+export interface NecroSummonEvent {
+  type: 'NECRO_SUMMON';
+  data: { necromancer: string; skeleton: string; x: number; y: number };
+}
+
+/** Tengu boss teleports away after dropping into a new HP/8 bracket (Tengu.jump()). */
+export interface TenguJumpEvent {
+  type: 'TENGU_JUMP';
+  data: { mob: string; x: number; y: number };
+}
+
+/** Tengu throws a bomb that detonates after a 3-turn countdown. */
+export interface TenguBombEvent {
+  type: 'TENGU_BOMB';
+  data: { mob: string; x: number; y: number; timer: number };
+}
+
+/** Tengu bomb countdown tick (SPD: "3...", "2...", "1..." floating text). */
+export interface TenguBombCountdownEvent {
+  type: 'TENGU_BOMB_COUNTDOWN';
+  data: { mob: string; x: number; y: number; count: number };
+}
+
+/** Tengu's bomb detonates, dealing radius-2 AoE damage. */
+export interface TenguBlastEvent {
+  type: 'TENGU_BLAST';
+  data: { mob: string; x: number; y: number };
+}
+
+/** Tengu breathes fire in a 3-cell line toward its target. */
+export interface TenguFireEvent {
+  type: 'TENGU_FIRE';
+  data: { mob: string; cells: Vec2[] };
+}
+
+/** Tengu calls down a lightning cross centered on its target. */
+export interface TenguShockerEvent {
+  type: 'TENGU_SHOCKER';
+  data: { mob: string; cells: Vec2[] };
+}
+
 export type GameEvent =
   | AttackEvent
   | MissEvent
@@ -417,7 +471,16 @@ export type GameEvent =
   | TalentMetamorphedEvent
   | GooChargeEvent
   | GooEnrageEvent
-  | GooFightStartedEvent;
+  | GooFightStartedEvent
+  | TenguFightStartedEvent
+  | ZapSummonEvent
+  | NecroSummonEvent
+  | TenguJumpEvent
+  | TenguBombEvent
+  | TenguBombCountdownEvent
+  | TenguBlastEvent
+  | TenguFireEvent
+  | TenguShockerEvent;
 
 export type GameEventType = GameEvent['type'];
 

@@ -51,6 +51,7 @@ TILE_FLAGS = {
     TileType.SECRET_TRAP:  PASSABLE | SECRET,
     TileType.TRAP:         PASSABLE,
     TileType.INACTIVE_TRAP: PASSABLE,
+    TileType.OPEN_DOOR:    PASSABLE,
 }
 
 

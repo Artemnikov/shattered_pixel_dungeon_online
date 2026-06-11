@@ -45,13 +45,13 @@ class ConnectionManager:
         # game_id -> {websocket: player_id}
         self.active_connections: Dict[str, Dict[WebSocket, str]] = {}
         self.game_instances: Dict[str, GameInstance] = {}
-        self.last_sent_floor: Dict[str, Dict[str, int]] = {}
+        self.last_sent_floor: Dict[str, Dict[str, Tuple[int, int]]] = {}
         # game_id -> {session_id: player_id} — stable identity across reconnects.
         self.sessions: Dict[str, Dict[str, str]] = {}
         # game_id -> {player_id: monotonic deadline} — players awaiting reconnect.
         self.disconnect_deadline: Dict[str, Dict[str, float]] = {}
 
-    async def connect(self, game_id: str, websocket: WebSocket, session_id: str) -> Tuple[str, bool]:
+    async def connect(self, game_id: str, websocket: WebSocket, session_id: str, seed: str = "") -> Tuple[str, bool]:
         """Accept a connection and resolve its player identity.
 
         Returns (player_id, is_new). When the session already maps to a player
@@ -61,7 +61,7 @@ class ConnectionManager:
         await websocket.accept()
         if game_id not in self.active_connections:
             self.active_connections[game_id] = {}
-            self.game_instances[game_id] = GameInstance(game_id)
+            self.game_instances[game_id] = GameInstance(game_id, seed=seed or None)
             self.last_sent_floor[game_id] = {}
             self.sessions[game_id] = {}
             self.disconnect_deadline[game_id] = {}
@@ -86,6 +86,7 @@ class ConnectionManager:
         game = self.game_instances[game_id]
         state = game.get_state(player_id)
         player_floor = state.get("depth", 1)
+        map_version = getattr(game.floors.get(player_floor), "map_version", 0)
 
         init = InitMessage(
             player_id=player_id,
@@ -96,7 +97,7 @@ class ConnectionManager:
             traps=state.get("traps", []),
         )
         await websocket.send_json(init.model_dump(exclude_none=True))
-        self.last_sent_floor.setdefault(game_id, {})[player_id] = player_floor
+        self.last_sent_floor.setdefault(game_id, {})[player_id] = (player_floor, map_version)
 
 
     def disconnect(self, game_id: str, websocket: WebSocket):
@@ -169,9 +170,10 @@ class ConnectionManager:
 
                     state = game.get_state(player_id)
                     player_floor = state.get("depth", 1)
-                    previous_floor = self.last_sent_floor.setdefault(game_id, {}).get(player_id)
-                    
-                    if previous_floor != player_floor:
+                    map_version = getattr(game.floors.get(player_floor), "map_version", 0)
+                    previous = self.last_sent_floor.setdefault(game_id, {}).get(player_id)
+
+                    if previous != (player_floor, map_version):
                         init = InitMessage(
                             depth=player_floor,
                             grid=state["grid"],
@@ -180,7 +182,7 @@ class ConnectionManager:
                             traps=state.get("traps", []),
                         )
                         await connection.send_json(init.model_dump(exclude_none=True))
-                        self.last_sent_floor[game_id][player_id] = player_floor
+                        self.last_sent_floor[game_id][player_id] = (player_floor, map_version)
 
                     player_obj = game.players.get(player_id)
                     gold = player_obj.gold if player_obj else 0
@@ -291,9 +293,9 @@ async def get_talents(class_type: str):
     }
 
 @app.websocket("/ws/game/{game_id}")
-async def game_websocket(websocket: WebSocket, game_id: str, class_type: str = "warrior", difficulty: str = "normal", name: str = None, admin_secret: str = "", session: str = None):
+async def game_websocket(websocket: WebSocket, game_id: str, class_type: str = "warrior", difficulty: str = "normal", name: str = None, admin_secret: str = "", session: str = None, seed: str = ""):
     session_id = session or str(uuid.uuid4())
-    player_id, is_new = await manager.connect(game_id, websocket, session_id)
+    player_id, is_new = await manager.connect(game_id, websocket, session_id, seed=seed)
 
     game = manager.game_instances[game_id]
     if is_new:

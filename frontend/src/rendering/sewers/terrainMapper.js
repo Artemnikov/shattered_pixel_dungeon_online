@@ -6,8 +6,8 @@ import {
   WALL_INDEX,
   hashCell,
   isGrassTile,
-  isWallStitcheable,
-  isWaterTile,
+  isSidewaysDoor,
+  isWaterStitcheable,
 } from './constants.js';
 
 const getTile = (grid, x, y) => {
@@ -82,29 +82,31 @@ export const getSewerTerrainInstructions = (grid, x, y, tile, openDoors = new Se
     ];
   }
 
-  if (tile === BACKEND_TILE.DOOR.id || tile === BACKEND_TILE.LOCKED_DOOR.id) {
-    // Side door: when the cell above is a wall, the door is set into a
-    // vertical wall and uses the dedicated side-door body sprite. Mirrors
-    // SPD DungeonTileSheet.getRaisedDoorTile.
-    if (isWallStitcheable(getTile(grid, x, y - 1))) {
+  if (tile === BACKEND_TILE.DOOR.id || tile === BACKEND_TILE.OPEN_DOOR.id || tile === BACKEND_TILE.LOCKED_DOOR.id) {
+    // Side door: when the cell above is a wall AND at least one side is open,
+    // the door is set into a vertical wall and uses the dedicated side-door
+    // body sprite. Mirrors SPD DungeonTileSheet.getRaisedDoorTile.
+    if (isSidewaysDoor(grid, x, y, getTile)) {
       return [{ srcIndex: WALL_INDEX.RAISED_DOOR_SIDEWAYS, quadrant: QUADRANT.FULL }];
     }
-    // Top-facing door: regular door sprite. Adjacent-wall stitching is
-    // handled by wallMapper.getSewerCap (DOOR_OVERHANG family).
-    const base = tile === BACKEND_TILE.LOCKED_DOOR.id
-      ? BACKEND_TILE.LOCKED_DOOR
-      : (openDoors.has(`${x},${y}`) ? BACKEND_TILE.OPEN_DOOR : BACKEND_TILE.DOOR);
-    return [tileInstr(base)];
+    // Top-facing door: raised 3D door sprite (SPD's RAISED_DOOR family).
+    // Adjacent-wall stitching is handled by wallMapper.getSewerCap
+    // (DOOR_OVERHANG family).
+    const srcIndex = tile === BACKEND_TILE.LOCKED_DOOR.id
+      ? WALL_INDEX.RAISED_DOOR_LOCKED
+      : (tile === BACKEND_TILE.OPEN_DOOR.id ? WALL_INDEX.RAISED_DOOR_OPEN
+        : (openDoors.has(`${x},${y}`) ? WALL_INDEX.RAISED_DOOR_OPEN : WALL_INDEX.RAISED_DOOR));
+    return [{ srcIndex, quadrant: QUADRANT.FULL }];
   }
 
   if (tile === BACKEND_TILE.FLOOR_WATER.id) {
-    const out = [];
-    for (const q of [QUADRANT.TL, QUADRANT.TR, QUADRANT.BL, QUADRANT.BR]) {
-      if (!shouldUseCornerType(grid, x, y, isWaterTile, q)) {
-        out.push({ srcIndex: TERRAIN_INDEX.WATER_EDGE[q], quadrant: q });
-      }
-    }
-    return out;
+    let mask = 0;
+    if (isWaterStitcheable(getTile(grid, x, y - 1))) mask |= 1;  // top
+    if (isWaterStitcheable(getTile(grid, x + 1, y))) mask |= 2;  // right
+    if (isWaterStitcheable(getTile(grid, x, y + 1))) mask |= 4;  // bottom
+    if (isWaterStitcheable(getTile(grid, x - 1, y))) mask |= 8;  // left
+    if (mask === 0) return [];
+    return [{ srcIndex: TERRAIN_INDEX.WATER_STITCH_BASE + mask, quadrant: QUADRANT.FULL }];
   }
 
   if (tile === BACKEND_TILE.FLOOR_GRASS.id) {
