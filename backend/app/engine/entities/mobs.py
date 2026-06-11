@@ -342,6 +342,20 @@ class Tengu(MobEntity):
     enrage_announced: bool = False
     fight_started: bool = False
 
+    # Ability/jump state (mirrors Tengu.java's HP-bracket jump and the
+    # bomb/fire/shocker ability rotation used while enraged).
+    hp_bracket: int = 7
+    ability_cooldown_until: float = 2.0  # SPD: starts at 2 so 1-turn delay before first ability
+    abilities_used: int = 0
+    last_ability: int = -1  # SPD: 90% no-repeat; -1 = none yet
+    arena_jumps: int = 0     # SPD: affects targetAbilityUses() cooldown
+    bomb_x: int = -1
+    bomb_y: int = -1
+    bomb_timer: int = 0
+
+    # SPD Tengu immunities
+    immunities: List[str] = Field(default_factory=lambda: ["roots", "blindness", "dread", "terror"])
+
     loot_table: List[DropEntry] = [
         DropEntry(item_kind="tengu_mask", chance=1.0, max_global=0),
     ]
@@ -351,6 +365,23 @@ class Tengu(MobEntity):
 
     def get_attack_skill(self) -> int:
         return 20 if not self.is_enraged() else 10
+
+    def target_ability_uses(self) -> int:
+        target = 1 + 2 * self.arena_jumps
+        target += max(0, self.arena_jumps - 2)
+        return target
+
+    # HP bracket clamping: Tengu cannot be hit through multiple HP/8 brackets
+    # at once (mirrors Tengu.damage()). Called after damage is dealt.
+    def clamp_bracket(self) -> None:
+        hp_bracket = self.max_hp // 8
+        if hp_bracket == 0:
+            return
+        curbracket = max(0, (self.hp * 8 - 1) // self.max_hp)  # SPD-style bracket
+        if self.hp <= curbracket * hp_bracket:
+            self.hp = curbracket * hp_bracket + 1
+            if self.hp > self.max_hp:
+                self.hp = self.max_hp
 
 
 # ---------------------------------------------------------------------------
@@ -529,6 +560,20 @@ class Guard(MobEntity):
     ]
 
 
+class NecroSkeleton(Skeleton):
+    """Summoned by Necromancer (SPD NecroSkeleton). Weaker than a regular
+    Skeleton, gives no exp/loot (Java maxLvl=-5), starts wandering, and is
+    rendered with a 0.75 brightness tint on the frontend."""
+    name: str = "NecroSkeleton"
+    hp: int = 20
+    max_hp: int = 25
+    exp: int = 0
+    max_lvl: int = -5
+    ai_state: str = "wandering"
+    loot_table: List[DropEntry] = []
+    tinted: bool = True
+
+
 class Necromancer(MobEntity):
     name: str = "Necromancer"
     hp: int = 40
@@ -545,6 +590,21 @@ class Necromancer(MobEntity):
     loot_table: List[DropEntry] = [
         DropEntry(item_kind="health_potion", chance=0.2, max_global=0),
     ]
+
+    # Summon-minion state (mirrors SPD Necromancer summoning/summoningPos/firstSummon/mySkeleton)
+    summoning: bool = False
+    summoning_x: int = -1
+    summoning_y: int = -1
+    first_summon: bool = True
+    my_skeleton_id: str = ""
+
+    def die(self, attacker=None, floor_mobs=None, tile_x=0, tile_y=0, players=None):
+        # SPD Necromancer.die(): kill the linked NecroSkeleton when its master dies.
+        if floor_mobs and self.my_skeleton_id:
+            skeleton = floor_mobs.get(self.my_skeleton_id)
+            if skeleton and skeleton.is_alive:
+                skeleton.hp = 0
+                skeleton.is_alive = False
 
 
 # ---------------------------------------------------------------------------

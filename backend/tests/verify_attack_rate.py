@@ -7,7 +7,7 @@ import uuid
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from app.engine.manager import GameInstance
-from app.engine.entities.base import CharacterClass, Weapon
+from app.engine.entities.base import CharacterClass, KindOfWeapon
 
 def test_attack_rate():
     print("Initializing Game...")
@@ -100,7 +100,7 @@ def test_attack_rate():
 
     # Test 2: Dagger (Cooldown 1.5s)
     print("\n--- Testing Rogue Dagger (1.5s cooldown) ---")
-    dagger = Weapon(id=str(uuid.uuid4()), name="Dagger", damage=2, range=1, strength_requirement=10, attack_cooldown=1.5)
+    dagger = KindOfWeapon(id=str(uuid.uuid4()), name="Dagger", damage=2, range=1, strength_requirement=10, attack_cooldown=1.5)
     player.inventory.append(dagger)
     player.equip_item(dagger.id)
     print(f"Equipped: {player.equipped_weapon.name}, Cooldown: {player.equipped_weapon.attack_cooldown}")

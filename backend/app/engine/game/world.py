@@ -35,7 +35,7 @@ class WorldInteractionMixin:
         key is dropped here because it needs the floor-specific lock id, and it
         must drop no matter how Goo died (melee or bleed) so progression can't
         soft-lock."""
-        from app.engine.entities.mobs import DM300, Goo, Pylon
+        from app.engine.entities.mobs import DM300, Goo, Necromancer, Pylon, Tengu
 
         # CavesBossLevel.eliminatePylon -> DM300.loseSupercharge: when an
         # activated Pylon dies, DM300 becomes vulnerable again. No
@@ -45,6 +45,20 @@ class WorldInteractionMixin:
                 if isinstance(other, DM300):
                     other.supercharged = False
                     break
+
+        # Necromancer.die(): kill the linked NecroSkeleton (mob.die already
+        # zeroed its HP); emit DEATH so the frontend plays its death animation.
+        if isinstance(mob, Necromancer) and mob.my_skeleton_id:
+            skeleton = floor.mobs.get(mob.my_skeleton_id)
+            if skeleton and not skeleton.is_alive:
+                self.add_event("DEATH", {"target": skeleton.id}, floor_id=floor_id)
+
+        # Tengu (floor 10): award base score + check badge qualification
+        if isinstance(mob, Tengu):
+            self.boss_scores[1] += 2000
+            if self.qualified_for_boss_challenge:
+                self.add_event("TENGU_BADGE_QUALIFIED", {}, floor_id=floor_id)
+            return
 
         if not isinstance(mob, Goo):
             return
@@ -172,8 +186,18 @@ class WorldInteractionMixin:
 
         trap.active = False
 
-        damage = 2
-        dealt = player.take_damage(damage)
+        # SPD TenguDartTrap: 8 poison damage (15 on challenge, but no
+        # challenge system yet), plus boss score penalty on floor 10.
+        if trap.trap_type == "tengu_dart":
+            damage = 8
+            dealt = player.take_damage(damage)
+            from app.engine.entities.buffs import add_buff
+            add_buff(player.buffs, "poison", duration=8.0, level=1, stack_mode="extend")
+            self.boss_scores[1] -= 100
+            self.qualified_for_boss_challenge = False
+        else:
+            damage = 2
+            dealt = player.take_damage(damage)
 
         if patches:
             self.add_event("MAP_PATCH", {"tiles": patches}, floor_id=floor_id)

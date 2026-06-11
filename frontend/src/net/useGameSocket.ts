@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { TILE_SIZE, PLAYER_ATTACK_DURATION, PLAYER_OPERATE_DURATION, HIT_CONNECT_DELAY, FLASH_DURATION } from '../constants';
+import { TILE_SIZE, PLAYER_ATTACK_DURATION, PLAYER_OPERATE_DURATION, PLAYER_READ_DURATION, HIT_CONNECT_DELAY, FLASH_DURATION } from '../constants';
 import { getWsBaseUrl } from '../config/urls';
 import AudioManager from '../audio/AudioManager';
 import { spawnBlood, spawnCritSparkle, spawnDust, spawnGrimShadow, spawnHeal } from '../rendering/draw/particles';
@@ -63,6 +63,7 @@ interface AnimState {
   attackUntil?: number;
   flashUntil?: number;
   operateUntil?: number;
+  readUntil?: number;
   pumpUntil?: number;
 }
 
@@ -164,6 +165,7 @@ interface HookProps {
   onMetamorphOpen?: () => void;
   onMetamorphOptions?: (data: { old_talent: string; options: string[] }) => void;
   onGooFightStarted?: (data: { mob: string }) => void;
+  onTenguFightStarted?: (data: { mob: string }) => void;
 }
 
 type HandlerCtx = Pick<
@@ -189,6 +191,7 @@ type HandlerCtx = Pick<
   onMetamorphOpen?: HookProps['onMetamorphOpen'];
   onMetamorphOptions?: HookProps['onMetamorphOptions'];
   onGooFightStarted?: HookProps['onGooFightStarted'];
+  onTenguFightStarted?: HookProps['onTenguFightStarted'];
 };
 
 export default function useGameSocket({
@@ -234,6 +237,7 @@ export default function useGameSocket({
   onMetamorphOpen,
   onMetamorphOptions,
   onGooFightStarted,
+  onTenguFightStarted,
 }: HookProps) {
   useEffect(() => {
     if (!enabled) return;
@@ -514,7 +518,7 @@ export default function useGameSocket({
             projectilesRef, mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef,
             searchEffectsRef, floatingTextRef, warnedTilesRef,
             onLevelUp, onSubclassChoiceAvailable, onArmorAbilityChoiceAvailable, onTalentUpgraded,
-            onMetamorphOpen, onMetamorphOptions, onGooFightStarted,
+            onMetamorphOpen, onMetamorphOptions, onGooFightStarted, onTenguFightStarted,
           });
         });
       }
@@ -543,7 +547,7 @@ function handleEvent(event: GameEvent, {
   projectilesRef, mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef,
   searchEffectsRef, floatingTextRef, warnedTilesRef,
   onLevelUp, onSubclassChoiceAvailable, onArmorAbilityChoiceAvailable, onTalentUpgraded,
-  onMetamorphOpen, onMetamorphOptions, onGooFightStarted,
+  onMetamorphOpen, onMetamorphOptions, onGooFightStarted, onTenguFightStarted,
 }: HandlerCtx) {
   if (event.type === 'PLAY_SOUND') {
     AudioManager.play(event.data.sound);
@@ -580,6 +584,97 @@ function handleEvent(event: GameEvent, {
     return;
   }
 
+  if (event.type === 'TENGU_FIGHT_STARTED') {
+    onTenguFightStarted?.(event.data);
+    return;
+  }
+
+  if (event.type === 'ZAP_SUMMON') {
+    // Necromancer zap: 4-frame ray animation @10fps (NecromancerSprite.zap),
+    // triggers summon/heal/buff onZapComplete on the backend.
+    const now = performance.now();
+    if (mobAnimRef.current) {
+      if (!mobAnimRef.current[event.data.mob]) mobAnimRef.current[event.data.mob] = {};
+      mobAnimRef.current[event.data.mob].attackUntil = now + 400;
+    }
+    if (visionRef?.current?.visible?.has(`${event.data.x},${event.data.y}`)) {
+      AudioManager.play('RAY');
+    }
+    return;
+  }
+
+  if (event.type === 'NECRO_SUMMON') {
+    // SPD's summonMinion() has no dedicated VFX/sound beyond the zap itself —
+    // a small dust poof marks where the NecroSkeleton appears.
+    if (particlesRef && visionRef?.current?.visible?.has(`${event.data.x},${event.data.y}`)) {
+      const cx = event.data.x * TILE_SIZE + TILE_SIZE / 2;
+      const cy = event.data.y * TILE_SIZE + TILE_SIZE / 2;
+      spawnDust(particlesRef, cx, cy, 8);
+    }
+    return;
+  }
+
+  if (event.type === 'TENGU_JUMP') {
+    // Tengu.jump(): a puff of smoke marks the cell Tengu teleports to.
+    if (particlesRef && visionRef?.current?.visible?.has(`${event.data.x},${event.data.y}`)) {
+      const cx = event.data.x * TILE_SIZE + TILE_SIZE / 2;
+      const cy = event.data.y * TILE_SIZE + TILE_SIZE / 2;
+      spawnDust(particlesRef, cx, cy, 12);
+    }
+    return;
+  }
+
+  if (event.type === 'TENGU_BOMB') {
+    // BombAbility: Tengu winds up a shuriken-throw pose; the bomb itself
+    // flies in via the RANGED_ATTACK event sent alongside this one.
+    const now = performance.now();
+    if (mobAnimRef.current) {
+      if (!mobAnimRef.current[event.data.mob]) mobAnimRef.current[event.data.mob] = {};
+      mobAnimRef.current[event.data.mob].attackUntil = now + 400;
+    }
+    if (floatingTextRef && visionRef?.current?.visible?.has(`${event.data.x},${event.data.y}`)) {
+      const cx = event.data.x * TILE_SIZE + TILE_SIZE / 2;
+      const cy = event.data.y * TILE_SIZE;
+      spawnFloatingText(floatingTextRef, cx, cy, '!', '#ff6600');
+    }
+    return;
+  }
+
+  if (event.type === 'TENGU_BOMB_COUNTDOWN') {
+    // SPD BombAbility act(): "3...", "2...", "1..." floating text
+    if (floatingTextRef && visionRef?.current?.visible?.has(`${event.data.x},${event.data.y}`)) {
+      const cx = event.data.x * TILE_SIZE + TILE_SIZE / 2;
+      const cy = event.data.y * TILE_SIZE;
+      const countStr = `${event.data.count}...`;
+      spawnFloatingText(floatingTextRef, cx, cy, countStr, '#ff6600');
+    }
+    return;
+  }
+
+  if (event.type === 'TENGU_BLAST') {
+    // BombAbility.detonate(): radius-2 explosion.
+    if (particlesRef && visionRef?.current?.visible?.has(`${event.data.x},${event.data.y}`)) {
+      const cx = event.data.x * TILE_SIZE + TILE_SIZE / 2;
+      const cy = event.data.y * TILE_SIZE + TILE_SIZE / 2;
+      spawnCritSparkle(particlesRef, cx, cy, 16, '#ff6600');
+    }
+    return;
+  }
+
+  if (event.type === 'TENGU_FIRE' || event.type === 'TENGU_SHOCKER') {
+    // FireAbility / ShockerAbility: highlight the affected cells.
+    if (particlesRef) {
+      const color = event.type === 'TENGU_FIRE' ? '#ff6600' : '#66ccff';
+      for (const [x, y] of event.data.cells) {
+        if (!visionRef?.current?.visible?.has(`${x},${y}`)) continue;
+        const cx = x * TILE_SIZE + TILE_SIZE / 2;
+        const cy = y * TILE_SIZE + TILE_SIZE / 2;
+        spawnCritSparkle(particlesRef, cx, cy, 8, color);
+      }
+    }
+    return;
+  }
+
   if (event.type === 'SEARCH') {
     // Reveal/search feedback (searcher-only event): the hero plays the operate
     // hand-raise pose and a cyan CheckedCell ring sweeps outward over the searched
@@ -608,6 +703,40 @@ function handleEvent(event: GameEvent, {
     if (playerAnimRef && entitiesRef.current.players[pid]) {
       if (!playerAnimRef.current[pid]) playerAnimRef.current[pid] = {};
       playerAnimRef.current[pid].operateUntil = performance.now() + PLAYER_OPERATE_DURATION;
+    }
+    return;
+  }
+
+  if (event.type === 'UNLOCK') {
+    const pid = event.data.player;
+    const unlocker = entitiesRef.current.players[pid];
+    const visible = visionRef?.current?.visible;
+    const isLocal = pid === myPlayerIdRef.current;
+    if (isLocal || (unlocker && visible?.has(`${unlocker.pos.x},${unlocker.pos.y}`))) {
+      AudioManager.play('UNLOCK');
+    }
+    // Play the "operate" gesture (key turning), mirroring
+    // Hero.sprite.operate() in the original game's door-unlock flow.
+    if (playerAnimRef && entitiesRef.current.players[pid]) {
+      if (!playerAnimRef.current[pid]) playerAnimRef.current[pid] = {};
+      playerAnimRef.current[pid].operateUntil = performance.now() + PLAYER_OPERATE_DURATION;
+    }
+    return;
+  }
+
+  if (event.type === 'READ') {
+    const pid = event.data.player;
+    const reader = entitiesRef.current.players[pid];
+    const visible = visionRef?.current?.visible;
+    const isLocal = pid === myPlayerIdRef.current;
+    if (isLocal || (reader && visible?.has(`${reader.pos.x},${reader.pos.y}`))) {
+      AudioManager.play('READ');
+    }
+    // Play the "read" gesture, mirroring HeroSprite.read() in the original game's
+    // scroll-reading flow (Scroll.readAnimation()).
+    if (playerAnimRef && entitiesRef.current.players[pid]) {
+      if (!playerAnimRef.current[pid]) playerAnimRef.current[pid] = {};
+      playerAnimRef.current[pid].readUntil = performance.now() + PLAYER_READ_DURATION;
     }
     return;
   }

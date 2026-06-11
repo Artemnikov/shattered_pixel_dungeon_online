@@ -5,3 +5,4 @@ backend/debug_map.txt
 *.pyc
 superpowers
 debug_map.txt
+.opencode

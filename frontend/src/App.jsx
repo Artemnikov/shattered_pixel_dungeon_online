@@ -8,7 +8,6 @@ import cursorControllerUrl from './assets/cursors/cursor_controller.png';
 
 import { TILE_SIZE } from './constants';
 import useAudioUnlock from './audio/useAudioUnlock';
-import AudioManager from './audio/AudioManager';
 import useMusicByDepth from './audio/useMusicByDepth';
 import useAssetImages from './rendering/useAssetImages';
 import useGameRenderer from './rendering/useGameRenderer';
@@ -301,8 +300,9 @@ function App() {
             ...prev,
             [tierKey]: Math.max(0, (prev[tierKey] || 0) - 1),
           }));
+          // TalentButton's burst effect plays the LEVELUP sound when
+          // upgradedTalentId matches it — don't double it here.
           setUpgradedTalentId(talent);
-          AudioManager.play('LEVELUP', 1.2);
           return;
         }
       }

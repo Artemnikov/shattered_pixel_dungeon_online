@@ -75,13 +75,11 @@ export const TERRAIN_INDEX = {
     br: atlasIndex(4, 2),
   },
 
-  WATER_CENTER: [atlasIndex(3, 7), atlasIndex(11, 3)],
-  WATER_EDGE: {
-    tl: atlasIndex(8, 7),
-    tr: atlasIndex(9, 7),
-    bl: atlasIndex(10, 7),
-    br: atlasIndex(11, 7),
-  },
+  // SPD DungeonTileSheet: WATER = xy(1,3) (16-slot block). Tile is picked by a
+  // 4-bit mask of the 4 cardinal neighbours: +1 top, +2 right, +4 bottom,
+  // +8 left if that neighbour is "ground-like" (stitcheable). Mask 0 = pure
+  // water (no overlay needed).
+  WATER_STITCH_BASE: atlasIndex(0, 2),
 };
 
 /*
@@ -209,7 +207,21 @@ export const isDoorTile = (tile) =>
   tile === BACKEND_TILE.OPEN_DOOR.id ||
   tile === BACKEND_TILE.LOCKED_DOOR.id;
 
+// A door cell is "sideways" (set into a vertical wall, body sprite facing
+// the player from the side) only when the cell above is a wall AND at least
+// one side is open. A door walled in on both sides too (e.g. the Goo boss
+// arena's locked-exit pedestal alcove) is front-facing despite the wall
+// above it. `getTile(grid, x, y)` must handle out-of-bounds cells.
+export const isSidewaysDoor = (grid, x, y, getTile) =>
+  isWallStitcheable(getTile(grid, x, y - 1)) &&
+  (!isWallStitcheable(getTile(grid, x - 1, y)) || !isWallStitcheable(getTile(grid, x + 1, y)));
+
 export const isWaterTile = (tile) => tile === BACKEND_TILE.FLOOR_WATER.id;
+
+// Mirrors SPD's DungeonTileSheet.waterStitcheable: anything except water and
+// walls counts as "ground" that water shores stitch against (including
+// VOID/out-of-bounds, matching SPD's EMPTY being stitcheable).
+export const isWaterStitcheable = (tile) => !isWaterTile(tile) && !isWallTile(tile);
 export const isGrassTile = (tile) =>
   tile === BACKEND_TILE.FLOOR_GRASS.id ||
   tile === BACKEND_TILE.HIGH_GRASS.id ||

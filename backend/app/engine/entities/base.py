@@ -260,6 +260,7 @@ class Action:
     AFFIX = "AFFIX"
     INFO = "INFO"
     STEALTH = "STEALTH"  # Cloak of Shadows: toggle invisibility
+    WEAR = "WEAR"        # TengusMask: choose subclass
 
 # Actions that require the player to pick a target cell before resolving.
 TARGETED_ACTIONS = {Action.THROW, Action.ZAP}
@@ -376,26 +377,44 @@ class KindOfWeapon(EquipableItem):
     # On surprise attacks, damage floor is raised by this fraction of the range
     surprise_damage_floor: float = 0.0
 
+    def _info_lines(self, player: Optional["Player"] = None) -> List[str]:
+        lines: List[str] = []
+        if isinstance(self, MeleeWeapon):
+            lvl = self.level if self.level_known else 0
+            lines.append(f"Deals {self.dmg_min(lvl)}-{self.dmg_max(lvl)} damage per hit.")
+        else:
+            lines.append(f"Deals {self.damage} damage per hit.")
+        lines += super()._info_lines(player)
+        return lines
+
 
 class MeleeWeapon(KindOfWeapon):
     kind: Literal["melee_weapon"] = "melee_weapon"
+    tier: int = 1
     DESC: ClassVar[str] = "A reliable melee weapon. Equip it to strike enemies in close combat."
+
+    def dmg_min(self, lvl: int = 0) -> int:
+        return self.tier + lvl
+
+    def dmg_max(self, lvl: int = 0) -> int:
+        return 5 * (self.tier + 1) + lvl * (self.tier + 1)
 
 
 class Dagger(MeleeWeapon):
     kind: Literal["dagger"] = "dagger"
     name: str = "Dagger"
-    damage: int = 2
     attack_cooldown: float = 0.84
     strength_requirement: int = 9
     surprise_damage_floor: float = 0.75
     DESC: ClassVar[str] = "A quick dagger. Surprise attacks deal more consistent damage."
 
+    def dmg_max(self, lvl: int = 0) -> int:
+        return 4 * (self.tier + 1) + lvl * (self.tier + 1)
+
 
 class WornShortsword(MeleeWeapon):
     kind: Literal["worn_shortsword"] = "worn_shortsword"
     name: str = "Worn Shortsword"
-    damage: int = 2
     attack_cooldown: float = 1.2
     strength_requirement: int = 10
     DESC: ClassVar[str] = "A basic shortsword, somewhat the worse for wear. All warriors start with one."
@@ -486,7 +505,9 @@ class Wand(ItemBase):
         return Action.ZAP
 
     def _info_lines(self, player: Optional["Player"] = None) -> List[str]:
-        return [f"It currently holds {self.charges} of {self.max_charges} charges."]
+        lines = [f"Deals {self.damage} damage per hit."]
+        lines.append(f"It currently holds {self.charges} of {self.max_charges} charges.")
+        return lines
 
 
 class Potion(ItemBase):
@@ -644,6 +665,21 @@ class Key(ItemBase):
     category: ClassVar[str] = ItemCategory.KEY
     key_id: str = ""
     DESC: ClassVar[str] = "A key that unlocks a matching door or chest somewhere on this floor."
+
+
+class TenguMask(ItemBase):
+    kind: Literal["tengu_mask"] = "tengu_mask"
+    name: str = "Tengu's Mask"
+    type: str = "misc"
+    category: ClassVar[str] = ItemCategory.MISC
+    unique: bool = True
+    DESC: ClassVar[str] = "The mask of the infamous Tengu assassin. Wearing it grants the power to choose a subclass path."
+
+    def actions(self, player: Optional["Player"] = None) -> List[str]:
+        return [Action.WEAR, Action.THROW, Action.DROP]
+
+    def default_action(self) -> Optional[str]:
+        return Action.WEAR
 
 
 class BrokenSeal(Artifact):
@@ -1351,15 +1387,24 @@ class Player(Entity):
 
     def get_damage_min(self) -> int:
         w = self.belongings.weapon
-        base = w.damage if isinstance(w, KindOfWeapon) else self.damage_min
-        # Sub-Atk (warrior T3): flat +1 per point if subclass is chosen
+        if isinstance(w, MeleeWeapon):
+            base = w.dmg_min(w.level)
+        elif isinstance(w, KindOfWeapon):
+            base = w.damage
+        else:
+            base = self.damage_min
         if self.subclass_info.subclass is not None:
             base += self.subclass_info.talent_info.level("sub_atk")
         return base
 
     def get_damage_max(self) -> int:
         w = self.belongings.weapon
-        base = w.damage if isinstance(w, KindOfWeapon) else self.damage_max
+        if isinstance(w, MeleeWeapon):
+            base = w.dmg_max(w.level)
+        elif isinstance(w, KindOfWeapon):
+            base = w.damage
+        else:
+            base = self.damage_max
         if self.subclass_info.subclass is not None:
             base += self.subclass_info.talent_info.level("sub_atk")
         return base

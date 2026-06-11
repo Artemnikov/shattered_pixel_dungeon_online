@@ -47,6 +47,7 @@ import {
   WALL_INDEX,
   hashCell,
   isDoorTile,
+  isSidewaysDoor,
   isWallStitcheable,
   isWallTile,
 } from './constants.js';
@@ -195,7 +196,7 @@ export const getSewerDoorCap = (grid, x, y, tile, openDoors) => {
   }
 
   if (isDoorTile(below)) {
-    if (isWallTile(tile)) {
+    if (isWallTile(tile) && isSidewaysDoor(grid, x, y + 1, getTile)) {
       // Wall above a sideways door — vertical-wall cap with doorway.
       return below === BACKEND_TILE.LOCKED_DOOR.id
         ? WALL_INDEX.DOOR_SIDEWAYS_LOCKED

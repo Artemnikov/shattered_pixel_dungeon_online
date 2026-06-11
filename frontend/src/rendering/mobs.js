@@ -128,6 +128,12 @@ export const BRUTE_FW = 12;
 export const BRUTE_FH = 16;
 export const BRUTE_DEST = { dx: 4, dy: 0, dw: 24, dh: 32 };
 
+// Swarm: 16x16 frames (SwarmSprite TextureFilm(texture, 16, 16)), swarm.png.
+// 16px sprite at 2x scale = full 32x32 tile, no offset needed.
+export const SWARM_FW = 16;
+export const SWARM_FH = 16;
+export const SWARM_DEST = { dx: 0, dy: 0, dw: 32, dh: 32 };
+
 const isEntityMoving = (mob) =>
   mob.targetPos &&
   (Math.abs(mob.targetPos.x - mob.renderPos.x) > 0.05 ||
@@ -208,6 +214,24 @@ export const getThiefFrame = (mob, mobAnim, now) => {
     return [0, 0, 2, 3, 3, 4][Math.floor(now / 67) % 6] * THIEF_FW;
   }
   return [0, 0, 0, 1, 0, 0, 0, 0, 1][Math.floor(now / 1000) % 9] * THIEF_FW;
+};
+
+// Faithful to original SPD BanditSprite (12x13 frames, thief.png, same sheet/size as Thief):
+//   idle    1fps loop  [21,21,21,22,21,21,21,21,22]
+//   run    15fps loop  [21,21,23,24,24,25]
+//   attack 12fps once  [31,32,33]    (die handled in draw/mobs.js)
+export const getBanditFrame = (mob, mobAnim, now) => {
+  const anim = mobAnim[mob.id] || {};
+  const isAttacking = anim.attackUntil && now < anim.attackUntil;
+  if (isAttacking) {
+    const elapsed = now - (anim.attackUntil - 250);
+    const fi = Math.min(Math.floor(elapsed / 83), 2);
+    return [31, 32, 33][fi] * THIEF_FW;
+  }
+  if (isEntityMoving(mob)) {
+    return [21, 21, 23, 24, 24, 25][Math.floor(now / 67) % 6] * THIEF_FW;
+  }
+  return [21, 21, 21, 22, 21, 21, 21, 21, 22][Math.floor(now / 1000) % 9] * THIEF_FW;
 };
 
 export const getDM100Frame = (mob, mobAnim, now) => {
@@ -461,10 +485,25 @@ export const getBruteFrame = (mob, mobAnim, now) => {
   return [0, 0, 0, 1, 0, 0, 1, 1][Math.floor(now / 500) % 8] * BRUTE_FW;
 };
 
+// Faithful to original SPD SwarmSprite (16x16 frames, swarm.png):
+//   idle   15fps loop  [0,1,2,3,4,5] (same as run)
+//   run    15fps loop  [0,1,2,3,4,5]
+//   attack 20fps once  [6,7,8,9]    (die handled in draw/mobs.js)
+export const getSwarmFrame = (mob, mobAnim, now) => {
+  const anim = mobAnim[mob.id] || {};
+  const isAttacking = anim.attackUntil && now < anim.attackUntil;
+  if (isAttacking) {
+    const elapsed = now - (anim.attackUntil - 200);
+    const fi = Math.min(Math.floor(elapsed / 50), 3);
+    return [6, 7, 8, 9][fi] * SWARM_FW;
+  }
+  return [0, 1, 2, 3, 4, 5][Math.floor(now / 67) % 6] * SWARM_FW;
+};
+
 // dest (optional): in-tile placement {dx,dy,dw,dh} for sprites whose native frame is not a
 // full 32x32 tile (e.g. gnoll's 12x15 -> 24x30 @ +4,+2). Omitted = legacy full-tile draw.
 // alpha (optional): 0..1 used for the death fade-out.
-export const drawMobSprite = (ctx, mob, sprite, sx, fw = FRAME_W, fh = FRAME_H, flash = false, dest = null, alpha = 1, sy = 0) => {
+export const drawMobSprite = (ctx, mob, sprite, sx, fw = FRAME_W, fh = FRAME_H, flash = false, dest = null, alpha = 1, sy = 0, brightness = 1) => {
   const x = mob.renderPos.x * TILE_SIZE;
   const y = mob.renderPos.y * TILE_SIZE;
   const dx = dest ? dest.dx : 0;
@@ -474,6 +513,8 @@ export const drawMobSprite = (ctx, mob, sprite, sx, fw = FRAME_W, fh = FRAME_H, 
   if (sprite) {
     ctx.save();
     if (alpha < 1) ctx.globalAlpha = alpha;
+    // NecroSkeleton: 0.75 brightness tint (mirrors NecroSkeletonSprite.resetColor()).
+    if (brightness < 1) ctx.filter = `brightness(${brightness * 100}%)`;
     if (mob.facing === 'LEFT') {
       // Mirror around the tile: a sub-rect at left offset dx maps to local TILE_SIZE-dx-dw.
       const lx = TILE_SIZE - dx - dw;

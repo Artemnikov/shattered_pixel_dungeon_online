@@ -71,6 +71,9 @@ import {
   BRUTE_FW,
   BRUTE_FH,
   BRUTE_DEST,
+  SWARM_FW,
+  SWARM_FH,
+  SWARM_DEST,
   drawMobSprite,
   getCrabFrame,
   getHermitCrabFrame,
@@ -104,6 +107,8 @@ import {
   getTenguFrame,
   getDM300Frame,
   getBruteFrame,
+  getBanditFrame,
+  getSwarmFrame,
 } from '../mobs';
 
 // Gnoll's 12x15 frame, centered/bottom-aligned in the 32px tile per SPD placement
@@ -172,12 +177,18 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     } else if (mob.name === 'Scorpio') {
       mobSprite = assetImages.scorpio;
       sx = getScorpioFrame(mob, mobAnimRef.current, now);
-    } else if (mob.name === 'Skeleton') {
+    } else if (mob.name === 'Skeleton' || mob.name === 'NecroSkeleton') {
       mobSprite = assetImages.skeleton;
       sx = getSkeletonFrame(mob, mobAnimRef.current, now);
     } else if (mob.name === 'Thief') {
       mobSprite = assetImages.thief;
       sx = getThiefFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Bandit') {
+      mobSprite = assetImages.thief;
+      sx = getBanditFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Swarm') {
+      mobSprite = assetImages.swarm;
+      sx = getSwarmFrame(mob, mobAnimRef.current, now);
     } else if (mob.name === 'DM-100') {
       mobSprite = assetImages.dm100;
       sx = getDM100Frame(mob, mobAnimRef.current, now);
@@ -259,8 +270,10 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     const isCausticSlime = mob.name === 'Caustic Slime';
     const isGnoll = mob.name === 'Gnoll';
     const isSnake = mob.name === 'Snake';
-    const isSkeleton = mob.name === 'Skeleton';
+    const isSkeleton = mob.name === 'Skeleton' || mob.name === 'NecroSkeleton';
     const isThief = mob.name === 'Thief';
+    const isBandit = mob.name === 'Bandit';
+    const isSwarm = mob.name === 'Swarm';
     const isDM100 = mob.name === 'DM-100';
     const isGuard = mob.name === 'Guard';
     const isGoo = mob.name === 'Goo';
@@ -292,9 +305,12 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     } else if (isSnake) {
       drawMobSprite(ctx, mob, mobSprite, sx, SNAKE_FW, SNAKE_FH, flash, SNAKE_DEST);
     } else if (isSkeleton) {
-      drawMobSprite(ctx, mob, mobSprite, sx, SKELETON_FW, SKELETON_FH, flash, SKELETON_DEST);
-    } else if (isThief) {
+      const tint = mob.tinted ? 0.75 : 1;
+      drawMobSprite(ctx, mob, mobSprite, sx, SKELETON_FW, SKELETON_FH, flash, SKELETON_DEST, 1, 0, tint);
+    } else if (isThief || isBandit) {
       drawMobSprite(ctx, mob, mobSprite, sx, THIEF_FW, THIEF_FH, flash, THIEF_DEST);
+    } else if (isSwarm) {
+      drawMobSprite(ctx, mob, mobSprite, sx, SWARM_FW, SWARM_FH, flash, SWARM_DEST);
     } else if (isDM100) {
       drawMobSprite(ctx, mob, mobSprite, sx, DM100_FW, DM100_FH, flash, DM100_DEST);
     } else if (isGuard) {
@@ -402,8 +418,10 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     const isSlimeDeath = mob.name === 'Slime';
     const isCausticSlimeDeath = mob.name === 'Caustic Slime';
     const isSnakeDeath = mob.name === 'Snake';
-    const isSkeletonDeath = mob.name === 'Skeleton';
+    const isSkeletonDeath = mob.name === 'Skeleton' || mob.name === 'NecroSkeleton';
     const isThiefDeath = mob.name === 'Thief';
+    const isBanditDeath = mob.name === 'Bandit';
+    const isSwarmDeath = mob.name === 'Swarm';
     const isDM100Death = mob.name === 'DM-100';
     const isGuardDeath = mob.name === 'Guard';
     const isNecromancerDeath = mob.name === 'Necromancer';
@@ -412,7 +430,7 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     const isBruteDeath = mob.name === 'Brute' || mob.name === 'Armored Brute';
     // Gnoll: die frames [8,9,10] over 250ms, then a 3s alpha fade (SPD AlphaTweener).
     // Snake: die frames [11,12,13] over 300ms, then a 3s alpha fade.
-    const deathDuration = isScorpioDeath ? 417 : isGooDeath ? 300 : isRatDeath ? 400 : (isCrabDeath || isHermitCrabDeath) ? 333 : (isSlimeDeath || isCausticSlimeDeath) ? 400 : isSnakeDeath ? 3300 : isSkeletonDeath ? 332 : isThiefDeath ? 500 : isDM100Death ? 498 : isGuardDeath ? 500 : isNecromancerDeath ? 400 : isTenguDeath ? 1000 : isDM300Death ? 1000 : isBruteDeath ? 250 : 3250;
+    const deathDuration = isScorpioDeath ? 417 : isGooDeath ? 300 : isRatDeath ? 400 : (isCrabDeath || isHermitCrabDeath) ? 333 : (isSlimeDeath || isCausticSlimeDeath) ? 400 : isSnakeDeath ? 3300 : isSkeletonDeath ? 332 : isThiefDeath ? 500 : isBanditDeath ? 500 : isSwarmDeath ? 333 : isDM100Death ? 498 : isGuardDeath ? 500 : isNecromancerDeath ? 400 : isTenguDeath ? 1000 : isDM300Death ? 1000 : isBruteDeath ? 250 : 3250;
     if (elapsed > deathDuration) { delete dyingMobsRef.current[id]; return; }
     if (!visionRef.current.visible.has(`${Math.round(mob.renderPos.x)},${Math.round(mob.renderPos.y)}`)) return;
     if (isScorpioDeath) {
@@ -434,10 +452,17 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
       drawMobSprite(ctx, mob, assetImages.slime, [0, 5, 6, 7][fi] * SLIME_FW, SLIME_FW, SLIME_FH, false, SLIME_DEST, 1, sy);
     } else if (isSkeletonDeath) {
       const fi = Math.min(Math.floor(elapsed / 83), 3);
-      drawMobSprite(ctx, mob, assetImages.skeleton, [10, 11, 12, 13][fi] * SKELETON_FW, SKELETON_FW, SKELETON_FH, false, SKELETON_DEST);
+      const tint = mob.tinted ? 0.75 : 1;
+      drawMobSprite(ctx, mob, assetImages.skeleton, [10, 11, 12, 13][fi] * SKELETON_FW, SKELETON_FW, SKELETON_FH, false, SKELETON_DEST, 1, 0, tint);
     } else if (isThiefDeath) {
       const fi = Math.min(Math.floor(elapsed / 100), 4);
       drawMobSprite(ctx, mob, assetImages.thief, [5, 6, 7, 8, 9][fi] * THIEF_FW, THIEF_FW, THIEF_FH, false, THIEF_DEST);
+    } else if (isBanditDeath) {
+      const fi = Math.min(Math.floor(elapsed / 100), 4);
+      drawMobSprite(ctx, mob, assetImages.thief, [25, 27, 28, 29, 30][fi] * THIEF_FW, THIEF_FW, THIEF_FH, false, THIEF_DEST);
+    } else if (isSwarmDeath) {
+      const fi = Math.min(Math.floor(elapsed / 67), 4);
+      drawMobSprite(ctx, mob, assetImages.swarm, [10, 11, 12, 13, 14][fi] * SWARM_FW, SWARM_FW, SWARM_FH, false, SWARM_DEST);
     } else if (isDM100Death) {
       const fi = Math.min(Math.floor(elapsed / 83), 5);
       drawMobSprite(ctx, mob, assetImages.dm100, [10, 11, 12, 13, 14, 15][fi] * DM100_FW, DM100_FW, DM100_FH, false, DM100_DEST);

@@ -90,36 +90,35 @@ def _build_sewer_boss_floor(rng: SPDRandom, depth: int, run_state: RunState) -> 
 
 
 def _build_prison_boss_floor(rng: SPDRandom, depth: int, run_state: RunState) -> Tuple[GenLevel, List[Room]]:
-    """Simplified prison boss level (Tengu, depth 10). Single enclosed arena
-    with entrance at one end, Tengu in the center, locked exit at the other."""
-    from app.engine.dungeon.spd_levelgen.prison_painter import PrisonPainter
+    """Hardcoded port of PrisonBossLevel.java (Tengu, depth 10): the START-state
+    32x32 layout (entrance/start hallway/start cells/tengu cell), faithful to
+    the original. Tengu itself is NOT spawned here -- it doesn't exist in the
+    world until the FIGHT_START transition (engine/game/tengu_arena.py)."""
+    from app.engine.dungeon.spd_levelgen import prison_boss_layout as layout
 
-    level = GenLevel(depth, Feeling.NONE)
+    level = layout.build_start_grid(rng, depth)
     level.run_state = run_state
 
-    while True:
-        builder = _boss_builder(rng)
-        init_rooms = _prison_boss_init_rooms(rng, depth)
-        rng.shuffle(init_rooms)
-        for r in init_rooms:
-            r.neighbours.clear()
-            r.connected.clear()
-        rooms = builder.build(list(init_rooms), rng, depth)
-        if rooms is not None:
-            break
-
-    painter = (PrisonPainter()
-               .set_water(0.20, 4)
-               .set_grass(0.10, 3)
-               .set_traps(0, (), ()))
-    painter.paint(rng, level, rooms)
+    entrance_room = PrisonBossEntranceRoom()
+    entrance_room.set(layout.ENTRANCE_ROOM.left, layout.ENTRANCE_ROOM.top,
+                       layout.ENTRANCE_ROOM.right, layout.ENTRANCE_ROOM.bottom)
+    exit_room = PrisonBossExitRoom()
+    exit_room.set(layout.LEVEL_EXIT.x, layout.LEVEL_EXIT.y,
+                   layout.LEVEL_EXIT.x + 2, layout.LEVEL_EXIT.y + 3)
+    rooms: List[Room] = [entrance_room, exit_room]
 
     level.rooms = rooms
-    level.room_entrance = next(r for r in rooms if r.is_entrance())
-    level.room_exit = next(r for r in rooms if r.is_exit())
+    level.room_entrance = entrance_room
+    level.room_exit = exit_room
     level.build_flag_maps()
 
     _boss_create_items(rng, level)
+
+    pos = layout.random_prison_cell_pos(rng, level)
+    while level.solid[pos]:
+        pos = layout.random_prison_cell_pos(rng, level)
+    level.drop(frozenset({"IronKey"}), pos)
+
     return level, rooms
 
 
@@ -206,24 +205,6 @@ def _boss_init_rooms(rng: SPDRandom, depth: int) -> List[Room]:
 def _boss_standard_rooms(force_max: bool) -> int:
     """Port of SewerBossLevel.standardRooms()."""
     return 3  # always returns 3 when forceMax (and boss level always forces)
-
-
-def _prison_boss_init_rooms(rng: SPDRandom, depth: int) -> List[Room]:
-    rooms: List[Room] = []
-    entrance = PrisonBossEntranceRoom()
-    entrance.init_size_cat(rng)
-    rooms.append(entrance)
-    exit_ = PrisonBossExitRoom()
-    exit_.init_size_cat(rng)
-    rooms.append(exit_)
-    for _ in range(3):
-        s = create_standard_room(rng, depth)
-        s.set_size_cat(rng, 0, 0)
-        rooms.append(s)
-    boss_room = TenguBossRoom()
-    boss_room.init_size_cat(rng)
-    rooms.append(boss_room)
-    return rooms
 
 
 def _caves_boss_init_rooms(rng: SPDRandom, depth: int) -> List[Room]:
@@ -579,63 +560,20 @@ class RatKingRoom(SecretRoom):
 # Prison Boss (Tengu, depth 10) room types
 # ===========================================================================
 
-class PrisonBossEntranceRoom(StandardRoom):
-    def min_width(self) -> int:
-        return max(super().min_width(), 7)
-
-    def min_height(self) -> int:
-        return max(super().min_height(), 7)
+class PrisonBossEntranceRoom(Room):
+    """Marks the entranceRoom rect of the hardcoded PrisonBossLevel layout."""
 
     def is_entrance(self) -> bool:
         return True
 
-    def paint(self, level, rng) -> None:
-        Painter.fill(level, self, terrain.WALL)
-        Painter.fill(level, self, 1, terrain.EMPTY)
-        entrance = level.point_to_cell(self.random(rng, 2))
-        Painter.set(level, entrance, terrain.ENTRANCE)
-        for door in self.connected.values():
-            door.set(DoorType.REGULAR)
 
-
-class PrisonBossExitRoom(StandardRoom):
-    def min_width(self) -> int:
-        return max(super().min_width(), 7)
-
-    def min_height(self) -> int:
-        return max(super().min_height(), 7)
+class PrisonBossExitRoom(Room):
+    """Marks the (walled-off) levelExit rect of the hardcoded PrisonBossLevel
+    layout -- present for consistency with other levels, per the Java
+    comment, even though it sits inside the END_MAP walls until WON."""
 
     def is_exit(self) -> bool:
         return True
-
-    def paint(self, level, rng) -> None:
-        Painter.fill(level, self, terrain.WALL)
-        Painter.fill(level, self, 1, terrain.EMPTY)
-        c = self.center(rng)
-        Painter.set(level, c, terrain.LOCKED_EXIT)
-        for door in self.connected.values():
-            door.set(DoorType.REGULAR)
-
-
-class TenguBossRoom(StandardRoom):
-    def size_cat_probs(self):
-        return [0.0, 1.0, 0.0]
-
-    def min_width(self) -> int:
-        return max(super().min_width(), 10)
-
-    def min_height(self) -> int:
-        return max(super().min_height(), 10)
-
-    def paint(self, level, rng) -> None:
-        Painter.fill(level, self, terrain.WALL)
-        Painter.fill(level, self, 1, terrain.EMPTY)
-        Painter.fill(level, self, 2, terrain.EMPTY)
-        for door in self.connected.values():
-            door.set(DoorType.REGULAR)
-        c = self.center(rng)
-        tengu_pos = level.point_to_cell(c)
-        level.mobs.append(GenMob(cls_name="Tengu", pos=tengu_pos))
 
 
 # ===========================================================================

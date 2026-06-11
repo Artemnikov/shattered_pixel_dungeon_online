@@ -48,6 +48,7 @@ import pylonSprite from '../assets/pixel-dungeon/sprites/pylon.png';
 import tenguSprite from '../assets/pixel-dungeon/sprites/tengu.png';
 import dm300Sprite from '../assets/pixel-dungeon/sprites/dm300.png';
 import bruteSprite from '../assets/pixel-dungeon/sprites/brute.png';
+import swarmSprite from '../assets/pixel-dungeon/sprites/swarm.png';
 
 export default function useAssetImages() {
   const [assetImages, setAssetImages] = useState({
@@ -98,6 +99,7 @@ export default function useAssetImages() {
     tengu: null,
     dm300: null,
     brute: null,
+    swarm: null,
   });
 
   useEffect(() => {
@@ -183,6 +185,7 @@ export default function useAssetImages() {
     loadImage(tenguSprite, 'tengu');
     loadImage(dm300Sprite, 'dm300');
     loadImage(bruteSprite, 'brute');
+    loadImage(swarmSprite, 'swarm');
   }, []);
 
   return assetImages;

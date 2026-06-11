@@ -29,6 +29,7 @@ export const ITEM_SPRITES = {
   // Weapons (WEP_TIER1 = xy(1,7) = idx 96 -> row 6; WEP_TIER2 = xy(9,7) = idx 104)
   "Throwable Dagger": [2, 9],   // THROWING_KNIFE (MISSILE_WEP+2)
   "Throwing":         [2, 9],
+  "Worn Key":         [10, 3],  // WORN_KEY (MISC_CONSUMABLE+10 = idx 58) — before "Worn"
   "Worn":             [0, 6],   // WORN_SHORTSWORD
   "Rusty Sword":      [1, 6],   // SHORT_SWORD (WEP_TIER1+1)
   "Shortsword":       [8, 6],   // SHORTSWORD (WEP_TIER2+0)
@@ -77,8 +78,28 @@ export const ITEM_SPRITES = {
   "Potion":           [0, 22],
   "Food":             [0, 27],  // FOOD = xy(1,28) = idx 432
 
+  // Seeds (SEEDS = xy(1,25) = idx 384 -> col0,row24; per-kind names like "Sungrass Seed")
+  "Sungrass Seed":    [3, 24],  // SEED_SUNGRASS (SEEDS+3)
+  "Earthroot Seed":   [8, 24],  // SEED_EARTHROOT (SEEDS+8)
+  "Firebloom Seed":   [1, 24],  // SEED_FIREBLOOM (SEEDS+1)
+  "Icecap Seed":      [4, 24],  // SEED_ICECAP (SEEDS+4)
+  "Sorrowmoss Seed":  [6, 24],  // SEED_SORROWMOSS (SEEDS+6)
+  "Dreamfoil Seed":   [7, 24],  // SEED_MAGEROYAL slot (SEEDS+7) — no SPD dreamfoil seed sprite
+  "Fadeleaf Seed":    [10, 24], // SEED_FADELEAF (SEEDS+10)
+  "Rotberry Seed":    [0, 24],  // SEED_ROTBERRY (SEEDS+0)
+  "Starflower Seed":  [9, 24],  // SEED_STARFLOWER (SEEDS+9)
+  "Stormvine Seed":   [5, 24],  // SEED_STORMVINE (SEEDS+5)
+  "Blindweed Seed":   [11, 24], // SEED_BLINDWEED (SEEDS+11)
+  "Swiftthistle Seed":[2, 24],  // SEED_SWIFTTHISTLE (SEEDS+2)
+  "Seed":             [3, 24],  // generic Seed / "Seed of Sunlight" -> SEED_SUNGRASS
+
   // Misc
+  "Tengu's Mask":     [0, 6],   // MASK (WEP_TIER1+0 = idx 96 = col 0, row 6 in items.png)
+  "Goo Blob":         [7, 29],  // BLOB (QUEST+7, QUEST = xy(1,30) = idx 464)
   "Gold":             [2, 1],   // GOLD (UNCOLLECTIBLE+0 = xy(3,2) = idx 18)
+  "Dewdrop":          [5, 1],   // DEWDROP (UNCOLLECTIBLE+3 = idx 21)
+  "Golden Key":       [8, 3],   // GOLDEN_KEY (MISC_CONSUMABLE+8 = idx 56)
+  "Crystal Key":      [9, 3],   // CRYSTAL_KEY (MISC_CONSUMABLE+9 = idx 57)
   "Rusty Key":        [7, 3],   // IRON_KEY (MISC_CONSUMABLE+7 = idx 55)
   "Key":              [7, 3],
 
@@ -114,6 +135,8 @@ export const getItemSpriteCoords = (itemName, itemType) => {
   if (itemType === 'food')      return [0, 27];
   if (itemType === 'key')       return [7, 3];
   if (itemType === 'gold')      return [2, 1];
+  if (itemType === 'seed')      return [3, 24];  // SEED_SUNGRASS
+  if (itemType === 'dewdrop')   return [5, 1];   // DEWDROP
   return ITEM_SPRITES["default"];
 };
 

@@ -33,6 +33,13 @@ class FloorState:
     dk_summon_spots: List[Tuple[int, int]] = field(default_factory=list)
     yog_pos: Optional[Tuple[int, int]] = None
 
+    # PrisonBossLevel (floor 10, Tengu) state machine -- mirrors
+    # PrisonBossLevel.State (START/FIGHT_START/FIGHT_PAUSE/FIGHT_ARENA/WON)
+    # and the storedItems list preserved across map rebuilds.
+    tengu_state: str = "START"
+    map_version: int = 0
+    prison_stored_items: List[Item] = field(default_factory=list)
+
     def rebuild_flags(self) -> None:
         self.flags = build_flag_maps(self.grid)
 

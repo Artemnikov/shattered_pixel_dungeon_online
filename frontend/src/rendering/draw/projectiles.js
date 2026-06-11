@@ -9,6 +9,7 @@ const PROJECTILE_SPRITE_MAP = {
   stone: [3, 9],
   boomerang: [12, 9],
   dagger: [2, 9],
+  shuriken: [3, 9],
 };
 
 export function advanceAndDrawProjectiles(ctx, { projectilesRef, assetImages }) {

@@ -7,7 +7,7 @@ import uuid
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app.engine.manager import GameInstance, CharacterClass
-from app.engine.entities.base import Position, Weapon, Bow, Mob, Faction
+from app.engine.entities.base import Position, Bow, Mob, Faction
 
 def test_audio_events():
     print("Setting up GameInstance...")

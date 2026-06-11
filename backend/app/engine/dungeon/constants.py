@@ -29,12 +29,14 @@ class RoomKind:
 
 class TrapType:
     WORN_DART = "worn_dart"
+    TENGU_DART = "tengu_dart"  # hidden dart trap in Tengu cell (floor 10 boss)
 
     # Whether each trap type can be hidden (SECRET_TRAP).
     # False → always placed as visible TRAP terrain.
     # Mirrors original SPD's Trap.canBeHidden.
     CAN_BE_HIDDEN = {
         WORN_DART: False,
+        TENGU_DART: True,  # hidden until revealed by search or trigger
     }
 
 
@@ -59,6 +61,7 @@ class TrapVisual:
 
     MAPPING = {
         TrapType.WORN_DART: (GREY, CROSSHAIR),
+        TrapType.TENGU_DART: (RED, CROSSHAIR),
     }
 
     @staticmethod

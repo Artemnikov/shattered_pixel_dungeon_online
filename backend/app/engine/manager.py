@@ -44,6 +44,15 @@ from app.engine.game.players import PlayersMixin
 from app.engine.game.rogue import RogueMixin
 from app.engine.game.serialization import SerializationMixin
 from app.engine.game.talents import TalentsMixin
+from app.engine.game.tengu_arena import PrisonBossMixin
+from app.engine.game.ai_goo import GooAIMixin
+from app.engine.game.ai_dwarf_king import DwarfKingAIMixin
+from app.engine.game.ai_yog_dzewa import YogDzewaAIMixin
+from app.engine.game.ai_demon_spawner import DemonSpawnerAIMixin
+from app.engine.game.ai_pylon import PylonAIMixin
+from app.engine.game.ai_dm300 import DM300AIMixin
+from app.engine.game.ai_necromancer import NecromancerAIMixin
+from app.engine.game.ai_tengu import TenguAIMixin
 from app.engine.game.tick import TickMixin
 from app.engine.game.vision import VisionMixin
 from app.engine.game.world import WorldInteractionMixin
@@ -57,6 +66,15 @@ class GameInstance(
     WorldInteractionMixin,
     MovementCombatMixin,
     ItemsMixin,
+    PrisonBossMixin,
+    GooAIMixin,
+    DwarfKingAIMixin,
+    YogDzewaAIMixin,
+    DemonSpawnerAIMixin,
+    PylonAIMixin,
+    DM300AIMixin,
+    NecromancerAIMixin,
+    TenguAIMixin,
     TickMixin,
     ArmorAbilitiesMixin,
     TalentsMixin,
@@ -92,6 +110,13 @@ class GameInstance(
 
         # Global drop limiters
         self.drop_counters: Dict[str, int] = {}
+
+        # Per-run boss score tracking (SPD Statistics.bossScores)
+        # Indices: 0=Goo, 1=Tengu, 2=DM300, 3=Dwarf King, 4=Yog
+        self.boss_scores: Dict[int, int] = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0}
+        # Badge eligibility — set when entering a boss floor, cleared on
+        # avoidable damage (SPD Statistics.qualifiedForBossChallengeBadge)
+        self.qualified_for_boss_challenge: bool = False
 
         # Seed + RunState for SPD-parity level generation.
         if seed:

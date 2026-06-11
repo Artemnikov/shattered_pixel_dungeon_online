@@ -38,6 +38,6 @@ def test_init_uses_player_floor_even_if_game_depth_differs():
         assert init_payload["player_id"] == player_id
         assert init_payload["depth"] == 1
         assert init_payload["grid"] == game._get_or_create_floor(1).grid
-        assert manager.last_sent_floor[game_id][player_id] == 1
+        assert manager.last_sent_floor[game_id][player_id] == (1, 0)
 
     asyncio.run(scenario())
