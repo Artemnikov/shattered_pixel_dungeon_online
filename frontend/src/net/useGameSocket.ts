@@ -16,6 +16,7 @@ import type {
   ServerMessage,
   SerializedItem,
   TrapInfo,
+  CustomTileLayer,
 } from '../types/contract';
 
 // Blood color per mob (default red; Goo bleeds black, per GooSprite.blood() = 0xFF000000).
@@ -128,6 +129,7 @@ interface HookProps {
   sessionId: string;
   selectedClass: string;
   difficulty: string;
+  challenges?: string;
   playerName: string;
   setConnectionStatus?: (status: string) => void;
   socketRef: Ref<WebSocket | null>;
@@ -138,6 +140,7 @@ interface HookProps {
   openDoorsRef: Ref<Set<string>>;
   projectilesRef: Ref<Projectile[]>;
   trapsRef: Ref<TrapInfo[]>;
+  customTilesRef: Ref<CustomTileLayer[]>;
   mobAnimRef: Ref<Record<string, AnimState>>;
   dyingMobsRef: Ref<Record<string, DyingMob>>;
   playerAnimRef: Ref<Record<string, AnimState>>;
@@ -200,6 +203,7 @@ export default function useGameSocket({
   sessionId,
   selectedClass,
   difficulty,
+  challenges,
   playerName,
   setConnectionStatus,
   socketRef,
@@ -210,6 +214,7 @@ export default function useGameSocket({
   openDoorsRef,
   projectilesRef,
   trapsRef,
+  customTilesRef,
   mobAnimRef,
   dyingMobsRef,
   playerAnimRef,
@@ -275,7 +280,8 @@ export default function useGameSocket({
       const urlParams = new URLSearchParams(window.location.search);
       const adminSecret = urlParams.get('admin_secret') || '';
       const adminParam = adminSecret ? `&admin_secret=${encodeURIComponent(adminSecret)}` : '';
-      const ws = new WebSocket(`${wsBaseUrl}/ws/game/${gameId}?class_type=${selectedClass}&difficulty=${difficulty}${nameParam}${adminParam}${sessionParam}`);
+      const challengesParam = challenges ? `&challenges=${encodeURIComponent(challenges)}` : '';
+      const ws = new WebSocket(`${wsBaseUrl}/ws/game/${gameId}?class_type=${selectedClass}&difficulty=${difficulty}${challengesParam}${nameParam}${adminParam}${sessionParam}`);
       socketRef.current = ws;
 
       ws.onopen = () => {
@@ -312,6 +318,7 @@ export default function useGameSocket({
         gridRef.current = data.grid;
         visionRef.current.discovered = new Set();
         trapsRef.current = data.traps || [];
+        customTilesRef.current = data.custom_tiles || [];
         if (typeof data.depth === 'number') setDepth(data.depth);
         if (data.player_id) {
           setMyPlayerId(data.player_id);

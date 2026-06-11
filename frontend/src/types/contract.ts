@@ -494,8 +494,20 @@ export interface InitMessage {
   width: number;
   height: number;
   traps: TrapInfo[];
+  /** Decorative custom tilemaps (e.g. GooNest), cosmetic only. */
+  custom_tiles?: CustomTileLayer[];
   /** Only present on the very first INIT after connecting. */
   player_id?: string;
+}
+
+/** A decorative tilemap overlay (e.g. GooBossRoom's GooNest). */
+export interface CustomTileLayer {
+  texture: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  tiles: number[][];
 }
 
 /** The 20Hz per-player snapshot (main.py:168). */

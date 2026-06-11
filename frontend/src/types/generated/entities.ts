@@ -42,6 +42,7 @@ export interface Player {
   bleed_amount?: number;
   bleed_turns?: number;
   ooze_amount?: number;
+  ooze_cooldown?: number;
   shields?: Shield[];
   crit_damage_bonus?: number;
   grim_max_chance?: number;
@@ -68,6 +69,7 @@ export interface Player {
   heal_flat_per_tick?: number;
   heal_cooldown?: number;
   room_heal_cooldown?: number;
+  aqua_heal_left?: number;
   path_queue?: [unknown, unknown][];
   move_intent?: [unknown, unknown] | null;
   last_auto_move_time?: number;
@@ -83,6 +85,7 @@ export interface Player {
   armor_charge?: number;
   armor_ability?: string;
   seal_affixed?: boolean;
+  hunger?: number;
   cloak_stealth_active?: boolean;
   prep_seconds?: number;
   momentum_stacks?: number;
@@ -103,14 +106,41 @@ export interface Player {
     | HealthPotion
     | RevivingPotion
     | FuryPotion
+    | PotionOfStrength
+    | PotionOfHaste
+    | PotionOfInvisibility
+    | PotionOfLevitation
+    | PotionOfMindVision
+    | PotionOfFrost
+    | PotionOfLiquidFlame
+    | PotionOfToxicGas
+    | PotionOfParalyticGas
+    | PotionOfPurity
+    | PotionOfExperience
+    | ElixirOfAquaticRejuvenation
     | Potion
-    | Scroll
     | ScrollOfRage
     | ScrollOfMetamorphosis
+    | ScrollOfUpgrade
+    | ScrollOfIdentify
+    | ScrollOfMagicMapping
+    | ScrollOfTeleportation
+    | ScrollOfRemoveCurse
+    | ScrollOfRecharging
+    | ScrollOfLullaby
+    | ScrollOfTerror
+    | ScrollOfMirrorImage
+    | ScrollOfRetribution
+    | ScrollOfTransmutation
+    | Scroll
     | Gold
-    | Food
     | MysteryMeat
     | Berry
+    | SmallRation
+    | Ration
+    | Pasty
+    | ChargrilledMeat
+    | Food
     | Key
     | Seed
     | Dewdrop
@@ -118,6 +148,7 @@ export interface Player {
     | Boomerang
     | ThrowableDagger
     | Throwable
+    | GooBlob
     | VelvetPouch
     | ScrollHolder
     | MagicalHolster
@@ -141,14 +172,41 @@ export interface Player {
         | HealthPotion
         | RevivingPotion
         | FuryPotion
+        | PotionOfStrength
+        | PotionOfHaste
+        | PotionOfInvisibility
+        | PotionOfLevitation
+        | PotionOfMindVision
+        | PotionOfFrost
+        | PotionOfLiquidFlame
+        | PotionOfToxicGas
+        | PotionOfParalyticGas
+        | PotionOfPurity
+        | PotionOfExperience
+        | ElixirOfAquaticRejuvenation
         | Potion
-        | Scroll
         | ScrollOfRage
         | ScrollOfMetamorphosis
+        | ScrollOfUpgrade
+        | ScrollOfIdentify
+        | ScrollOfMagicMapping
+        | ScrollOfTeleportation
+        | ScrollOfRemoveCurse
+        | ScrollOfRecharging
+        | ScrollOfLullaby
+        | ScrollOfTerror
+        | ScrollOfMirrorImage
+        | ScrollOfRetribution
+        | ScrollOfTransmutation
+        | Scroll
         | Gold
-        | Food
         | MysteryMeat
         | Berry
+        | SmallRation
+        | Ration
+        | Pasty
+        | ChargrilledMeat
+        | Food
         | Key
         | Seed
         | Dewdrop
@@ -156,6 +214,7 @@ export interface Player {
         | Boomerang
         | ThrowableDagger
         | Throwable
+        | GooBlob
         | VelvetPouch
         | ScrollHolder
         | MagicalHolster
@@ -180,14 +239,41 @@ export interface Player {
         | HealthPotion
         | RevivingPotion
         | FuryPotion
+        | PotionOfStrength
+        | PotionOfHaste
+        | PotionOfInvisibility
+        | PotionOfLevitation
+        | PotionOfMindVision
+        | PotionOfFrost
+        | PotionOfLiquidFlame
+        | PotionOfToxicGas
+        | PotionOfParalyticGas
+        | PotionOfPurity
+        | PotionOfExperience
+        | ElixirOfAquaticRejuvenation
         | Potion
-        | Scroll
         | ScrollOfRage
         | ScrollOfMetamorphosis
+        | ScrollOfUpgrade
+        | ScrollOfIdentify
+        | ScrollOfMagicMapping
+        | ScrollOfTeleportation
+        | ScrollOfRemoveCurse
+        | ScrollOfRecharging
+        | ScrollOfLullaby
+        | ScrollOfTerror
+        | ScrollOfMirrorImage
+        | ScrollOfRetribution
+        | ScrollOfTransmutation
+        | Scroll
         | Gold
-        | Food
         | MysteryMeat
         | Berry
+        | SmallRation
+        | Ration
+        | Pasty
+        | ChargrilledMeat
+        | Food
         | Key
         | Seed
         | Dewdrop
@@ -195,6 +281,7 @@ export interface Player {
         | Boomerang
         | ThrowableDagger
         | Throwable
+        | GooBlob
         | VelvetPouch
         | ScrollHolder
         | MagicalHolster
@@ -248,14 +335,41 @@ export interface Belongings {
         | HealthPotion
         | RevivingPotion
         | FuryPotion
+        | PotionOfStrength
+        | PotionOfHaste
+        | PotionOfInvisibility
+        | PotionOfLevitation
+        | PotionOfMindVision
+        | PotionOfFrost
+        | PotionOfLiquidFlame
+        | PotionOfToxicGas
+        | PotionOfParalyticGas
+        | PotionOfPurity
+        | PotionOfExperience
+        | ElixirOfAquaticRejuvenation
         | Potion
-        | Scroll
         | ScrollOfRage
         | ScrollOfMetamorphosis
+        | ScrollOfUpgrade
+        | ScrollOfIdentify
+        | ScrollOfMagicMapping
+        | ScrollOfTeleportation
+        | ScrollOfRemoveCurse
+        | ScrollOfRecharging
+        | ScrollOfLullaby
+        | ScrollOfTerror
+        | ScrollOfMirrorImage
+        | ScrollOfRetribution
+        | ScrollOfTransmutation
+        | Scroll
         | Gold
-        | Food
         | MysteryMeat
         | Berry
+        | SmallRation
+        | Ration
+        | Pasty
+        | ChargrilledMeat
+        | Food
         | Key
         | Seed
         | Dewdrop
@@ -263,6 +377,7 @@ export interface Belongings {
         | Boomerang
         | ThrowableDagger
         | Throwable
+        | GooBlob
         | VelvetPouch
         | ScrollHolder
         | MagicalHolster
@@ -287,14 +402,41 @@ export interface Belongings {
         | HealthPotion
         | RevivingPotion
         | FuryPotion
+        | PotionOfStrength
+        | PotionOfHaste
+        | PotionOfInvisibility
+        | PotionOfLevitation
+        | PotionOfMindVision
+        | PotionOfFrost
+        | PotionOfLiquidFlame
+        | PotionOfToxicGas
+        | PotionOfParalyticGas
+        | PotionOfPurity
+        | PotionOfExperience
+        | ElixirOfAquaticRejuvenation
         | Potion
-        | Scroll
         | ScrollOfRage
         | ScrollOfMetamorphosis
+        | ScrollOfUpgrade
+        | ScrollOfIdentify
+        | ScrollOfMagicMapping
+        | ScrollOfTeleportation
+        | ScrollOfRemoveCurse
+        | ScrollOfRecharging
+        | ScrollOfLullaby
+        | ScrollOfTerror
+        | ScrollOfMirrorImage
+        | ScrollOfRetribution
+        | ScrollOfTransmutation
+        | Scroll
         | Gold
-        | Food
         | MysteryMeat
         | Berry
+        | SmallRation
+        | Ration
+        | Pasty
+        | ChargrilledMeat
+        | Food
         | Key
         | Seed
         | Dewdrop
@@ -302,6 +444,7 @@ export interface Belongings {
         | Boomerang
         | ThrowableDagger
         | Throwable
+        | GooBlob
         | VelvetPouch
         | ScrollHolder
         | MagicalHolster
@@ -326,14 +469,41 @@ export interface Belongings {
         | HealthPotion
         | RevivingPotion
         | FuryPotion
+        | PotionOfStrength
+        | PotionOfHaste
+        | PotionOfInvisibility
+        | PotionOfLevitation
+        | PotionOfMindVision
+        | PotionOfFrost
+        | PotionOfLiquidFlame
+        | PotionOfToxicGas
+        | PotionOfParalyticGas
+        | PotionOfPurity
+        | PotionOfExperience
+        | ElixirOfAquaticRejuvenation
         | Potion
-        | Scroll
         | ScrollOfRage
         | ScrollOfMetamorphosis
+        | ScrollOfUpgrade
+        | ScrollOfIdentify
+        | ScrollOfMagicMapping
+        | ScrollOfTeleportation
+        | ScrollOfRemoveCurse
+        | ScrollOfRecharging
+        | ScrollOfLullaby
+        | ScrollOfTerror
+        | ScrollOfMirrorImage
+        | ScrollOfRetribution
+        | ScrollOfTransmutation
+        | Scroll
         | Gold
-        | Food
         | MysteryMeat
         | Berry
+        | SmallRation
+        | Ration
+        | Pasty
+        | ChargrilledMeat
+        | Food
         | Key
         | Seed
         | Dewdrop
@@ -341,6 +511,7 @@ export interface Belongings {
         | Boomerang
         | ThrowableDagger
         | Throwable
+        | GooBlob
         | VelvetPouch
         | ScrollHolder
         | MagicalHolster
@@ -365,14 +536,41 @@ export interface Belongings {
         | HealthPotion
         | RevivingPotion
         | FuryPotion
+        | PotionOfStrength
+        | PotionOfHaste
+        | PotionOfInvisibility
+        | PotionOfLevitation
+        | PotionOfMindVision
+        | PotionOfFrost
+        | PotionOfLiquidFlame
+        | PotionOfToxicGas
+        | PotionOfParalyticGas
+        | PotionOfPurity
+        | PotionOfExperience
+        | ElixirOfAquaticRejuvenation
         | Potion
-        | Scroll
         | ScrollOfRage
         | ScrollOfMetamorphosis
+        | ScrollOfUpgrade
+        | ScrollOfIdentify
+        | ScrollOfMagicMapping
+        | ScrollOfTeleportation
+        | ScrollOfRemoveCurse
+        | ScrollOfRecharging
+        | ScrollOfLullaby
+        | ScrollOfTerror
+        | ScrollOfMirrorImage
+        | ScrollOfRetribution
+        | ScrollOfTransmutation
+        | Scroll
         | Gold
-        | Food
         | MysteryMeat
         | Berry
+        | SmallRation
+        | Ration
+        | Pasty
+        | ChargrilledMeat
+        | Food
         | Key
         | Seed
         | Dewdrop
@@ -380,6 +578,7 @@ export interface Belongings {
         | Boomerang
         | ThrowableDagger
         | Throwable
+        | GooBlob
         | VelvetPouch
         | ScrollHolder
         | MagicalHolster
@@ -404,14 +603,41 @@ export interface Belongings {
         | HealthPotion
         | RevivingPotion
         | FuryPotion
+        | PotionOfStrength
+        | PotionOfHaste
+        | PotionOfInvisibility
+        | PotionOfLevitation
+        | PotionOfMindVision
+        | PotionOfFrost
+        | PotionOfLiquidFlame
+        | PotionOfToxicGas
+        | PotionOfParalyticGas
+        | PotionOfPurity
+        | PotionOfExperience
+        | ElixirOfAquaticRejuvenation
         | Potion
-        | Scroll
         | ScrollOfRage
         | ScrollOfMetamorphosis
+        | ScrollOfUpgrade
+        | ScrollOfIdentify
+        | ScrollOfMagicMapping
+        | ScrollOfTeleportation
+        | ScrollOfRemoveCurse
+        | ScrollOfRecharging
+        | ScrollOfLullaby
+        | ScrollOfTerror
+        | ScrollOfMirrorImage
+        | ScrollOfRetribution
+        | ScrollOfTransmutation
+        | Scroll
         | Gold
-        | Food
         | MysteryMeat
         | Berry
+        | SmallRation
+        | Ration
+        | Pasty
+        | ChargrilledMeat
+        | Food
         | Key
         | Seed
         | Dewdrop
@@ -419,6 +645,7 @@ export interface Belongings {
         | Boomerang
         | ThrowableDagger
         | Throwable
+        | GooBlob
         | VelvetPouch
         | ScrollHolder
         | MagicalHolster
@@ -457,14 +684,41 @@ export interface Bag {
     | HealthPotion
     | RevivingPotion
     | FuryPotion
+    | PotionOfStrength
+    | PotionOfHaste
+    | PotionOfInvisibility
+    | PotionOfLevitation
+    | PotionOfMindVision
+    | PotionOfFrost
+    | PotionOfLiquidFlame
+    | PotionOfToxicGas
+    | PotionOfParalyticGas
+    | PotionOfPurity
+    | PotionOfExperience
+    | ElixirOfAquaticRejuvenation
     | Potion
-    | Scroll
     | ScrollOfRage
     | ScrollOfMetamorphosis
+    | ScrollOfUpgrade
+    | ScrollOfIdentify
+    | ScrollOfMagicMapping
+    | ScrollOfTeleportation
+    | ScrollOfRemoveCurse
+    | ScrollOfRecharging
+    | ScrollOfLullaby
+    | ScrollOfTerror
+    | ScrollOfMirrorImage
+    | ScrollOfRetribution
+    | ScrollOfTransmutation
+    | Scroll
     | Gold
-    | Food
     | MysteryMeat
     | Berry
+    | SmallRation
+    | Ration
+    | Pasty
+    | ChargrilledMeat
+    | Food
     | Key
     | Seed
     | Dewdrop
@@ -472,6 +726,7 @@ export interface Bag {
     | Boomerang
     | ThrowableDagger
     | Throwable
+    | GooBlob
     | VelvetPouch
     | ScrollHolder
     | MagicalHolster
@@ -499,6 +754,7 @@ export interface MeleeWeapon {
   enchantment?: string | null;
   projectile_type?: string | null;
   surprise_damage_floor?: number;
+  tier?: number;
 }
 export interface Dagger {
   kind?: "dagger";
@@ -520,6 +776,7 @@ export interface Dagger {
   enchantment?: string | null;
   projectile_type?: string | null;
   surprise_damage_floor?: number;
+  tier?: number;
 }
 export interface WornShortsword {
   kind?: "worn_shortsword";
@@ -541,6 +798,7 @@ export interface WornShortsword {
   enchantment?: string | null;
   projectile_type?: string | null;
   surprise_damage_floor?: number;
+  tier?: number;
 }
 export interface Bow {
   kind?: "bow";
@@ -759,6 +1017,186 @@ export interface FuryPotion {
   kept_though_lost?: boolean;
   effect?: string;
 }
+export interface PotionOfStrength {
+  kind?: "potion_of_strength";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  effect?: string;
+}
+export interface PotionOfHaste {
+  kind?: "potion_of_haste";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  effect?: string;
+}
+export interface PotionOfInvisibility {
+  kind?: "potion_of_invisibility";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  effect?: string;
+}
+export interface PotionOfLevitation {
+  kind?: "potion_of_levitation";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  effect?: string;
+}
+export interface PotionOfMindVision {
+  kind?: "potion_of_mind_vision";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  effect?: string;
+}
+export interface PotionOfFrost {
+  kind?: "potion_of_frost";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  effect?: string;
+}
+export interface PotionOfLiquidFlame {
+  kind?: "potion_of_liquid_flame";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  effect?: string;
+}
+export interface PotionOfToxicGas {
+  kind?: "potion_of_toxic_gas";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  effect?: string;
+}
+export interface PotionOfParalyticGas {
+  kind?: "potion_of_paralytic_gas";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  effect?: string;
+}
+export interface PotionOfPurity {
+  kind?: "potion_of_purity";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  effect?: string;
+}
+export interface PotionOfExperience {
+  kind?: "potion_of_experience";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  effect?: string;
+}
+export interface ElixirOfAquaticRejuvenation {
+  kind?: "elixir_aqua_rejuv";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  effect?: string;
+}
 export interface Potion {
   kind?: "potion";
   id?: string;
@@ -773,20 +1211,6 @@ export interface Potion {
   unique?: boolean;
   kept_though_lost?: boolean;
   effect?: string;
-}
-export interface Scroll {
-  kind?: "scroll";
-  id?: string;
-  name: string;
-  type?: string;
-  pos?: Position | null;
-  quantity?: number;
-  level?: number;
-  level_known?: boolean;
-  cursed?: boolean;
-  cursed_known?: boolean;
-  unique?: boolean;
-  kept_though_lost?: boolean;
 }
 export interface ScrollOfRage {
   kind?: "scroll_of_rage";
@@ -816,8 +1240,162 @@ export interface ScrollOfMetamorphosis {
   unique?: boolean;
   kept_though_lost?: boolean;
 }
-export interface Gold {
-  kind?: "gold";
+export interface ScrollOfUpgrade {
+  kind?: "scroll_of_upgrade";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+}
+export interface ScrollOfIdentify {
+  kind?: "scroll_of_identify";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+}
+export interface ScrollOfMagicMapping {
+  kind?: "scroll_of_magic_mapping";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+}
+export interface ScrollOfTeleportation {
+  kind?: "scroll_of_teleportation";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+}
+export interface ScrollOfRemoveCurse {
+  kind?: "scroll_of_remove_curse";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+}
+export interface ScrollOfRecharging {
+  kind?: "scroll_of_recharging";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+}
+export interface ScrollOfLullaby {
+  kind?: "scroll_of_lullaby";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+}
+export interface ScrollOfTerror {
+  kind?: "scroll_of_terror";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+}
+export interface ScrollOfMirrorImage {
+  kind?: "scroll_of_mirror_image";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+}
+export interface ScrollOfRetribution {
+  kind?: "scroll_of_retribution";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+}
+export interface ScrollOfTransmutation {
+  kind?: "scroll_of_transmutation";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+}
+export interface Scroll {
+  kind?: "scroll";
   id?: string;
   name: string;
   type?: string;
@@ -830,8 +1408,8 @@ export interface Gold {
   unique?: boolean;
   kept_though_lost?: boolean;
 }
-export interface Food {
-  kind?: "food";
+export interface Gold {
+  kind?: "gold";
   id?: string;
   name: string;
   type?: string;
@@ -857,6 +1435,7 @@ export interface MysteryMeat {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  energy?: number;
 }
 export interface Berry {
   kind?: "berry";
@@ -871,6 +1450,82 @@ export interface Berry {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  energy?: number;
+}
+export interface SmallRation {
+  kind?: "small_ration";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  energy?: number;
+}
+export interface Ration {
+  kind?: "ration";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  energy?: number;
+}
+export interface Pasty {
+  kind?: "pasty";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  energy?: number;
+}
+export interface ChargrilledMeat {
+  kind?: "chargrilled_meat";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  energy?: number;
+}
+export interface Food {
+  kind?: "food";
+  id?: string;
+  name: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  energy?: number;
 }
 export interface Key {
   kind?: "key";
@@ -988,6 +1643,20 @@ export interface Throwable {
   consumable?: boolean;
   projectile_type?: string;
 }
+export interface GooBlob {
+  kind?: "goo_blob";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+}
 export interface VelvetPouch {
   kind?: "velvet_pouch";
   id?: string;
@@ -1018,14 +1687,41 @@ export interface VelvetPouch {
     | HealthPotion
     | RevivingPotion
     | FuryPotion
+    | PotionOfStrength
+    | PotionOfHaste
+    | PotionOfInvisibility
+    | PotionOfLevitation
+    | PotionOfMindVision
+    | PotionOfFrost
+    | PotionOfLiquidFlame
+    | PotionOfToxicGas
+    | PotionOfParalyticGas
+    | PotionOfPurity
+    | PotionOfExperience
+    | ElixirOfAquaticRejuvenation
     | Potion
-    | Scroll
     | ScrollOfRage
     | ScrollOfMetamorphosis
+    | ScrollOfUpgrade
+    | ScrollOfIdentify
+    | ScrollOfMagicMapping
+    | ScrollOfTeleportation
+    | ScrollOfRemoveCurse
+    | ScrollOfRecharging
+    | ScrollOfLullaby
+    | ScrollOfTerror
+    | ScrollOfMirrorImage
+    | ScrollOfRetribution
+    | ScrollOfTransmutation
+    | Scroll
     | Gold
-    | Food
     | MysteryMeat
     | Berry
+    | SmallRation
+    | Ration
+    | Pasty
+    | ChargrilledMeat
+    | Food
     | Key
     | Seed
     | Dewdrop
@@ -1033,6 +1729,7 @@ export interface VelvetPouch {
     | Boomerang
     | ThrowableDagger
     | Throwable
+    | GooBlob
     | VelvetPouch
     | ScrollHolder
     | MagicalHolster
@@ -1070,14 +1767,41 @@ export interface ScrollHolder {
     | HealthPotion
     | RevivingPotion
     | FuryPotion
+    | PotionOfStrength
+    | PotionOfHaste
+    | PotionOfInvisibility
+    | PotionOfLevitation
+    | PotionOfMindVision
+    | PotionOfFrost
+    | PotionOfLiquidFlame
+    | PotionOfToxicGas
+    | PotionOfParalyticGas
+    | PotionOfPurity
+    | PotionOfExperience
+    | ElixirOfAquaticRejuvenation
     | Potion
-    | Scroll
     | ScrollOfRage
     | ScrollOfMetamorphosis
+    | ScrollOfUpgrade
+    | ScrollOfIdentify
+    | ScrollOfMagicMapping
+    | ScrollOfTeleportation
+    | ScrollOfRemoveCurse
+    | ScrollOfRecharging
+    | ScrollOfLullaby
+    | ScrollOfTerror
+    | ScrollOfMirrorImage
+    | ScrollOfRetribution
+    | ScrollOfTransmutation
+    | Scroll
     | Gold
-    | Food
     | MysteryMeat
     | Berry
+    | SmallRation
+    | Ration
+    | Pasty
+    | ChargrilledMeat
+    | Food
     | Key
     | Seed
     | Dewdrop
@@ -1085,6 +1809,7 @@ export interface ScrollHolder {
     | Boomerang
     | ThrowableDagger
     | Throwable
+    | GooBlob
     | VelvetPouch
     | ScrollHolder
     | MagicalHolster
@@ -1122,14 +1847,41 @@ export interface MagicalHolster {
     | HealthPotion
     | RevivingPotion
     | FuryPotion
+    | PotionOfStrength
+    | PotionOfHaste
+    | PotionOfInvisibility
+    | PotionOfLevitation
+    | PotionOfMindVision
+    | PotionOfFrost
+    | PotionOfLiquidFlame
+    | PotionOfToxicGas
+    | PotionOfParalyticGas
+    | PotionOfPurity
+    | PotionOfExperience
+    | ElixirOfAquaticRejuvenation
     | Potion
-    | Scroll
     | ScrollOfRage
     | ScrollOfMetamorphosis
+    | ScrollOfUpgrade
+    | ScrollOfIdentify
+    | ScrollOfMagicMapping
+    | ScrollOfTeleportation
+    | ScrollOfRemoveCurse
+    | ScrollOfRecharging
+    | ScrollOfLullaby
+    | ScrollOfTerror
+    | ScrollOfMirrorImage
+    | ScrollOfRetribution
+    | ScrollOfTransmutation
+    | Scroll
     | Gold
-    | Food
     | MysteryMeat
     | Berry
+    | SmallRation
+    | Ration
+    | Pasty
+    | ChargrilledMeat
+    | Food
     | Key
     | Seed
     | Dewdrop
@@ -1137,6 +1889,7 @@ export interface MagicalHolster {
     | Boomerang
     | ThrowableDagger
     | Throwable
+    | GooBlob
     | VelvetPouch
     | ScrollHolder
     | MagicalHolster
@@ -1174,14 +1927,41 @@ export interface PotionBandolier {
     | HealthPotion
     | RevivingPotion
     | FuryPotion
+    | PotionOfStrength
+    | PotionOfHaste
+    | PotionOfInvisibility
+    | PotionOfLevitation
+    | PotionOfMindVision
+    | PotionOfFrost
+    | PotionOfLiquidFlame
+    | PotionOfToxicGas
+    | PotionOfParalyticGas
+    | PotionOfPurity
+    | PotionOfExperience
+    | ElixirOfAquaticRejuvenation
     | Potion
-    | Scroll
     | ScrollOfRage
     | ScrollOfMetamorphosis
+    | ScrollOfUpgrade
+    | ScrollOfIdentify
+    | ScrollOfMagicMapping
+    | ScrollOfTeleportation
+    | ScrollOfRemoveCurse
+    | ScrollOfRecharging
+    | ScrollOfLullaby
+    | ScrollOfTerror
+    | ScrollOfMirrorImage
+    | ScrollOfRetribution
+    | ScrollOfTransmutation
+    | Scroll
     | Gold
-    | Food
     | MysteryMeat
     | Berry
+    | SmallRation
+    | Ration
+    | Pasty
+    | ChargrilledMeat
+    | Food
     | Key
     | Seed
     | Dewdrop
@@ -1189,6 +1969,7 @@ export interface PotionBandolier {
     | Boomerang
     | ThrowableDagger
     | Throwable
+    | GooBlob
     | VelvetPouch
     | ScrollHolder
     | MagicalHolster
@@ -1248,6 +2029,7 @@ export interface Mob {
   bleed_amount?: number;
   bleed_turns?: number;
   ooze_amount?: number;
+  ooze_cooldown?: number;
   shields?: Shield[];
   crit_damage_bonus?: number;
   grim_max_chance?: number;
@@ -1261,6 +2043,7 @@ export interface Mob {
   difficulty?: string;
   exp?: number;
   loot_table?: DropEntry[];
+  weighted_drops?: WeightedCountDrop[];
   flying?: boolean;
   properties?: string[];
   attack_range?: number;
@@ -1272,5 +2055,11 @@ export interface Mob {
 export interface DropEntry {
   item_kind: string;
   chance: number;
+  max_global?: number;
+}
+export interface WeightedCountDrop {
+  item_kind: string;
+  weights: number[];
+  base_count?: number;
   max_global?: number;
 }

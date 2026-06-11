@@ -95,6 +95,7 @@ class ConnectionManager:
             width=state["width"],
             height=state["height"],
             traps=state.get("traps", []),
+            custom_tiles=state.get("custom_tiles", []),
         )
         await websocket.send_json(init.model_dump(exclude_none=True))
         self.last_sent_floor.setdefault(game_id, {})[player_id] = (player_floor, map_version)
@@ -180,6 +181,7 @@ class ConnectionManager:
                             width=state["width"],
                             height=state["height"],
                             traps=state.get("traps", []),
+                            custom_tiles=state.get("custom_tiles", []),
                         )
                         await connection.send_json(init.model_dump(exclude_none=True))
                         self.last_sent_floor[game_id][player_id] = (player_floor, map_version)
@@ -293,7 +295,7 @@ async def get_talents(class_type: str):
     }
 
 @app.websocket("/ws/game/{game_id}")
-async def game_websocket(websocket: WebSocket, game_id: str, class_type: str = "warrior", difficulty: str = "normal", name: str = None, admin_secret: str = "", session: str = None, seed: str = ""):
+async def game_websocket(websocket: WebSocket, game_id: str, class_type: str = "warrior", difficulty: str = "normal", name: str = None, admin_secret: str = "", session: str = None, seed: str = "", challenges: str = ""):
     session_id = session or str(uuid.uuid4())
     player_id, is_new = await manager.connect(game_id, websocket, session_id, seed=seed)
 
@@ -301,6 +303,7 @@ async def game_websocket(websocket: WebSocket, game_id: str, class_type: str = "
     if is_new:
         if game.player_count == 0: # First player sets difficulty
             game.change_difficulty(difficulty)
+            game.set_challenges(challenges)
 
         is_admin = bool(admin_secret and admin_secret == os.environ.get("ADMIN_SECRET", "admin"))
         player_name = "admin" if is_admin else (name.strip()[:20] if name and name.strip() else f"Player_{player_id[:4]}")

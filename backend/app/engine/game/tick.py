@@ -18,6 +18,7 @@ Advances death processing, buff sync, player auto-movement, healing/regen,
 status effects (bleed/ooze), mob respawns, and delegates boss AI to sub-mixins.
 """
 
+import math
 import random
 import time
 from typing import List, Optional, Type
@@ -144,6 +145,7 @@ class TickMixin:
                         self.move_entity(player.id, dx, dy)
 
             self._apply_heal_tick(player)
+            self._apply_aqua_heal_tick(player)
             self._apply_room_heal_tick(player)
             self._apply_passive_regen(player)
 
@@ -497,6 +499,11 @@ class TickMixin:
                 key="regen", name="Healing", icon=44,
                 remaining=player.heal_left, duration=duration,
             ))
+        if player.aqua_heal_left > 0:
+            effects.append(Effect(
+                key="aqua_rejuv", name="Aquatic Rejuvenation", icon=44,
+                remaining=player.aqua_heal_left, duration=player.aqua_heal_left,
+            ))
         if player.berserk_active:
             effects.append(Effect(
                 key="berserk", name="Berserk", icon=13,
@@ -541,6 +548,40 @@ class TickMixin:
             player.heal_left = 0.0
             player.heal_pct_per_tick = 0.0
             player.heal_flat_per_tick = 0.0
+
+    def _apply_aqua_heal_tick(self, player: Player):
+        # Elixir of Aquatic Rejuvenation (SPD AquaHealing): heals
+        # max(1, maxHP/50) per turn while standing in water, until the pool
+        # (round(maxHP*1.5)) is exhausted. Fractional heal amounts are rounded
+        # probabilistically (SPD's Random.round / chance-of-rounding-up).
+        if player.aqua_heal_left <= 0:
+            return
+
+        max_hp = player.get_total_max_hp()
+        if player.hp >= max_hp:
+            return
+
+        floor = self._get_or_create_floor(player.floor_id)
+        if floor.grid[player.pos.y][player.pos.x] != TileType.FLOOR_WATER:
+            return
+
+        raw = max(1.0, max_hp / 50.0)
+        whole = math.floor(raw)
+        frac = raw - whole
+        amt = whole + 1 if random.random() < frac else whole
+        amt = max(1, amt)
+        amt = min(amt, player.aqua_heal_left, max_hp - player.hp)
+
+        player.hp = min(max_hp, player.hp + amt)
+        player.aqua_heal_left -= amt
+        if player.aqua_heal_left <= 0:
+            player.aqua_heal_left = 0.0
+
+        self.add_event(
+            "HEAL",
+            {"target": player.id, "amount": int(amt), "x": player.pos.x, "y": player.pos.y},
+            floor_id=player.floor_id,
+        )
 
     def _apply_room_heal_tick(self, player: Player):
         floor = self.floors.get(player.floor_id)

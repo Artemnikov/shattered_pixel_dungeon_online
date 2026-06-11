@@ -82,6 +82,7 @@ function HeroBust({ sheet, scale = 3, selected }) {
 const CharacterSelection = ({ onSelect }) => {
   const [selectedClass, setSelectedClass] = useState('warrior');
   const [difficulty, setDifficulty] = useState('normal');
+  const [strongerBosses, setStrongerBosses] = useState(false);
   const [playerName, setPlayerName] = useState('');
   const [landscape, setLandscape] = useState(
     typeof window !== 'undefined' ? window.innerWidth > window.innerHeight : true
@@ -122,7 +123,7 @@ const CharacterSelection = ({ onSelect }) => {
     AudioManager.play('CLICK');
     if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
     new Audio(descendSound).play().catch(() => {});
-    onSelect(selectedClass, difficulty, playerName.trim());
+    onSelect(selectedClass, difficulty, playerName.trim(), strongerBosses);
   };
 
   return (
@@ -166,6 +167,14 @@ const CharacterSelection = ({ onSelect }) => {
               ))}
             </div>
           </div>
+          <label className="hero-challenge-toggle">
+            <input
+              type="checkbox"
+              checked={strongerBosses}
+              onChange={(e) => { AudioManager.play('CLICK'); setStrongerBosses(e.target.checked); }}
+            />
+            Stronger Bosses
+          </label>
           <input
             className="hero-name-input"
             type="text"

@@ -78,6 +78,7 @@ function App() {
   const [selectedClass, setSelectedClass] = useState('warrior');
   const [playerName, setPlayerName] = useState('');
   const [difficulty, setDifficulty] = useState('normal');
+  const [challenges, setChallenges] = useState('');
   const [gameId] = useState('default-lobby');
   // Stable per-run identity so a dropped socket can reconnect to the same hero.
   // A fresh id is minted when a new run starts (see startGame); persisted so a
@@ -178,6 +179,7 @@ function App() {
   const warnedTilesRef = useRef(null);
   const floatingTextRef = useRef([]);
   const trapsRef = useRef([]);
+  const customTilesRef = useRef([]);
   const depthRef = useRef(1);
   const gameMenuOpenRef = useRef(false);
 
@@ -261,11 +263,11 @@ function App() {
 
   useGameSocket({
     enabled: gameState === 'PLAYING',
-    gameId, sessionId, selectedClass, difficulty, playerName,
+    gameId, sessionId, selectedClass, difficulty, challenges, playerName,
     setConnectionStatus,
     socketRef, gridRef, myPlayerIdRef, entitiesRef,
     visionRef, openDoorsRef, projectilesRef,
-    trapsRef,
+    trapsRef, customTilesRef,
     mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef, searchEffectsRef, floatingTextRef, wasDownedRef, warnedTilesRef,
     setGrid, setDepth, setMyPlayerId, setInventory,
     setEquippedItems, setMyStats, setDifficulty, setBossInfo,
@@ -322,7 +324,7 @@ function App() {
   useGameRenderer({
     canvasRef, grid, myPlayerId, depth, assetImages,
     entitiesRef, visionRef, openDoorsRef, projectilesRef,
-    trapsRef,
+    trapsRef, customTilesRef,
     mobAnimRef, dyingMobsRef, playerAnimRef, particlesRef, searchEffectsRef, floatingTextRef, myPlayerIdRef, warnedTilesRef,
     panOffsetRef, cameraLerpRef, zoomRef,
     isRefocusingRef, isDraggingRef,
@@ -727,9 +729,10 @@ function App() {
         <meta name="description" content="Select your hero class — Warrior, Mage, Rogue, or Archer — and descend into the dungeon." />
         <div className={isDesktop ? 'desktop-mode' : ''}
              style={isDesktop ? { '--cursor-mouse': `url(${cursorMouseUrl}) 1 1, pointer` } : {}}>
-          <CharacterSelection onSelect={(c, d, n) => {
+          <CharacterSelection onSelect={(c, d, n, strongerBosses) => {
             setSelectedClass(c);
             setDifficulty(d);
+            setChallenges(strongerBosses ? 'stronger_bosses' : '');
             setPlayerName(n);
             // Fresh identity for the new run so we spawn a new hero rather than
             // rebinding to a previous (possibly dead) one.

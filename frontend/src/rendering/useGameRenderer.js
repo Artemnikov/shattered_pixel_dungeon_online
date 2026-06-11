@@ -3,6 +3,7 @@ import { TILE_SIZE, MOVE_DURATION, CAMERA_LERP } from '../constants';
 import { DEST_TILE_SIZE } from './sewers/constants';
 import { buildWaterClipPath, drawWaterBackground, getWaterTextureForDepth } from './sewers/draw';
 import { drawGrid, drawGridCaps } from './draw/grid';
+import { drawCustomTiles } from './draw/customTiles';
 import { drawTerrainFeatures } from './draw/terrainFeatures';
 import { drawItems } from './draw/items';
 import { drawMobs } from './draw/mobs';
@@ -24,6 +25,7 @@ export default function useGameRenderer({
   openDoorsRef,
   projectilesRef,
   trapsRef,
+  customTilesRef,
   mobAnimRef,
   dyingMobsRef,
   playerAnimRef,
@@ -125,6 +127,7 @@ export default function useGameRenderer({
 
       drawWaterBackground(ctx, waterTex, waterClipPath, gridBounds, performance.now());
       drawGrid(ctx, { grid, depth, assetImages, visionRef, openDoorsRef });
+      drawCustomTiles(ctx, { customTiles: customTilesRef.current, assetImages, visionRef });
       drawTerrainFeatures(ctx, assetImages.terrainFeatures, trapsRef.current, grid, visionRef);
       if (warnedTilesRef) drawWarnedTiles(ctx, { ref: warnedTilesRef });
       drawItems(ctx, { entitiesRef, visionRef, assetImages });

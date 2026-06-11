@@ -261,6 +261,7 @@ class Action:
     INFO = "INFO"
     STEALTH = "STEALTH"  # Cloak of Shadows: toggle invisibility
     WEAR = "WEAR"        # TengusMask: choose subclass
+    ALCHEMIZE = "ALCHEMIZE"  # GooBlob + HealthPotion at an Alchemy Pot -> Elixir of Aquatic Rejuvenation
 
 # Actions that require the player to pick a target cell before resolving.
 TARGETED_ACTIONS = {Action.THROW, Action.ZAP}
@@ -625,6 +626,13 @@ class PotionOfExperience(Potion):
     DESC: ClassVar[str] = "Drinking this immediately grants a full level's worth of experience."
 
 
+class ElixirOfAquaticRejuvenation(Potion):
+    kind: Literal["elixir_aqua_rejuv"] = "elixir_aqua_rejuv"
+    name: str = "Elixir of Aquatic Rejuvenation"
+    effect: str = "aqua_rejuv"
+    DESC: ClassVar[str] = "A murky elixir brewed from a Health Potion and a Goo Blob. While its power lasts, you heal whenever you stand in water."
+
+
 class Scroll(ItemBase):
     kind: Literal["scroll"] = "scroll"
     type: str = "scroll"
@@ -930,6 +938,24 @@ class ChargrilledMeat(Food):
     DESC: ClassVar[str] = "Properly cooked mystery meat. Smells delicious."
 
 
+class GooBlob(ItemBase):
+    # Goo's death drop (SPD GooBlob): stackable quest reagent, used with a
+    # Health Potion at an Alchemy Pot to brew an Elixir of Aquatic Rejuvenation
+    # (see Action.ALCHEMIZE / action_alchemize).
+    kind: Literal["goo_blob"] = "goo_blob"
+    name: str = "Goo Blob"
+    type: str = "misc"
+    category: ClassVar[str] = ItemCategory.MISC
+    stackable: ClassVar[bool] = True
+    DESC: ClassVar[str] = "A blob of black ooze left behind by Goo. Can be combined with a Health Potion at an Alchemy Pot."
+
+    def actions(self, player: Optional["Player"] = None) -> List[str]:
+        base = super().actions(player)
+        if player is not None and any(isinstance(it, HealthPotion) for it in player.inventory):
+            return [Action.ALCHEMIZE] + base
+        return base
+
+
 class Scenery(ItemBase):
     # Non-pickable floor decoration (e.g. graves). Mirrors SPD heaps that aren't
     # collectable. Kept out of AnyItem since it only ever lives on the ground.
@@ -1084,6 +1110,7 @@ AnyItem = Annotated[
         PotionOfStrength, PotionOfHaste, PotionOfInvisibility, PotionOfLevitation,
         PotionOfMindVision, PotionOfFrost, PotionOfLiquidFlame, PotionOfToxicGas,
         PotionOfParalyticGas, PotionOfPurity, PotionOfExperience,
+        ElixirOfAquaticRejuvenation,
         Potion,
         ScrollOfRage, ScrollOfMetamorphosis,
         ScrollOfUpgrade, ScrollOfIdentify, ScrollOfMagicMapping, ScrollOfTeleportation,
@@ -1094,6 +1121,7 @@ AnyItem = Annotated[
         MysteryMeat, Berry, SmallRation, Ration, Pasty, ChargrilledMeat, Food,
         Key,
         Seed, Dewdrop, Stone, Boomerang, ThrowableDagger, Throwable,
+        GooBlob,
         VelvetPouch, ScrollHolder, MagicalHolster, PotionBandolier, Bag,
     ],
     Field(discriminator="kind"),
@@ -1226,6 +1254,14 @@ class DropEntry(BaseModel):
     chance: float
     max_global: int = 0
 
+class WeightedCountDrop(BaseModel):
+    # Mirrors SPD's Random.chances({...}) weighted pick: weights[i] is the
+    # relative weight of dropping (base_count + i) copies of item_kind.
+    item_kind: str
+    weights: List[float]
+    base_count: int = 0
+    max_global: int = 0
+
 class Mob(Entity):
     type: str = EntityType.MOB
     faction: str = Faction.DUNGEON
@@ -1234,6 +1270,7 @@ class Mob(Entity):
     difficulty: str = Difficulty.NORMAL
     exp: int = 1
     loot_table: List[DropEntry] = Field(default_factory=list)
+    weighted_drops: List[WeightedCountDrop] = Field(default_factory=list)
     flying: bool = False
     properties: List[str] = Field(default_factory=list)
     attack_range: int = 1
@@ -1283,6 +1320,9 @@ class Player(Entity):
     heal_cooldown: int = 0
     # Throttles the passive +10/s healing while standing in a floor's entrance room.
     room_heal_cooldown: int = 0
+    # Elixir of Aquatic Rejuvenation healing pool (SPD AquaHealing buff): heals
+    # max(1, maxHP/50) per turn while standing in water, until exhausted.
+    aqua_heal_left: float = 0.0
     path_queue: List[Tuple[int, int]] = []
     move_intent: Optional[Tuple[int, int]] = None
     last_auto_move_time: float = 0.0

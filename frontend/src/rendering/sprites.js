@@ -75,6 +75,7 @@ export const ITEM_SPRITES = {
   "Scroll":           [0, 19],  // SCROLLS = xy(1,20) = idx 304
   "Health Potion":    [0, 22],  // POTIONS = xy(1,23) = idx 352
   "Reviving Potion":  [0, 22],
+  "Elixir of Aquatic Rejuvenation": [9, 25],  // ELIXIR_AQUA (ELIXIRS+1, ELIXIRS=xy(9,26))
   "Potion":           [0, 22],
   "Food":             [0, 27],  // FOOD = xy(1,28) = idx 432
 

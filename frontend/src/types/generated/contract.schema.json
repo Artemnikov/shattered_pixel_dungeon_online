@@ -234,27 +234,55 @@
                 "boomerang": "#/$defs/Boomerang",
                 "bow": "#/$defs/Bow",
                 "broken_seal": "#/$defs/BrokenSeal",
+                "chargrilled_meat": "#/$defs/ChargrilledMeat",
                 "cloak_of_shadows": "#/$defs/CloakOfShadows",
                 "dagger": "#/$defs/Dagger",
                 "dewdrop": "#/$defs/Dewdrop",
+                "elixir_aqua_rejuv": "#/$defs/ElixirOfAquaticRejuvenation",
                 "food": "#/$defs/Food",
                 "fury_potion": "#/$defs/FuryPotion",
                 "gold": "#/$defs/Gold",
+                "goo_blob": "#/$defs/GooBlob",
                 "health_potion": "#/$defs/HealthPotion",
                 "key": "#/$defs/Key",
                 "magical_holster": "#/$defs/MagicalHolster",
                 "melee_weapon": "#/$defs/MeleeWeapon",
                 "missile_weapon": "#/$defs/MissileWeapon",
                 "mystery_meat": "#/$defs/MysteryMeat",
+                "pasty": "#/$defs/Pasty",
                 "potion": "#/$defs/Potion",
                 "potion_bandolier": "#/$defs/PotionBandolier",
+                "potion_of_experience": "#/$defs/PotionOfExperience",
+                "potion_of_frost": "#/$defs/PotionOfFrost",
+                "potion_of_haste": "#/$defs/PotionOfHaste",
+                "potion_of_invisibility": "#/$defs/PotionOfInvisibility",
+                "potion_of_levitation": "#/$defs/PotionOfLevitation",
+                "potion_of_liquid_flame": "#/$defs/PotionOfLiquidFlame",
+                "potion_of_mind_vision": "#/$defs/PotionOfMindVision",
+                "potion_of_paralytic_gas": "#/$defs/PotionOfParalyticGas",
+                "potion_of_purity": "#/$defs/PotionOfPurity",
+                "potion_of_strength": "#/$defs/PotionOfStrength",
+                "potion_of_toxic_gas": "#/$defs/PotionOfToxicGas",
+                "ration": "#/$defs/Ration",
                 "reviving_potion": "#/$defs/RevivingPotion",
                 "ring": "#/$defs/Ring",
                 "scroll": "#/$defs/Scroll",
                 "scroll_holder": "#/$defs/ScrollHolder",
+                "scroll_of_identify": "#/$defs/ScrollOfIdentify",
+                "scroll_of_lullaby": "#/$defs/ScrollOfLullaby",
+                "scroll_of_magic_mapping": "#/$defs/ScrollOfMagicMapping",
                 "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
+                "scroll_of_mirror_image": "#/$defs/ScrollOfMirrorImage",
                 "scroll_of_rage": "#/$defs/ScrollOfRage",
+                "scroll_of_recharging": "#/$defs/ScrollOfRecharging",
+                "scroll_of_remove_curse": "#/$defs/ScrollOfRemoveCurse",
+                "scroll_of_retribution": "#/$defs/ScrollOfRetribution",
+                "scroll_of_teleportation": "#/$defs/ScrollOfTeleportation",
+                "scroll_of_terror": "#/$defs/ScrollOfTerror",
+                "scroll_of_transmutation": "#/$defs/ScrollOfTransmutation",
+                "scroll_of_upgrade": "#/$defs/ScrollOfUpgrade",
                 "seed": "#/$defs/Seed",
+                "small_ration": "#/$defs/SmallRation",
                 "staff": "#/$defs/Staff",
                 "stone": "#/$defs/Stone",
                 "throwable": "#/$defs/Throwable",
@@ -312,10 +340,43 @@
                 "$ref": "#/$defs/FuryPotion"
               },
               {
-                "$ref": "#/$defs/Potion"
+                "$ref": "#/$defs/PotionOfStrength"
               },
               {
-                "$ref": "#/$defs/Scroll"
+                "$ref": "#/$defs/PotionOfHaste"
+              },
+              {
+                "$ref": "#/$defs/PotionOfInvisibility"
+              },
+              {
+                "$ref": "#/$defs/PotionOfLevitation"
+              },
+              {
+                "$ref": "#/$defs/PotionOfMindVision"
+              },
+              {
+                "$ref": "#/$defs/PotionOfFrost"
+              },
+              {
+                "$ref": "#/$defs/PotionOfLiquidFlame"
+              },
+              {
+                "$ref": "#/$defs/PotionOfToxicGas"
+              },
+              {
+                "$ref": "#/$defs/PotionOfParalyticGas"
+              },
+              {
+                "$ref": "#/$defs/PotionOfPurity"
+              },
+              {
+                "$ref": "#/$defs/PotionOfExperience"
+              },
+              {
+                "$ref": "#/$defs/ElixirOfAquaticRejuvenation"
+              },
+              {
+                "$ref": "#/$defs/Potion"
               },
               {
                 "$ref": "#/$defs/ScrollOfRage"
@@ -324,16 +385,64 @@
                 "$ref": "#/$defs/ScrollOfMetamorphosis"
               },
               {
-                "$ref": "#/$defs/Gold"
+                "$ref": "#/$defs/ScrollOfUpgrade"
               },
               {
-                "$ref": "#/$defs/Food"
+                "$ref": "#/$defs/ScrollOfIdentify"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfMagicMapping"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfTeleportation"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfRemoveCurse"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfRecharging"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfLullaby"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfTerror"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfMirrorImage"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfRetribution"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfTransmutation"
+              },
+              {
+                "$ref": "#/$defs/Scroll"
+              },
+              {
+                "$ref": "#/$defs/Gold"
               },
               {
                 "$ref": "#/$defs/MysteryMeat"
               },
               {
                 "$ref": "#/$defs/Berry"
+              },
+              {
+                "$ref": "#/$defs/SmallRation"
+              },
+              {
+                "$ref": "#/$defs/Ration"
+              },
+              {
+                "$ref": "#/$defs/Pasty"
+              },
+              {
+                "$ref": "#/$defs/ChargrilledMeat"
+              },
+              {
+                "$ref": "#/$defs/Food"
               },
               {
                 "$ref": "#/$defs/Key"
@@ -355,6 +464,9 @@
               },
               {
                 "$ref": "#/$defs/Throwable"
+              },
+              {
+                "$ref": "#/$defs/GooBlob"
               },
               {
                 "$ref": "#/$defs/VelvetPouch"
@@ -398,27 +510,55 @@
                   "boomerang": "#/$defs/Boomerang",
                   "bow": "#/$defs/Bow",
                   "broken_seal": "#/$defs/BrokenSeal",
+                  "chargrilled_meat": "#/$defs/ChargrilledMeat",
                   "cloak_of_shadows": "#/$defs/CloakOfShadows",
                   "dagger": "#/$defs/Dagger",
                   "dewdrop": "#/$defs/Dewdrop",
+                  "elixir_aqua_rejuv": "#/$defs/ElixirOfAquaticRejuvenation",
                   "food": "#/$defs/Food",
                   "fury_potion": "#/$defs/FuryPotion",
                   "gold": "#/$defs/Gold",
+                  "goo_blob": "#/$defs/GooBlob",
                   "health_potion": "#/$defs/HealthPotion",
                   "key": "#/$defs/Key",
                   "magical_holster": "#/$defs/MagicalHolster",
                   "melee_weapon": "#/$defs/MeleeWeapon",
                   "missile_weapon": "#/$defs/MissileWeapon",
                   "mystery_meat": "#/$defs/MysteryMeat",
+                  "pasty": "#/$defs/Pasty",
                   "potion": "#/$defs/Potion",
                   "potion_bandolier": "#/$defs/PotionBandolier",
+                  "potion_of_experience": "#/$defs/PotionOfExperience",
+                  "potion_of_frost": "#/$defs/PotionOfFrost",
+                  "potion_of_haste": "#/$defs/PotionOfHaste",
+                  "potion_of_invisibility": "#/$defs/PotionOfInvisibility",
+                  "potion_of_levitation": "#/$defs/PotionOfLevitation",
+                  "potion_of_liquid_flame": "#/$defs/PotionOfLiquidFlame",
+                  "potion_of_mind_vision": "#/$defs/PotionOfMindVision",
+                  "potion_of_paralytic_gas": "#/$defs/PotionOfParalyticGas",
+                  "potion_of_purity": "#/$defs/PotionOfPurity",
+                  "potion_of_strength": "#/$defs/PotionOfStrength",
+                  "potion_of_toxic_gas": "#/$defs/PotionOfToxicGas",
+                  "ration": "#/$defs/Ration",
                   "reviving_potion": "#/$defs/RevivingPotion",
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_identify": "#/$defs/ScrollOfIdentify",
+                  "scroll_of_lullaby": "#/$defs/ScrollOfLullaby",
+                  "scroll_of_magic_mapping": "#/$defs/ScrollOfMagicMapping",
                   "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
+                  "scroll_of_mirror_image": "#/$defs/ScrollOfMirrorImage",
                   "scroll_of_rage": "#/$defs/ScrollOfRage",
+                  "scroll_of_recharging": "#/$defs/ScrollOfRecharging",
+                  "scroll_of_remove_curse": "#/$defs/ScrollOfRemoveCurse",
+                  "scroll_of_retribution": "#/$defs/ScrollOfRetribution",
+                  "scroll_of_teleportation": "#/$defs/ScrollOfTeleportation",
+                  "scroll_of_terror": "#/$defs/ScrollOfTerror",
+                  "scroll_of_transmutation": "#/$defs/ScrollOfTransmutation",
+                  "scroll_of_upgrade": "#/$defs/ScrollOfUpgrade",
                   "seed": "#/$defs/Seed",
+                  "small_ration": "#/$defs/SmallRation",
                   "staff": "#/$defs/Staff",
                   "stone": "#/$defs/Stone",
                   "throwable": "#/$defs/Throwable",
@@ -476,10 +616,43 @@
                   "$ref": "#/$defs/FuryPotion"
                 },
                 {
-                  "$ref": "#/$defs/Potion"
+                  "$ref": "#/$defs/PotionOfStrength"
                 },
                 {
-                  "$ref": "#/$defs/Scroll"
+                  "$ref": "#/$defs/PotionOfHaste"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfInvisibility"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfLevitation"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfMindVision"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfFrost"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfLiquidFlame"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfToxicGas"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfParalyticGas"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfPurity"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfExperience"
+                },
+                {
+                  "$ref": "#/$defs/ElixirOfAquaticRejuvenation"
+                },
+                {
+                  "$ref": "#/$defs/Potion"
                 },
                 {
                   "$ref": "#/$defs/ScrollOfRage"
@@ -488,16 +661,64 @@
                   "$ref": "#/$defs/ScrollOfMetamorphosis"
                 },
                 {
-                  "$ref": "#/$defs/Gold"
+                  "$ref": "#/$defs/ScrollOfUpgrade"
                 },
                 {
-                  "$ref": "#/$defs/Food"
+                  "$ref": "#/$defs/ScrollOfIdentify"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMagicMapping"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTeleportation"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRemoveCurse"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRecharging"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfLullaby"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTerror"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMirrorImage"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRetribution"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTransmutation"
+                },
+                {
+                  "$ref": "#/$defs/Scroll"
+                },
+                {
+                  "$ref": "#/$defs/Gold"
                 },
                 {
                   "$ref": "#/$defs/MysteryMeat"
                 },
                 {
                   "$ref": "#/$defs/Berry"
+                },
+                {
+                  "$ref": "#/$defs/SmallRation"
+                },
+                {
+                  "$ref": "#/$defs/Ration"
+                },
+                {
+                  "$ref": "#/$defs/Pasty"
+                },
+                {
+                  "$ref": "#/$defs/ChargrilledMeat"
+                },
+                {
+                  "$ref": "#/$defs/Food"
                 },
                 {
                   "$ref": "#/$defs/Key"
@@ -519,6 +740,9 @@
                 },
                 {
                   "$ref": "#/$defs/Throwable"
+                },
+                {
+                  "$ref": "#/$defs/GooBlob"
                 },
                 {
                   "$ref": "#/$defs/VelvetPouch"
@@ -555,27 +779,55 @@
                   "boomerang": "#/$defs/Boomerang",
                   "bow": "#/$defs/Bow",
                   "broken_seal": "#/$defs/BrokenSeal",
+                  "chargrilled_meat": "#/$defs/ChargrilledMeat",
                   "cloak_of_shadows": "#/$defs/CloakOfShadows",
                   "dagger": "#/$defs/Dagger",
                   "dewdrop": "#/$defs/Dewdrop",
+                  "elixir_aqua_rejuv": "#/$defs/ElixirOfAquaticRejuvenation",
                   "food": "#/$defs/Food",
                   "fury_potion": "#/$defs/FuryPotion",
                   "gold": "#/$defs/Gold",
+                  "goo_blob": "#/$defs/GooBlob",
                   "health_potion": "#/$defs/HealthPotion",
                   "key": "#/$defs/Key",
                   "magical_holster": "#/$defs/MagicalHolster",
                   "melee_weapon": "#/$defs/MeleeWeapon",
                   "missile_weapon": "#/$defs/MissileWeapon",
                   "mystery_meat": "#/$defs/MysteryMeat",
+                  "pasty": "#/$defs/Pasty",
                   "potion": "#/$defs/Potion",
                   "potion_bandolier": "#/$defs/PotionBandolier",
+                  "potion_of_experience": "#/$defs/PotionOfExperience",
+                  "potion_of_frost": "#/$defs/PotionOfFrost",
+                  "potion_of_haste": "#/$defs/PotionOfHaste",
+                  "potion_of_invisibility": "#/$defs/PotionOfInvisibility",
+                  "potion_of_levitation": "#/$defs/PotionOfLevitation",
+                  "potion_of_liquid_flame": "#/$defs/PotionOfLiquidFlame",
+                  "potion_of_mind_vision": "#/$defs/PotionOfMindVision",
+                  "potion_of_paralytic_gas": "#/$defs/PotionOfParalyticGas",
+                  "potion_of_purity": "#/$defs/PotionOfPurity",
+                  "potion_of_strength": "#/$defs/PotionOfStrength",
+                  "potion_of_toxic_gas": "#/$defs/PotionOfToxicGas",
+                  "ration": "#/$defs/Ration",
                   "reviving_potion": "#/$defs/RevivingPotion",
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_identify": "#/$defs/ScrollOfIdentify",
+                  "scroll_of_lullaby": "#/$defs/ScrollOfLullaby",
+                  "scroll_of_magic_mapping": "#/$defs/ScrollOfMagicMapping",
                   "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
+                  "scroll_of_mirror_image": "#/$defs/ScrollOfMirrorImage",
                   "scroll_of_rage": "#/$defs/ScrollOfRage",
+                  "scroll_of_recharging": "#/$defs/ScrollOfRecharging",
+                  "scroll_of_remove_curse": "#/$defs/ScrollOfRemoveCurse",
+                  "scroll_of_retribution": "#/$defs/ScrollOfRetribution",
+                  "scroll_of_teleportation": "#/$defs/ScrollOfTeleportation",
+                  "scroll_of_terror": "#/$defs/ScrollOfTerror",
+                  "scroll_of_transmutation": "#/$defs/ScrollOfTransmutation",
+                  "scroll_of_upgrade": "#/$defs/ScrollOfUpgrade",
                   "seed": "#/$defs/Seed",
+                  "small_ration": "#/$defs/SmallRation",
                   "staff": "#/$defs/Staff",
                   "stone": "#/$defs/Stone",
                   "throwable": "#/$defs/Throwable",
@@ -633,10 +885,43 @@
                   "$ref": "#/$defs/FuryPotion"
                 },
                 {
-                  "$ref": "#/$defs/Potion"
+                  "$ref": "#/$defs/PotionOfStrength"
                 },
                 {
-                  "$ref": "#/$defs/Scroll"
+                  "$ref": "#/$defs/PotionOfHaste"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfInvisibility"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfLevitation"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfMindVision"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfFrost"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfLiquidFlame"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfToxicGas"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfParalyticGas"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfPurity"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfExperience"
+                },
+                {
+                  "$ref": "#/$defs/ElixirOfAquaticRejuvenation"
+                },
+                {
+                  "$ref": "#/$defs/Potion"
                 },
                 {
                   "$ref": "#/$defs/ScrollOfRage"
@@ -645,16 +930,64 @@
                   "$ref": "#/$defs/ScrollOfMetamorphosis"
                 },
                 {
-                  "$ref": "#/$defs/Gold"
+                  "$ref": "#/$defs/ScrollOfUpgrade"
                 },
                 {
-                  "$ref": "#/$defs/Food"
+                  "$ref": "#/$defs/ScrollOfIdentify"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMagicMapping"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTeleportation"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRemoveCurse"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRecharging"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfLullaby"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTerror"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMirrorImage"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRetribution"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTransmutation"
+                },
+                {
+                  "$ref": "#/$defs/Scroll"
+                },
+                {
+                  "$ref": "#/$defs/Gold"
                 },
                 {
                   "$ref": "#/$defs/MysteryMeat"
                 },
                 {
                   "$ref": "#/$defs/Berry"
+                },
+                {
+                  "$ref": "#/$defs/SmallRation"
+                },
+                {
+                  "$ref": "#/$defs/Ration"
+                },
+                {
+                  "$ref": "#/$defs/Pasty"
+                },
+                {
+                  "$ref": "#/$defs/ChargrilledMeat"
+                },
+                {
+                  "$ref": "#/$defs/Food"
                 },
                 {
                   "$ref": "#/$defs/Key"
@@ -676,6 +1009,9 @@
                 },
                 {
                   "$ref": "#/$defs/Throwable"
+                },
+                {
+                  "$ref": "#/$defs/GooBlob"
                 },
                 {
                   "$ref": "#/$defs/VelvetPouch"
@@ -712,27 +1048,55 @@
                   "boomerang": "#/$defs/Boomerang",
                   "bow": "#/$defs/Bow",
                   "broken_seal": "#/$defs/BrokenSeal",
+                  "chargrilled_meat": "#/$defs/ChargrilledMeat",
                   "cloak_of_shadows": "#/$defs/CloakOfShadows",
                   "dagger": "#/$defs/Dagger",
                   "dewdrop": "#/$defs/Dewdrop",
+                  "elixir_aqua_rejuv": "#/$defs/ElixirOfAquaticRejuvenation",
                   "food": "#/$defs/Food",
                   "fury_potion": "#/$defs/FuryPotion",
                   "gold": "#/$defs/Gold",
+                  "goo_blob": "#/$defs/GooBlob",
                   "health_potion": "#/$defs/HealthPotion",
                   "key": "#/$defs/Key",
                   "magical_holster": "#/$defs/MagicalHolster",
                   "melee_weapon": "#/$defs/MeleeWeapon",
                   "missile_weapon": "#/$defs/MissileWeapon",
                   "mystery_meat": "#/$defs/MysteryMeat",
+                  "pasty": "#/$defs/Pasty",
                   "potion": "#/$defs/Potion",
                   "potion_bandolier": "#/$defs/PotionBandolier",
+                  "potion_of_experience": "#/$defs/PotionOfExperience",
+                  "potion_of_frost": "#/$defs/PotionOfFrost",
+                  "potion_of_haste": "#/$defs/PotionOfHaste",
+                  "potion_of_invisibility": "#/$defs/PotionOfInvisibility",
+                  "potion_of_levitation": "#/$defs/PotionOfLevitation",
+                  "potion_of_liquid_flame": "#/$defs/PotionOfLiquidFlame",
+                  "potion_of_mind_vision": "#/$defs/PotionOfMindVision",
+                  "potion_of_paralytic_gas": "#/$defs/PotionOfParalyticGas",
+                  "potion_of_purity": "#/$defs/PotionOfPurity",
+                  "potion_of_strength": "#/$defs/PotionOfStrength",
+                  "potion_of_toxic_gas": "#/$defs/PotionOfToxicGas",
+                  "ration": "#/$defs/Ration",
                   "reviving_potion": "#/$defs/RevivingPotion",
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_identify": "#/$defs/ScrollOfIdentify",
+                  "scroll_of_lullaby": "#/$defs/ScrollOfLullaby",
+                  "scroll_of_magic_mapping": "#/$defs/ScrollOfMagicMapping",
                   "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
+                  "scroll_of_mirror_image": "#/$defs/ScrollOfMirrorImage",
                   "scroll_of_rage": "#/$defs/ScrollOfRage",
+                  "scroll_of_recharging": "#/$defs/ScrollOfRecharging",
+                  "scroll_of_remove_curse": "#/$defs/ScrollOfRemoveCurse",
+                  "scroll_of_retribution": "#/$defs/ScrollOfRetribution",
+                  "scroll_of_teleportation": "#/$defs/ScrollOfTeleportation",
+                  "scroll_of_terror": "#/$defs/ScrollOfTerror",
+                  "scroll_of_transmutation": "#/$defs/ScrollOfTransmutation",
+                  "scroll_of_upgrade": "#/$defs/ScrollOfUpgrade",
                   "seed": "#/$defs/Seed",
+                  "small_ration": "#/$defs/SmallRation",
                   "staff": "#/$defs/Staff",
                   "stone": "#/$defs/Stone",
                   "throwable": "#/$defs/Throwable",
@@ -790,10 +1154,43 @@
                   "$ref": "#/$defs/FuryPotion"
                 },
                 {
-                  "$ref": "#/$defs/Potion"
+                  "$ref": "#/$defs/PotionOfStrength"
                 },
                 {
-                  "$ref": "#/$defs/Scroll"
+                  "$ref": "#/$defs/PotionOfHaste"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfInvisibility"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfLevitation"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfMindVision"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfFrost"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfLiquidFlame"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfToxicGas"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfParalyticGas"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfPurity"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfExperience"
+                },
+                {
+                  "$ref": "#/$defs/ElixirOfAquaticRejuvenation"
+                },
+                {
+                  "$ref": "#/$defs/Potion"
                 },
                 {
                   "$ref": "#/$defs/ScrollOfRage"
@@ -802,16 +1199,64 @@
                   "$ref": "#/$defs/ScrollOfMetamorphosis"
                 },
                 {
-                  "$ref": "#/$defs/Gold"
+                  "$ref": "#/$defs/ScrollOfUpgrade"
                 },
                 {
-                  "$ref": "#/$defs/Food"
+                  "$ref": "#/$defs/ScrollOfIdentify"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMagicMapping"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTeleportation"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRemoveCurse"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRecharging"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfLullaby"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTerror"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMirrorImage"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRetribution"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTransmutation"
+                },
+                {
+                  "$ref": "#/$defs/Scroll"
+                },
+                {
+                  "$ref": "#/$defs/Gold"
                 },
                 {
                   "$ref": "#/$defs/MysteryMeat"
                 },
                 {
                   "$ref": "#/$defs/Berry"
+                },
+                {
+                  "$ref": "#/$defs/SmallRation"
+                },
+                {
+                  "$ref": "#/$defs/Ration"
+                },
+                {
+                  "$ref": "#/$defs/Pasty"
+                },
+                {
+                  "$ref": "#/$defs/ChargrilledMeat"
+                },
+                {
+                  "$ref": "#/$defs/Food"
                 },
                 {
                   "$ref": "#/$defs/Key"
@@ -833,6 +1278,9 @@
                 },
                 {
                   "$ref": "#/$defs/Throwable"
+                },
+                {
+                  "$ref": "#/$defs/GooBlob"
                 },
                 {
                   "$ref": "#/$defs/VelvetPouch"
@@ -869,27 +1317,55 @@
                   "boomerang": "#/$defs/Boomerang",
                   "bow": "#/$defs/Bow",
                   "broken_seal": "#/$defs/BrokenSeal",
+                  "chargrilled_meat": "#/$defs/ChargrilledMeat",
                   "cloak_of_shadows": "#/$defs/CloakOfShadows",
                   "dagger": "#/$defs/Dagger",
                   "dewdrop": "#/$defs/Dewdrop",
+                  "elixir_aqua_rejuv": "#/$defs/ElixirOfAquaticRejuvenation",
                   "food": "#/$defs/Food",
                   "fury_potion": "#/$defs/FuryPotion",
                   "gold": "#/$defs/Gold",
+                  "goo_blob": "#/$defs/GooBlob",
                   "health_potion": "#/$defs/HealthPotion",
                   "key": "#/$defs/Key",
                   "magical_holster": "#/$defs/MagicalHolster",
                   "melee_weapon": "#/$defs/MeleeWeapon",
                   "missile_weapon": "#/$defs/MissileWeapon",
                   "mystery_meat": "#/$defs/MysteryMeat",
+                  "pasty": "#/$defs/Pasty",
                   "potion": "#/$defs/Potion",
                   "potion_bandolier": "#/$defs/PotionBandolier",
+                  "potion_of_experience": "#/$defs/PotionOfExperience",
+                  "potion_of_frost": "#/$defs/PotionOfFrost",
+                  "potion_of_haste": "#/$defs/PotionOfHaste",
+                  "potion_of_invisibility": "#/$defs/PotionOfInvisibility",
+                  "potion_of_levitation": "#/$defs/PotionOfLevitation",
+                  "potion_of_liquid_flame": "#/$defs/PotionOfLiquidFlame",
+                  "potion_of_mind_vision": "#/$defs/PotionOfMindVision",
+                  "potion_of_paralytic_gas": "#/$defs/PotionOfParalyticGas",
+                  "potion_of_purity": "#/$defs/PotionOfPurity",
+                  "potion_of_strength": "#/$defs/PotionOfStrength",
+                  "potion_of_toxic_gas": "#/$defs/PotionOfToxicGas",
+                  "ration": "#/$defs/Ration",
                   "reviving_potion": "#/$defs/RevivingPotion",
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_identify": "#/$defs/ScrollOfIdentify",
+                  "scroll_of_lullaby": "#/$defs/ScrollOfLullaby",
+                  "scroll_of_magic_mapping": "#/$defs/ScrollOfMagicMapping",
                   "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
+                  "scroll_of_mirror_image": "#/$defs/ScrollOfMirrorImage",
                   "scroll_of_rage": "#/$defs/ScrollOfRage",
+                  "scroll_of_recharging": "#/$defs/ScrollOfRecharging",
+                  "scroll_of_remove_curse": "#/$defs/ScrollOfRemoveCurse",
+                  "scroll_of_retribution": "#/$defs/ScrollOfRetribution",
+                  "scroll_of_teleportation": "#/$defs/ScrollOfTeleportation",
+                  "scroll_of_terror": "#/$defs/ScrollOfTerror",
+                  "scroll_of_transmutation": "#/$defs/ScrollOfTransmutation",
+                  "scroll_of_upgrade": "#/$defs/ScrollOfUpgrade",
                   "seed": "#/$defs/Seed",
+                  "small_ration": "#/$defs/SmallRation",
                   "staff": "#/$defs/Staff",
                   "stone": "#/$defs/Stone",
                   "throwable": "#/$defs/Throwable",
@@ -947,10 +1423,43 @@
                   "$ref": "#/$defs/FuryPotion"
                 },
                 {
-                  "$ref": "#/$defs/Potion"
+                  "$ref": "#/$defs/PotionOfStrength"
                 },
                 {
-                  "$ref": "#/$defs/Scroll"
+                  "$ref": "#/$defs/PotionOfHaste"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfInvisibility"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfLevitation"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfMindVision"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfFrost"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfLiquidFlame"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfToxicGas"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfParalyticGas"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfPurity"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfExperience"
+                },
+                {
+                  "$ref": "#/$defs/ElixirOfAquaticRejuvenation"
+                },
+                {
+                  "$ref": "#/$defs/Potion"
                 },
                 {
                   "$ref": "#/$defs/ScrollOfRage"
@@ -959,16 +1468,64 @@
                   "$ref": "#/$defs/ScrollOfMetamorphosis"
                 },
                 {
-                  "$ref": "#/$defs/Gold"
+                  "$ref": "#/$defs/ScrollOfUpgrade"
                 },
                 {
-                  "$ref": "#/$defs/Food"
+                  "$ref": "#/$defs/ScrollOfIdentify"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMagicMapping"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTeleportation"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRemoveCurse"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRecharging"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfLullaby"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTerror"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMirrorImage"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRetribution"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTransmutation"
+                },
+                {
+                  "$ref": "#/$defs/Scroll"
+                },
+                {
+                  "$ref": "#/$defs/Gold"
                 },
                 {
                   "$ref": "#/$defs/MysteryMeat"
                 },
                 {
                   "$ref": "#/$defs/Berry"
+                },
+                {
+                  "$ref": "#/$defs/SmallRation"
+                },
+                {
+                  "$ref": "#/$defs/Ration"
+                },
+                {
+                  "$ref": "#/$defs/Pasty"
+                },
+                {
+                  "$ref": "#/$defs/ChargrilledMeat"
+                },
+                {
+                  "$ref": "#/$defs/Food"
                 },
                 {
                   "$ref": "#/$defs/Key"
@@ -990,6 +1547,9 @@
                 },
                 {
                   "$ref": "#/$defs/Throwable"
+                },
+                {
+                  "$ref": "#/$defs/GooBlob"
                 },
                 {
                   "$ref": "#/$defs/VelvetPouch"
@@ -1026,27 +1586,55 @@
                   "boomerang": "#/$defs/Boomerang",
                   "bow": "#/$defs/Bow",
                   "broken_seal": "#/$defs/BrokenSeal",
+                  "chargrilled_meat": "#/$defs/ChargrilledMeat",
                   "cloak_of_shadows": "#/$defs/CloakOfShadows",
                   "dagger": "#/$defs/Dagger",
                   "dewdrop": "#/$defs/Dewdrop",
+                  "elixir_aqua_rejuv": "#/$defs/ElixirOfAquaticRejuvenation",
                   "food": "#/$defs/Food",
                   "fury_potion": "#/$defs/FuryPotion",
                   "gold": "#/$defs/Gold",
+                  "goo_blob": "#/$defs/GooBlob",
                   "health_potion": "#/$defs/HealthPotion",
                   "key": "#/$defs/Key",
                   "magical_holster": "#/$defs/MagicalHolster",
                   "melee_weapon": "#/$defs/MeleeWeapon",
                   "missile_weapon": "#/$defs/MissileWeapon",
                   "mystery_meat": "#/$defs/MysteryMeat",
+                  "pasty": "#/$defs/Pasty",
                   "potion": "#/$defs/Potion",
                   "potion_bandolier": "#/$defs/PotionBandolier",
+                  "potion_of_experience": "#/$defs/PotionOfExperience",
+                  "potion_of_frost": "#/$defs/PotionOfFrost",
+                  "potion_of_haste": "#/$defs/PotionOfHaste",
+                  "potion_of_invisibility": "#/$defs/PotionOfInvisibility",
+                  "potion_of_levitation": "#/$defs/PotionOfLevitation",
+                  "potion_of_liquid_flame": "#/$defs/PotionOfLiquidFlame",
+                  "potion_of_mind_vision": "#/$defs/PotionOfMindVision",
+                  "potion_of_paralytic_gas": "#/$defs/PotionOfParalyticGas",
+                  "potion_of_purity": "#/$defs/PotionOfPurity",
+                  "potion_of_strength": "#/$defs/PotionOfStrength",
+                  "potion_of_toxic_gas": "#/$defs/PotionOfToxicGas",
+                  "ration": "#/$defs/Ration",
                   "reviving_potion": "#/$defs/RevivingPotion",
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_identify": "#/$defs/ScrollOfIdentify",
+                  "scroll_of_lullaby": "#/$defs/ScrollOfLullaby",
+                  "scroll_of_magic_mapping": "#/$defs/ScrollOfMagicMapping",
                   "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
+                  "scroll_of_mirror_image": "#/$defs/ScrollOfMirrorImage",
                   "scroll_of_rage": "#/$defs/ScrollOfRage",
+                  "scroll_of_recharging": "#/$defs/ScrollOfRecharging",
+                  "scroll_of_remove_curse": "#/$defs/ScrollOfRemoveCurse",
+                  "scroll_of_retribution": "#/$defs/ScrollOfRetribution",
+                  "scroll_of_teleportation": "#/$defs/ScrollOfTeleportation",
+                  "scroll_of_terror": "#/$defs/ScrollOfTerror",
+                  "scroll_of_transmutation": "#/$defs/ScrollOfTransmutation",
+                  "scroll_of_upgrade": "#/$defs/ScrollOfUpgrade",
                   "seed": "#/$defs/Seed",
+                  "small_ration": "#/$defs/SmallRation",
                   "staff": "#/$defs/Staff",
                   "stone": "#/$defs/Stone",
                   "throwable": "#/$defs/Throwable",
@@ -1104,10 +1692,43 @@
                   "$ref": "#/$defs/FuryPotion"
                 },
                 {
-                  "$ref": "#/$defs/Potion"
+                  "$ref": "#/$defs/PotionOfStrength"
                 },
                 {
-                  "$ref": "#/$defs/Scroll"
+                  "$ref": "#/$defs/PotionOfHaste"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfInvisibility"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfLevitation"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfMindVision"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfFrost"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfLiquidFlame"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfToxicGas"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfParalyticGas"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfPurity"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfExperience"
+                },
+                {
+                  "$ref": "#/$defs/ElixirOfAquaticRejuvenation"
+                },
+                {
+                  "$ref": "#/$defs/Potion"
                 },
                 {
                   "$ref": "#/$defs/ScrollOfRage"
@@ -1116,16 +1737,64 @@
                   "$ref": "#/$defs/ScrollOfMetamorphosis"
                 },
                 {
-                  "$ref": "#/$defs/Gold"
+                  "$ref": "#/$defs/ScrollOfUpgrade"
                 },
                 {
-                  "$ref": "#/$defs/Food"
+                  "$ref": "#/$defs/ScrollOfIdentify"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMagicMapping"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTeleportation"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRemoveCurse"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRecharging"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfLullaby"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTerror"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMirrorImage"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRetribution"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTransmutation"
+                },
+                {
+                  "$ref": "#/$defs/Scroll"
+                },
+                {
+                  "$ref": "#/$defs/Gold"
                 },
                 {
                   "$ref": "#/$defs/MysteryMeat"
                 },
                 {
                   "$ref": "#/$defs/Berry"
+                },
+                {
+                  "$ref": "#/$defs/SmallRation"
+                },
+                {
+                  "$ref": "#/$defs/Ration"
+                },
+                {
+                  "$ref": "#/$defs/Pasty"
+                },
+                {
+                  "$ref": "#/$defs/ChargrilledMeat"
+                },
+                {
+                  "$ref": "#/$defs/Food"
                 },
                 {
                   "$ref": "#/$defs/Key"
@@ -1147,6 +1816,9 @@
                 },
                 {
                   "$ref": "#/$defs/Throwable"
+                },
+                {
+                  "$ref": "#/$defs/GooBlob"
                 },
                 {
                   "$ref": "#/$defs/VelvetPouch"
@@ -1231,6 +1903,10 @@
         "kept_though_lost": {
           "default": false,
           "type": "boolean"
+        },
+        "energy": {
+          "default": 100,
+          "type": "integer"
         }
       },
       "type": "object"
@@ -1523,6 +2199,71 @@
       ],
       "type": "object"
     },
+    "ChargrilledMeat": {
+      "properties": {
+        "kind": {
+          "const": "chargrilled_meat",
+          "default": "chargrilled_meat",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Chargrilled Meat",
+          "type": "string"
+        },
+        "type": {
+          "default": "food",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "energy": {
+          "default": 300,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
     "CloakOfShadows": {
       "properties": {
         "kind": {
@@ -1663,7 +2404,7 @@
           "type": "integer"
         },
         "damage": {
-          "default": 2,
+          "default": 1,
           "type": "integer"
         },
         "range": {
@@ -1699,6 +2440,10 @@
         "surprise_damage_floor": {
           "default": 0.75,
           "type": "number"
+        },
+        "tier": {
+          "default": 1,
+          "type": "integer"
         }
       },
       "type": "object"
@@ -1810,6 +2555,71 @@
       ],
       "type": "object"
     },
+    "ElixirOfAquaticRejuvenation": {
+      "properties": {
+        "kind": {
+          "const": "elixir_aqua_rejuv",
+          "default": "elixir_aqua_rejuv",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Elixir of Aquatic Rejuvenation",
+          "type": "string"
+        },
+        "type": {
+          "default": "potion",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "effect": {
+          "default": "aqua_rejuv",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "Food": {
       "properties": {
         "kind": {
@@ -1866,6 +2676,10 @@
         "kept_though_lost": {
           "default": false,
           "type": "boolean"
+        },
+        "energy": {
+          "default": 0,
+          "type": "integer"
         }
       },
       "required": [
@@ -1999,6 +2813,67 @@
       "required": [
         "name"
       ],
+      "type": "object"
+    },
+    "GooBlob": {
+      "properties": {
+        "kind": {
+          "const": "goo_blob",
+          "default": "goo_blob",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Goo Blob",
+          "type": "string"
+        },
+        "type": {
+          "default": "misc",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
       "type": "object"
     },
     "HealthPotion": {
@@ -2206,27 +3081,55 @@
                 "boomerang": "#/$defs/Boomerang",
                 "bow": "#/$defs/Bow",
                 "broken_seal": "#/$defs/BrokenSeal",
+                "chargrilled_meat": "#/$defs/ChargrilledMeat",
                 "cloak_of_shadows": "#/$defs/CloakOfShadows",
                 "dagger": "#/$defs/Dagger",
                 "dewdrop": "#/$defs/Dewdrop",
+                "elixir_aqua_rejuv": "#/$defs/ElixirOfAquaticRejuvenation",
                 "food": "#/$defs/Food",
                 "fury_potion": "#/$defs/FuryPotion",
                 "gold": "#/$defs/Gold",
+                "goo_blob": "#/$defs/GooBlob",
                 "health_potion": "#/$defs/HealthPotion",
                 "key": "#/$defs/Key",
                 "magical_holster": "#/$defs/MagicalHolster",
                 "melee_weapon": "#/$defs/MeleeWeapon",
                 "missile_weapon": "#/$defs/MissileWeapon",
                 "mystery_meat": "#/$defs/MysteryMeat",
+                "pasty": "#/$defs/Pasty",
                 "potion": "#/$defs/Potion",
                 "potion_bandolier": "#/$defs/PotionBandolier",
+                "potion_of_experience": "#/$defs/PotionOfExperience",
+                "potion_of_frost": "#/$defs/PotionOfFrost",
+                "potion_of_haste": "#/$defs/PotionOfHaste",
+                "potion_of_invisibility": "#/$defs/PotionOfInvisibility",
+                "potion_of_levitation": "#/$defs/PotionOfLevitation",
+                "potion_of_liquid_flame": "#/$defs/PotionOfLiquidFlame",
+                "potion_of_mind_vision": "#/$defs/PotionOfMindVision",
+                "potion_of_paralytic_gas": "#/$defs/PotionOfParalyticGas",
+                "potion_of_purity": "#/$defs/PotionOfPurity",
+                "potion_of_strength": "#/$defs/PotionOfStrength",
+                "potion_of_toxic_gas": "#/$defs/PotionOfToxicGas",
+                "ration": "#/$defs/Ration",
                 "reviving_potion": "#/$defs/RevivingPotion",
                 "ring": "#/$defs/Ring",
                 "scroll": "#/$defs/Scroll",
                 "scroll_holder": "#/$defs/ScrollHolder",
+                "scroll_of_identify": "#/$defs/ScrollOfIdentify",
+                "scroll_of_lullaby": "#/$defs/ScrollOfLullaby",
+                "scroll_of_magic_mapping": "#/$defs/ScrollOfMagicMapping",
                 "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
+                "scroll_of_mirror_image": "#/$defs/ScrollOfMirrorImage",
                 "scroll_of_rage": "#/$defs/ScrollOfRage",
+                "scroll_of_recharging": "#/$defs/ScrollOfRecharging",
+                "scroll_of_remove_curse": "#/$defs/ScrollOfRemoveCurse",
+                "scroll_of_retribution": "#/$defs/ScrollOfRetribution",
+                "scroll_of_teleportation": "#/$defs/ScrollOfTeleportation",
+                "scroll_of_terror": "#/$defs/ScrollOfTerror",
+                "scroll_of_transmutation": "#/$defs/ScrollOfTransmutation",
+                "scroll_of_upgrade": "#/$defs/ScrollOfUpgrade",
                 "seed": "#/$defs/Seed",
+                "small_ration": "#/$defs/SmallRation",
                 "staff": "#/$defs/Staff",
                 "stone": "#/$defs/Stone",
                 "throwable": "#/$defs/Throwable",
@@ -2284,10 +3187,43 @@
                 "$ref": "#/$defs/FuryPotion"
               },
               {
-                "$ref": "#/$defs/Potion"
+                "$ref": "#/$defs/PotionOfStrength"
               },
               {
-                "$ref": "#/$defs/Scroll"
+                "$ref": "#/$defs/PotionOfHaste"
+              },
+              {
+                "$ref": "#/$defs/PotionOfInvisibility"
+              },
+              {
+                "$ref": "#/$defs/PotionOfLevitation"
+              },
+              {
+                "$ref": "#/$defs/PotionOfMindVision"
+              },
+              {
+                "$ref": "#/$defs/PotionOfFrost"
+              },
+              {
+                "$ref": "#/$defs/PotionOfLiquidFlame"
+              },
+              {
+                "$ref": "#/$defs/PotionOfToxicGas"
+              },
+              {
+                "$ref": "#/$defs/PotionOfParalyticGas"
+              },
+              {
+                "$ref": "#/$defs/PotionOfPurity"
+              },
+              {
+                "$ref": "#/$defs/PotionOfExperience"
+              },
+              {
+                "$ref": "#/$defs/ElixirOfAquaticRejuvenation"
+              },
+              {
+                "$ref": "#/$defs/Potion"
               },
               {
                 "$ref": "#/$defs/ScrollOfRage"
@@ -2296,16 +3232,64 @@
                 "$ref": "#/$defs/ScrollOfMetamorphosis"
               },
               {
-                "$ref": "#/$defs/Gold"
+                "$ref": "#/$defs/ScrollOfUpgrade"
               },
               {
-                "$ref": "#/$defs/Food"
+                "$ref": "#/$defs/ScrollOfIdentify"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfMagicMapping"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfTeleportation"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfRemoveCurse"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfRecharging"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfLullaby"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfTerror"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfMirrorImage"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfRetribution"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfTransmutation"
+              },
+              {
+                "$ref": "#/$defs/Scroll"
+              },
+              {
+                "$ref": "#/$defs/Gold"
               },
               {
                 "$ref": "#/$defs/MysteryMeat"
               },
               {
                 "$ref": "#/$defs/Berry"
+              },
+              {
+                "$ref": "#/$defs/SmallRation"
+              },
+              {
+                "$ref": "#/$defs/Ration"
+              },
+              {
+                "$ref": "#/$defs/Pasty"
+              },
+              {
+                "$ref": "#/$defs/ChargrilledMeat"
+              },
+              {
+                "$ref": "#/$defs/Food"
               },
               {
                 "$ref": "#/$defs/Key"
@@ -2327,6 +3311,9 @@
               },
               {
                 "$ref": "#/$defs/Throwable"
+              },
+              {
+                "$ref": "#/$defs/GooBlob"
               },
               {
                 "$ref": "#/$defs/VelvetPouch"
@@ -2448,6 +3435,10 @@
         "surprise_damage_floor": {
           "default": 0.0,
           "type": "number"
+        },
+        "tier": {
+          "default": 1,
+          "type": "integer"
         }
       },
       "required": [
@@ -2657,6 +3648,10 @@
           "default": 0,
           "type": "integer"
         },
+        "ooze_cooldown": {
+          "default": 0,
+          "type": "integer"
+        },
         "shields": {
           "items": {
             "$ref": "#/$defs/Shield"
@@ -2719,6 +3714,12 @@
         "loot_table": {
           "items": {
             "$ref": "#/$defs/DropEntry"
+          },
+          "type": "array"
+        },
+        "weighted_drops": {
+          "items": {
+            "$ref": "#/$defs/WeightedCountDrop"
           },
           "type": "array"
         },
@@ -2826,6 +3827,75 @@
         "kept_though_lost": {
           "default": false,
           "type": "boolean"
+        },
+        "energy": {
+          "default": 0,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "Pasty": {
+      "properties": {
+        "kind": {
+          "const": "pasty",
+          "default": "pasty",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Pasty",
+          "type": "string"
+        },
+        "type": {
+          "default": "food",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "energy": {
+          "default": 450,
+          "type": "integer"
         }
       },
       "type": "object"
@@ -2924,6 +3994,10 @@
           "type": "integer"
         },
         "ooze_amount": {
+          "default": 0,
+          "type": "integer"
+        },
+        "ooze_cooldown": {
           "default": 0,
           "type": "integer"
         },
@@ -3043,6 +4117,10 @@
           "default": 0,
           "type": "integer"
         },
+        "aqua_heal_left": {
+          "default": 0.0,
+          "type": "number"
+        },
         "path_queue": {
           "default": [],
           "items": {
@@ -3132,6 +4210,10 @@
           "default": false,
           "type": "boolean"
         },
+        "hunger": {
+          "default": 0.0,
+          "type": "number"
+        },
         "cloak_stealth_active": {
           "default": false,
           "type": "boolean"
@@ -3159,27 +4241,55 @@
                 "boomerang": "#/$defs/Boomerang",
                 "bow": "#/$defs/Bow",
                 "broken_seal": "#/$defs/BrokenSeal",
+                "chargrilled_meat": "#/$defs/ChargrilledMeat",
                 "cloak_of_shadows": "#/$defs/CloakOfShadows",
                 "dagger": "#/$defs/Dagger",
                 "dewdrop": "#/$defs/Dewdrop",
+                "elixir_aqua_rejuv": "#/$defs/ElixirOfAquaticRejuvenation",
                 "food": "#/$defs/Food",
                 "fury_potion": "#/$defs/FuryPotion",
                 "gold": "#/$defs/Gold",
+                "goo_blob": "#/$defs/GooBlob",
                 "health_potion": "#/$defs/HealthPotion",
                 "key": "#/$defs/Key",
                 "magical_holster": "#/$defs/MagicalHolster",
                 "melee_weapon": "#/$defs/MeleeWeapon",
                 "missile_weapon": "#/$defs/MissileWeapon",
                 "mystery_meat": "#/$defs/MysteryMeat",
+                "pasty": "#/$defs/Pasty",
                 "potion": "#/$defs/Potion",
                 "potion_bandolier": "#/$defs/PotionBandolier",
+                "potion_of_experience": "#/$defs/PotionOfExperience",
+                "potion_of_frost": "#/$defs/PotionOfFrost",
+                "potion_of_haste": "#/$defs/PotionOfHaste",
+                "potion_of_invisibility": "#/$defs/PotionOfInvisibility",
+                "potion_of_levitation": "#/$defs/PotionOfLevitation",
+                "potion_of_liquid_flame": "#/$defs/PotionOfLiquidFlame",
+                "potion_of_mind_vision": "#/$defs/PotionOfMindVision",
+                "potion_of_paralytic_gas": "#/$defs/PotionOfParalyticGas",
+                "potion_of_purity": "#/$defs/PotionOfPurity",
+                "potion_of_strength": "#/$defs/PotionOfStrength",
+                "potion_of_toxic_gas": "#/$defs/PotionOfToxicGas",
+                "ration": "#/$defs/Ration",
                 "reviving_potion": "#/$defs/RevivingPotion",
                 "ring": "#/$defs/Ring",
                 "scroll": "#/$defs/Scroll",
                 "scroll_holder": "#/$defs/ScrollHolder",
+                "scroll_of_identify": "#/$defs/ScrollOfIdentify",
+                "scroll_of_lullaby": "#/$defs/ScrollOfLullaby",
+                "scroll_of_magic_mapping": "#/$defs/ScrollOfMagicMapping",
                 "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
+                "scroll_of_mirror_image": "#/$defs/ScrollOfMirrorImage",
                 "scroll_of_rage": "#/$defs/ScrollOfRage",
+                "scroll_of_recharging": "#/$defs/ScrollOfRecharging",
+                "scroll_of_remove_curse": "#/$defs/ScrollOfRemoveCurse",
+                "scroll_of_retribution": "#/$defs/ScrollOfRetribution",
+                "scroll_of_teleportation": "#/$defs/ScrollOfTeleportation",
+                "scroll_of_terror": "#/$defs/ScrollOfTerror",
+                "scroll_of_transmutation": "#/$defs/ScrollOfTransmutation",
+                "scroll_of_upgrade": "#/$defs/ScrollOfUpgrade",
                 "seed": "#/$defs/Seed",
+                "small_ration": "#/$defs/SmallRation",
                 "staff": "#/$defs/Staff",
                 "stone": "#/$defs/Stone",
                 "throwable": "#/$defs/Throwable",
@@ -3237,10 +4347,43 @@
                 "$ref": "#/$defs/FuryPotion"
               },
               {
-                "$ref": "#/$defs/Potion"
+                "$ref": "#/$defs/PotionOfStrength"
               },
               {
-                "$ref": "#/$defs/Scroll"
+                "$ref": "#/$defs/PotionOfHaste"
+              },
+              {
+                "$ref": "#/$defs/PotionOfInvisibility"
+              },
+              {
+                "$ref": "#/$defs/PotionOfLevitation"
+              },
+              {
+                "$ref": "#/$defs/PotionOfMindVision"
+              },
+              {
+                "$ref": "#/$defs/PotionOfFrost"
+              },
+              {
+                "$ref": "#/$defs/PotionOfLiquidFlame"
+              },
+              {
+                "$ref": "#/$defs/PotionOfToxicGas"
+              },
+              {
+                "$ref": "#/$defs/PotionOfParalyticGas"
+              },
+              {
+                "$ref": "#/$defs/PotionOfPurity"
+              },
+              {
+                "$ref": "#/$defs/PotionOfExperience"
+              },
+              {
+                "$ref": "#/$defs/ElixirOfAquaticRejuvenation"
+              },
+              {
+                "$ref": "#/$defs/Potion"
               },
               {
                 "$ref": "#/$defs/ScrollOfRage"
@@ -3249,16 +4392,64 @@
                 "$ref": "#/$defs/ScrollOfMetamorphosis"
               },
               {
-                "$ref": "#/$defs/Gold"
+                "$ref": "#/$defs/ScrollOfUpgrade"
               },
               {
-                "$ref": "#/$defs/Food"
+                "$ref": "#/$defs/ScrollOfIdentify"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfMagicMapping"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfTeleportation"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfRemoveCurse"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfRecharging"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfLullaby"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfTerror"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfMirrorImage"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfRetribution"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfTransmutation"
+              },
+              {
+                "$ref": "#/$defs/Scroll"
+              },
+              {
+                "$ref": "#/$defs/Gold"
               },
               {
                 "$ref": "#/$defs/MysteryMeat"
               },
               {
                 "$ref": "#/$defs/Berry"
+              },
+              {
+                "$ref": "#/$defs/SmallRation"
+              },
+              {
+                "$ref": "#/$defs/Ration"
+              },
+              {
+                "$ref": "#/$defs/Pasty"
+              },
+              {
+                "$ref": "#/$defs/ChargrilledMeat"
+              },
+              {
+                "$ref": "#/$defs/Food"
               },
               {
                 "$ref": "#/$defs/Key"
@@ -3280,6 +4471,9 @@
               },
               {
                 "$ref": "#/$defs/Throwable"
+              },
+              {
+                "$ref": "#/$defs/GooBlob"
               },
               {
                 "$ref": "#/$defs/VelvetPouch"
@@ -3313,27 +4507,55 @@
                   "boomerang": "#/$defs/Boomerang",
                   "bow": "#/$defs/Bow",
                   "broken_seal": "#/$defs/BrokenSeal",
+                  "chargrilled_meat": "#/$defs/ChargrilledMeat",
                   "cloak_of_shadows": "#/$defs/CloakOfShadows",
                   "dagger": "#/$defs/Dagger",
                   "dewdrop": "#/$defs/Dewdrop",
+                  "elixir_aqua_rejuv": "#/$defs/ElixirOfAquaticRejuvenation",
                   "food": "#/$defs/Food",
                   "fury_potion": "#/$defs/FuryPotion",
                   "gold": "#/$defs/Gold",
+                  "goo_blob": "#/$defs/GooBlob",
                   "health_potion": "#/$defs/HealthPotion",
                   "key": "#/$defs/Key",
                   "magical_holster": "#/$defs/MagicalHolster",
                   "melee_weapon": "#/$defs/MeleeWeapon",
                   "missile_weapon": "#/$defs/MissileWeapon",
                   "mystery_meat": "#/$defs/MysteryMeat",
+                  "pasty": "#/$defs/Pasty",
                   "potion": "#/$defs/Potion",
                   "potion_bandolier": "#/$defs/PotionBandolier",
+                  "potion_of_experience": "#/$defs/PotionOfExperience",
+                  "potion_of_frost": "#/$defs/PotionOfFrost",
+                  "potion_of_haste": "#/$defs/PotionOfHaste",
+                  "potion_of_invisibility": "#/$defs/PotionOfInvisibility",
+                  "potion_of_levitation": "#/$defs/PotionOfLevitation",
+                  "potion_of_liquid_flame": "#/$defs/PotionOfLiquidFlame",
+                  "potion_of_mind_vision": "#/$defs/PotionOfMindVision",
+                  "potion_of_paralytic_gas": "#/$defs/PotionOfParalyticGas",
+                  "potion_of_purity": "#/$defs/PotionOfPurity",
+                  "potion_of_strength": "#/$defs/PotionOfStrength",
+                  "potion_of_toxic_gas": "#/$defs/PotionOfToxicGas",
+                  "ration": "#/$defs/Ration",
                   "reviving_potion": "#/$defs/RevivingPotion",
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_identify": "#/$defs/ScrollOfIdentify",
+                  "scroll_of_lullaby": "#/$defs/ScrollOfLullaby",
+                  "scroll_of_magic_mapping": "#/$defs/ScrollOfMagicMapping",
                   "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
+                  "scroll_of_mirror_image": "#/$defs/ScrollOfMirrorImage",
                   "scroll_of_rage": "#/$defs/ScrollOfRage",
+                  "scroll_of_recharging": "#/$defs/ScrollOfRecharging",
+                  "scroll_of_remove_curse": "#/$defs/ScrollOfRemoveCurse",
+                  "scroll_of_retribution": "#/$defs/ScrollOfRetribution",
+                  "scroll_of_teleportation": "#/$defs/ScrollOfTeleportation",
+                  "scroll_of_terror": "#/$defs/ScrollOfTerror",
+                  "scroll_of_transmutation": "#/$defs/ScrollOfTransmutation",
+                  "scroll_of_upgrade": "#/$defs/ScrollOfUpgrade",
                   "seed": "#/$defs/Seed",
+                  "small_ration": "#/$defs/SmallRation",
                   "staff": "#/$defs/Staff",
                   "stone": "#/$defs/Stone",
                   "throwable": "#/$defs/Throwable",
@@ -3391,10 +4613,43 @@
                   "$ref": "#/$defs/FuryPotion"
                 },
                 {
-                  "$ref": "#/$defs/Potion"
+                  "$ref": "#/$defs/PotionOfStrength"
                 },
                 {
-                  "$ref": "#/$defs/Scroll"
+                  "$ref": "#/$defs/PotionOfHaste"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfInvisibility"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfLevitation"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfMindVision"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfFrost"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfLiquidFlame"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfToxicGas"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfParalyticGas"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfPurity"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfExperience"
+                },
+                {
+                  "$ref": "#/$defs/ElixirOfAquaticRejuvenation"
+                },
+                {
+                  "$ref": "#/$defs/Potion"
                 },
                 {
                   "$ref": "#/$defs/ScrollOfRage"
@@ -3403,16 +4658,64 @@
                   "$ref": "#/$defs/ScrollOfMetamorphosis"
                 },
                 {
-                  "$ref": "#/$defs/Gold"
+                  "$ref": "#/$defs/ScrollOfUpgrade"
                 },
                 {
-                  "$ref": "#/$defs/Food"
+                  "$ref": "#/$defs/ScrollOfIdentify"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMagicMapping"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTeleportation"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRemoveCurse"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRecharging"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfLullaby"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTerror"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMirrorImage"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRetribution"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTransmutation"
+                },
+                {
+                  "$ref": "#/$defs/Scroll"
+                },
+                {
+                  "$ref": "#/$defs/Gold"
                 },
                 {
                   "$ref": "#/$defs/MysteryMeat"
                 },
                 {
                   "$ref": "#/$defs/Berry"
+                },
+                {
+                  "$ref": "#/$defs/SmallRation"
+                },
+                {
+                  "$ref": "#/$defs/Ration"
+                },
+                {
+                  "$ref": "#/$defs/Pasty"
+                },
+                {
+                  "$ref": "#/$defs/ChargrilledMeat"
+                },
+                {
+                  "$ref": "#/$defs/Food"
                 },
                 {
                   "$ref": "#/$defs/Key"
@@ -3434,6 +4737,9 @@
                 },
                 {
                   "$ref": "#/$defs/Throwable"
+                },
+                {
+                  "$ref": "#/$defs/GooBlob"
                 },
                 {
                   "$ref": "#/$defs/VelvetPouch"
@@ -3470,27 +4776,55 @@
                   "boomerang": "#/$defs/Boomerang",
                   "bow": "#/$defs/Bow",
                   "broken_seal": "#/$defs/BrokenSeal",
+                  "chargrilled_meat": "#/$defs/ChargrilledMeat",
                   "cloak_of_shadows": "#/$defs/CloakOfShadows",
                   "dagger": "#/$defs/Dagger",
                   "dewdrop": "#/$defs/Dewdrop",
+                  "elixir_aqua_rejuv": "#/$defs/ElixirOfAquaticRejuvenation",
                   "food": "#/$defs/Food",
                   "fury_potion": "#/$defs/FuryPotion",
                   "gold": "#/$defs/Gold",
+                  "goo_blob": "#/$defs/GooBlob",
                   "health_potion": "#/$defs/HealthPotion",
                   "key": "#/$defs/Key",
                   "magical_holster": "#/$defs/MagicalHolster",
                   "melee_weapon": "#/$defs/MeleeWeapon",
                   "missile_weapon": "#/$defs/MissileWeapon",
                   "mystery_meat": "#/$defs/MysteryMeat",
+                  "pasty": "#/$defs/Pasty",
                   "potion": "#/$defs/Potion",
                   "potion_bandolier": "#/$defs/PotionBandolier",
+                  "potion_of_experience": "#/$defs/PotionOfExperience",
+                  "potion_of_frost": "#/$defs/PotionOfFrost",
+                  "potion_of_haste": "#/$defs/PotionOfHaste",
+                  "potion_of_invisibility": "#/$defs/PotionOfInvisibility",
+                  "potion_of_levitation": "#/$defs/PotionOfLevitation",
+                  "potion_of_liquid_flame": "#/$defs/PotionOfLiquidFlame",
+                  "potion_of_mind_vision": "#/$defs/PotionOfMindVision",
+                  "potion_of_paralytic_gas": "#/$defs/PotionOfParalyticGas",
+                  "potion_of_purity": "#/$defs/PotionOfPurity",
+                  "potion_of_strength": "#/$defs/PotionOfStrength",
+                  "potion_of_toxic_gas": "#/$defs/PotionOfToxicGas",
+                  "ration": "#/$defs/Ration",
                   "reviving_potion": "#/$defs/RevivingPotion",
                   "ring": "#/$defs/Ring",
                   "scroll": "#/$defs/Scroll",
                   "scroll_holder": "#/$defs/ScrollHolder",
+                  "scroll_of_identify": "#/$defs/ScrollOfIdentify",
+                  "scroll_of_lullaby": "#/$defs/ScrollOfLullaby",
+                  "scroll_of_magic_mapping": "#/$defs/ScrollOfMagicMapping",
                   "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
+                  "scroll_of_mirror_image": "#/$defs/ScrollOfMirrorImage",
                   "scroll_of_rage": "#/$defs/ScrollOfRage",
+                  "scroll_of_recharging": "#/$defs/ScrollOfRecharging",
+                  "scroll_of_remove_curse": "#/$defs/ScrollOfRemoveCurse",
+                  "scroll_of_retribution": "#/$defs/ScrollOfRetribution",
+                  "scroll_of_teleportation": "#/$defs/ScrollOfTeleportation",
+                  "scroll_of_terror": "#/$defs/ScrollOfTerror",
+                  "scroll_of_transmutation": "#/$defs/ScrollOfTransmutation",
+                  "scroll_of_upgrade": "#/$defs/ScrollOfUpgrade",
                   "seed": "#/$defs/Seed",
+                  "small_ration": "#/$defs/SmallRation",
                   "staff": "#/$defs/Staff",
                   "stone": "#/$defs/Stone",
                   "throwable": "#/$defs/Throwable",
@@ -3548,10 +4882,43 @@
                   "$ref": "#/$defs/FuryPotion"
                 },
                 {
-                  "$ref": "#/$defs/Potion"
+                  "$ref": "#/$defs/PotionOfStrength"
                 },
                 {
-                  "$ref": "#/$defs/Scroll"
+                  "$ref": "#/$defs/PotionOfHaste"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfInvisibility"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfLevitation"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfMindVision"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfFrost"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfLiquidFlame"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfToxicGas"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfParalyticGas"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfPurity"
+                },
+                {
+                  "$ref": "#/$defs/PotionOfExperience"
+                },
+                {
+                  "$ref": "#/$defs/ElixirOfAquaticRejuvenation"
+                },
+                {
+                  "$ref": "#/$defs/Potion"
                 },
                 {
                   "$ref": "#/$defs/ScrollOfRage"
@@ -3560,16 +4927,64 @@
                   "$ref": "#/$defs/ScrollOfMetamorphosis"
                 },
                 {
-                  "$ref": "#/$defs/Gold"
+                  "$ref": "#/$defs/ScrollOfUpgrade"
                 },
                 {
-                  "$ref": "#/$defs/Food"
+                  "$ref": "#/$defs/ScrollOfIdentify"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMagicMapping"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTeleportation"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRemoveCurse"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRecharging"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfLullaby"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTerror"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfMirrorImage"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfRetribution"
+                },
+                {
+                  "$ref": "#/$defs/ScrollOfTransmutation"
+                },
+                {
+                  "$ref": "#/$defs/Scroll"
+                },
+                {
+                  "$ref": "#/$defs/Gold"
                 },
                 {
                   "$ref": "#/$defs/MysteryMeat"
                 },
                 {
                   "$ref": "#/$defs/Berry"
+                },
+                {
+                  "$ref": "#/$defs/SmallRation"
+                },
+                {
+                  "$ref": "#/$defs/Ration"
+                },
+                {
+                  "$ref": "#/$defs/Pasty"
+                },
+                {
+                  "$ref": "#/$defs/ChargrilledMeat"
+                },
+                {
+                  "$ref": "#/$defs/Food"
                 },
                 {
                   "$ref": "#/$defs/Key"
@@ -3591,6 +5006,9 @@
                 },
                 {
                   "$ref": "#/$defs/Throwable"
+                },
+                {
+                  "$ref": "#/$defs/GooBlob"
                 },
                 {
                   "$ref": "#/$defs/VelvetPouch"
@@ -3783,27 +5201,55 @@
                 "boomerang": "#/$defs/Boomerang",
                 "bow": "#/$defs/Bow",
                 "broken_seal": "#/$defs/BrokenSeal",
+                "chargrilled_meat": "#/$defs/ChargrilledMeat",
                 "cloak_of_shadows": "#/$defs/CloakOfShadows",
                 "dagger": "#/$defs/Dagger",
                 "dewdrop": "#/$defs/Dewdrop",
+                "elixir_aqua_rejuv": "#/$defs/ElixirOfAquaticRejuvenation",
                 "food": "#/$defs/Food",
                 "fury_potion": "#/$defs/FuryPotion",
                 "gold": "#/$defs/Gold",
+                "goo_blob": "#/$defs/GooBlob",
                 "health_potion": "#/$defs/HealthPotion",
                 "key": "#/$defs/Key",
                 "magical_holster": "#/$defs/MagicalHolster",
                 "melee_weapon": "#/$defs/MeleeWeapon",
                 "missile_weapon": "#/$defs/MissileWeapon",
                 "mystery_meat": "#/$defs/MysteryMeat",
+                "pasty": "#/$defs/Pasty",
                 "potion": "#/$defs/Potion",
                 "potion_bandolier": "#/$defs/PotionBandolier",
+                "potion_of_experience": "#/$defs/PotionOfExperience",
+                "potion_of_frost": "#/$defs/PotionOfFrost",
+                "potion_of_haste": "#/$defs/PotionOfHaste",
+                "potion_of_invisibility": "#/$defs/PotionOfInvisibility",
+                "potion_of_levitation": "#/$defs/PotionOfLevitation",
+                "potion_of_liquid_flame": "#/$defs/PotionOfLiquidFlame",
+                "potion_of_mind_vision": "#/$defs/PotionOfMindVision",
+                "potion_of_paralytic_gas": "#/$defs/PotionOfParalyticGas",
+                "potion_of_purity": "#/$defs/PotionOfPurity",
+                "potion_of_strength": "#/$defs/PotionOfStrength",
+                "potion_of_toxic_gas": "#/$defs/PotionOfToxicGas",
+                "ration": "#/$defs/Ration",
                 "reviving_potion": "#/$defs/RevivingPotion",
                 "ring": "#/$defs/Ring",
                 "scroll": "#/$defs/Scroll",
                 "scroll_holder": "#/$defs/ScrollHolder",
+                "scroll_of_identify": "#/$defs/ScrollOfIdentify",
+                "scroll_of_lullaby": "#/$defs/ScrollOfLullaby",
+                "scroll_of_magic_mapping": "#/$defs/ScrollOfMagicMapping",
                 "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
+                "scroll_of_mirror_image": "#/$defs/ScrollOfMirrorImage",
                 "scroll_of_rage": "#/$defs/ScrollOfRage",
+                "scroll_of_recharging": "#/$defs/ScrollOfRecharging",
+                "scroll_of_remove_curse": "#/$defs/ScrollOfRemoveCurse",
+                "scroll_of_retribution": "#/$defs/ScrollOfRetribution",
+                "scroll_of_teleportation": "#/$defs/ScrollOfTeleportation",
+                "scroll_of_terror": "#/$defs/ScrollOfTerror",
+                "scroll_of_transmutation": "#/$defs/ScrollOfTransmutation",
+                "scroll_of_upgrade": "#/$defs/ScrollOfUpgrade",
                 "seed": "#/$defs/Seed",
+                "small_ration": "#/$defs/SmallRation",
                 "staff": "#/$defs/Staff",
                 "stone": "#/$defs/Stone",
                 "throwable": "#/$defs/Throwable",
@@ -3861,10 +5307,43 @@
                 "$ref": "#/$defs/FuryPotion"
               },
               {
-                "$ref": "#/$defs/Potion"
+                "$ref": "#/$defs/PotionOfStrength"
               },
               {
-                "$ref": "#/$defs/Scroll"
+                "$ref": "#/$defs/PotionOfHaste"
+              },
+              {
+                "$ref": "#/$defs/PotionOfInvisibility"
+              },
+              {
+                "$ref": "#/$defs/PotionOfLevitation"
+              },
+              {
+                "$ref": "#/$defs/PotionOfMindVision"
+              },
+              {
+                "$ref": "#/$defs/PotionOfFrost"
+              },
+              {
+                "$ref": "#/$defs/PotionOfLiquidFlame"
+              },
+              {
+                "$ref": "#/$defs/PotionOfToxicGas"
+              },
+              {
+                "$ref": "#/$defs/PotionOfParalyticGas"
+              },
+              {
+                "$ref": "#/$defs/PotionOfPurity"
+              },
+              {
+                "$ref": "#/$defs/PotionOfExperience"
+              },
+              {
+                "$ref": "#/$defs/ElixirOfAquaticRejuvenation"
+              },
+              {
+                "$ref": "#/$defs/Potion"
               },
               {
                 "$ref": "#/$defs/ScrollOfRage"
@@ -3873,16 +5352,64 @@
                 "$ref": "#/$defs/ScrollOfMetamorphosis"
               },
               {
-                "$ref": "#/$defs/Gold"
+                "$ref": "#/$defs/ScrollOfUpgrade"
               },
               {
-                "$ref": "#/$defs/Food"
+                "$ref": "#/$defs/ScrollOfIdentify"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfMagicMapping"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfTeleportation"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfRemoveCurse"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfRecharging"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfLullaby"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfTerror"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfMirrorImage"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfRetribution"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfTransmutation"
+              },
+              {
+                "$ref": "#/$defs/Scroll"
+              },
+              {
+                "$ref": "#/$defs/Gold"
               },
               {
                 "$ref": "#/$defs/MysteryMeat"
               },
               {
                 "$ref": "#/$defs/Berry"
+              },
+              {
+                "$ref": "#/$defs/SmallRation"
+              },
+              {
+                "$ref": "#/$defs/Ration"
+              },
+              {
+                "$ref": "#/$defs/Pasty"
+              },
+              {
+                "$ref": "#/$defs/ChargrilledMeat"
+              },
+              {
+                "$ref": "#/$defs/Food"
               },
               {
                 "$ref": "#/$defs/Key"
@@ -3906,6 +5433,9 @@
                 "$ref": "#/$defs/Throwable"
               },
               {
+                "$ref": "#/$defs/GooBlob"
+              },
+              {
                 "$ref": "#/$defs/VelvetPouch"
               },
               {
@@ -3923,6 +5453,721 @@
             ]
           },
           "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "PotionOfExperience": {
+      "properties": {
+        "kind": {
+          "const": "potion_of_experience",
+          "default": "potion_of_experience",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Potion of Experience",
+          "type": "string"
+        },
+        "type": {
+          "default": "potion",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "effect": {
+          "default": "experience",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "PotionOfFrost": {
+      "properties": {
+        "kind": {
+          "const": "potion_of_frost",
+          "default": "potion_of_frost",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Potion of Frost",
+          "type": "string"
+        },
+        "type": {
+          "default": "potion",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "effect": {
+          "default": "frost",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "PotionOfHaste": {
+      "properties": {
+        "kind": {
+          "const": "potion_of_haste",
+          "default": "potion_of_haste",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Potion of Haste",
+          "type": "string"
+        },
+        "type": {
+          "default": "potion",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "effect": {
+          "default": "haste",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "PotionOfInvisibility": {
+      "properties": {
+        "kind": {
+          "const": "potion_of_invisibility",
+          "default": "potion_of_invisibility",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Potion of Invisibility",
+          "type": "string"
+        },
+        "type": {
+          "default": "potion",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "effect": {
+          "default": "invisibility",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "PotionOfLevitation": {
+      "properties": {
+        "kind": {
+          "const": "potion_of_levitation",
+          "default": "potion_of_levitation",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Potion of Levitation",
+          "type": "string"
+        },
+        "type": {
+          "default": "potion",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "effect": {
+          "default": "levitation",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "PotionOfLiquidFlame": {
+      "properties": {
+        "kind": {
+          "const": "potion_of_liquid_flame",
+          "default": "potion_of_liquid_flame",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Potion of Liquid Flame",
+          "type": "string"
+        },
+        "type": {
+          "default": "potion",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "effect": {
+          "default": "liquid_flame",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "PotionOfMindVision": {
+      "properties": {
+        "kind": {
+          "const": "potion_of_mind_vision",
+          "default": "potion_of_mind_vision",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Potion of Mind Vision",
+          "type": "string"
+        },
+        "type": {
+          "default": "potion",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "effect": {
+          "default": "mind_vision",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "PotionOfParalyticGas": {
+      "properties": {
+        "kind": {
+          "const": "potion_of_paralytic_gas",
+          "default": "potion_of_paralytic_gas",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Potion of Paralytic Gas",
+          "type": "string"
+        },
+        "type": {
+          "default": "potion",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "effect": {
+          "default": "paralytic_gas",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "PotionOfPurity": {
+      "properties": {
+        "kind": {
+          "const": "potion_of_purity",
+          "default": "potion_of_purity",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Potion of Purity",
+          "type": "string"
+        },
+        "type": {
+          "default": "potion",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "effect": {
+          "default": "purity",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "PotionOfStrength": {
+      "properties": {
+        "kind": {
+          "const": "potion_of_strength",
+          "default": "potion_of_strength",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Potion of Strength",
+          "type": "string"
+        },
+        "type": {
+          "default": "potion",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "effect": {
+          "default": "strength",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "PotionOfToxicGas": {
+      "properties": {
+        "kind": {
+          "const": "potion_of_toxic_gas",
+          "default": "potion_of_toxic_gas",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Potion of Toxic Gas",
+          "type": "string"
+        },
+        "type": {
+          "default": "potion",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "effect": {
+          "default": "toxic_gas",
+          "type": "string"
         }
       },
       "type": "object"
@@ -3965,6 +6210,71 @@
             }
           ],
           "default": null
+        }
+      },
+      "type": "object"
+    },
+    "Ration": {
+      "properties": {
+        "kind": {
+          "const": "ration",
+          "default": "ration",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Ration",
+          "type": "string"
+        },
+        "type": {
+          "default": "food",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "energy": {
+          "default": 300,
+          "type": "integer"
         }
       },
       "type": "object"
@@ -4237,27 +6547,55 @@
                 "boomerang": "#/$defs/Boomerang",
                 "bow": "#/$defs/Bow",
                 "broken_seal": "#/$defs/BrokenSeal",
+                "chargrilled_meat": "#/$defs/ChargrilledMeat",
                 "cloak_of_shadows": "#/$defs/CloakOfShadows",
                 "dagger": "#/$defs/Dagger",
                 "dewdrop": "#/$defs/Dewdrop",
+                "elixir_aqua_rejuv": "#/$defs/ElixirOfAquaticRejuvenation",
                 "food": "#/$defs/Food",
                 "fury_potion": "#/$defs/FuryPotion",
                 "gold": "#/$defs/Gold",
+                "goo_blob": "#/$defs/GooBlob",
                 "health_potion": "#/$defs/HealthPotion",
                 "key": "#/$defs/Key",
                 "magical_holster": "#/$defs/MagicalHolster",
                 "melee_weapon": "#/$defs/MeleeWeapon",
                 "missile_weapon": "#/$defs/MissileWeapon",
                 "mystery_meat": "#/$defs/MysteryMeat",
+                "pasty": "#/$defs/Pasty",
                 "potion": "#/$defs/Potion",
                 "potion_bandolier": "#/$defs/PotionBandolier",
+                "potion_of_experience": "#/$defs/PotionOfExperience",
+                "potion_of_frost": "#/$defs/PotionOfFrost",
+                "potion_of_haste": "#/$defs/PotionOfHaste",
+                "potion_of_invisibility": "#/$defs/PotionOfInvisibility",
+                "potion_of_levitation": "#/$defs/PotionOfLevitation",
+                "potion_of_liquid_flame": "#/$defs/PotionOfLiquidFlame",
+                "potion_of_mind_vision": "#/$defs/PotionOfMindVision",
+                "potion_of_paralytic_gas": "#/$defs/PotionOfParalyticGas",
+                "potion_of_purity": "#/$defs/PotionOfPurity",
+                "potion_of_strength": "#/$defs/PotionOfStrength",
+                "potion_of_toxic_gas": "#/$defs/PotionOfToxicGas",
+                "ration": "#/$defs/Ration",
                 "reviving_potion": "#/$defs/RevivingPotion",
                 "ring": "#/$defs/Ring",
                 "scroll": "#/$defs/Scroll",
                 "scroll_holder": "#/$defs/ScrollHolder",
+                "scroll_of_identify": "#/$defs/ScrollOfIdentify",
+                "scroll_of_lullaby": "#/$defs/ScrollOfLullaby",
+                "scroll_of_magic_mapping": "#/$defs/ScrollOfMagicMapping",
                 "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
+                "scroll_of_mirror_image": "#/$defs/ScrollOfMirrorImage",
                 "scroll_of_rage": "#/$defs/ScrollOfRage",
+                "scroll_of_recharging": "#/$defs/ScrollOfRecharging",
+                "scroll_of_remove_curse": "#/$defs/ScrollOfRemoveCurse",
+                "scroll_of_retribution": "#/$defs/ScrollOfRetribution",
+                "scroll_of_teleportation": "#/$defs/ScrollOfTeleportation",
+                "scroll_of_terror": "#/$defs/ScrollOfTerror",
+                "scroll_of_transmutation": "#/$defs/ScrollOfTransmutation",
+                "scroll_of_upgrade": "#/$defs/ScrollOfUpgrade",
                 "seed": "#/$defs/Seed",
+                "small_ration": "#/$defs/SmallRation",
                 "staff": "#/$defs/Staff",
                 "stone": "#/$defs/Stone",
                 "throwable": "#/$defs/Throwable",
@@ -4315,10 +6653,43 @@
                 "$ref": "#/$defs/FuryPotion"
               },
               {
-                "$ref": "#/$defs/Potion"
+                "$ref": "#/$defs/PotionOfStrength"
               },
               {
-                "$ref": "#/$defs/Scroll"
+                "$ref": "#/$defs/PotionOfHaste"
+              },
+              {
+                "$ref": "#/$defs/PotionOfInvisibility"
+              },
+              {
+                "$ref": "#/$defs/PotionOfLevitation"
+              },
+              {
+                "$ref": "#/$defs/PotionOfMindVision"
+              },
+              {
+                "$ref": "#/$defs/PotionOfFrost"
+              },
+              {
+                "$ref": "#/$defs/PotionOfLiquidFlame"
+              },
+              {
+                "$ref": "#/$defs/PotionOfToxicGas"
+              },
+              {
+                "$ref": "#/$defs/PotionOfParalyticGas"
+              },
+              {
+                "$ref": "#/$defs/PotionOfPurity"
+              },
+              {
+                "$ref": "#/$defs/PotionOfExperience"
+              },
+              {
+                "$ref": "#/$defs/ElixirOfAquaticRejuvenation"
+              },
+              {
+                "$ref": "#/$defs/Potion"
               },
               {
                 "$ref": "#/$defs/ScrollOfRage"
@@ -4327,16 +6698,64 @@
                 "$ref": "#/$defs/ScrollOfMetamorphosis"
               },
               {
-                "$ref": "#/$defs/Gold"
+                "$ref": "#/$defs/ScrollOfUpgrade"
               },
               {
-                "$ref": "#/$defs/Food"
+                "$ref": "#/$defs/ScrollOfIdentify"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfMagicMapping"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfTeleportation"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfRemoveCurse"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfRecharging"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfLullaby"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfTerror"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfMirrorImage"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfRetribution"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfTransmutation"
+              },
+              {
+                "$ref": "#/$defs/Scroll"
+              },
+              {
+                "$ref": "#/$defs/Gold"
               },
               {
                 "$ref": "#/$defs/MysteryMeat"
               },
               {
                 "$ref": "#/$defs/Berry"
+              },
+              {
+                "$ref": "#/$defs/SmallRation"
+              },
+              {
+                "$ref": "#/$defs/Ration"
+              },
+              {
+                "$ref": "#/$defs/Pasty"
+              },
+              {
+                "$ref": "#/$defs/ChargrilledMeat"
+              },
+              {
+                "$ref": "#/$defs/Food"
               },
               {
                 "$ref": "#/$defs/Key"
@@ -4360,6 +6779,9 @@
                 "$ref": "#/$defs/Throwable"
               },
               {
+                "$ref": "#/$defs/GooBlob"
+              },
+              {
                 "$ref": "#/$defs/VelvetPouch"
               },
               {
@@ -4377,6 +6799,189 @@
             ]
           },
           "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "ScrollOfIdentify": {
+      "properties": {
+        "kind": {
+          "const": "scroll_of_identify",
+          "default": "scroll_of_identify",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Scroll of Identify",
+          "type": "string"
+        },
+        "type": {
+          "default": "scroll",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "ScrollOfLullaby": {
+      "properties": {
+        "kind": {
+          "const": "scroll_of_lullaby",
+          "default": "scroll_of_lullaby",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Scroll of Lullaby",
+          "type": "string"
+        },
+        "type": {
+          "default": "scroll",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "ScrollOfMagicMapping": {
+      "properties": {
+        "kind": {
+          "const": "scroll_of_magic_mapping",
+          "default": "scroll_of_magic_mapping",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Scroll of Magic Mapping",
+          "type": "string"
+        },
+        "type": {
+          "default": "scroll",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "type": "object"
@@ -4442,6 +7047,67 @@
       },
       "type": "object"
     },
+    "ScrollOfMirrorImage": {
+      "properties": {
+        "kind": {
+          "const": "scroll_of_mirror_image",
+          "default": "scroll_of_mirror_image",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Scroll of Mirror Image",
+          "type": "string"
+        },
+        "type": {
+          "default": "scroll",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
     "ScrollOfRage": {
       "properties": {
         "kind": {
@@ -4455,6 +7121,433 @@
         },
         "name": {
           "default": "Scroll of Rage",
+          "type": "string"
+        },
+        "type": {
+          "default": "scroll",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "ScrollOfRecharging": {
+      "properties": {
+        "kind": {
+          "const": "scroll_of_recharging",
+          "default": "scroll_of_recharging",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Scroll of Recharging",
+          "type": "string"
+        },
+        "type": {
+          "default": "scroll",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "ScrollOfRemoveCurse": {
+      "properties": {
+        "kind": {
+          "const": "scroll_of_remove_curse",
+          "default": "scroll_of_remove_curse",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Scroll of Remove Curse",
+          "type": "string"
+        },
+        "type": {
+          "default": "scroll",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "ScrollOfRetribution": {
+      "properties": {
+        "kind": {
+          "const": "scroll_of_retribution",
+          "default": "scroll_of_retribution",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Scroll of Retribution",
+          "type": "string"
+        },
+        "type": {
+          "default": "scroll",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "ScrollOfTeleportation": {
+      "properties": {
+        "kind": {
+          "const": "scroll_of_teleportation",
+          "default": "scroll_of_teleportation",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Scroll of Teleportation",
+          "type": "string"
+        },
+        "type": {
+          "default": "scroll",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "ScrollOfTerror": {
+      "properties": {
+        "kind": {
+          "const": "scroll_of_terror",
+          "default": "scroll_of_terror",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Scroll of Terror",
+          "type": "string"
+        },
+        "type": {
+          "default": "scroll",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "ScrollOfTransmutation": {
+      "properties": {
+        "kind": {
+          "const": "scroll_of_transmutation",
+          "default": "scroll_of_transmutation",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Scroll of Transmutation",
+          "type": "string"
+        },
+        "type": {
+          "default": "scroll",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "ScrollOfUpgrade": {
+      "properties": {
+        "kind": {
+          "const": "scroll_of_upgrade",
+          "default": "scroll_of_upgrade",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Scroll of Upgrade",
           "type": "string"
         },
         "type": {
@@ -4587,6 +7680,71 @@
         "name": {
           "default": "",
           "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "SmallRation": {
+      "properties": {
+        "kind": {
+          "const": "small_ration",
+          "default": "small_ration",
+          "type": "string"
+        },
+        "id": {
+          "default": "",
+          "type": "string"
+        },
+        "name": {
+          "default": "Small Ration",
+          "type": "string"
+        },
+        "type": {
+          "default": "food",
+          "type": "string"
+        },
+        "pos": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "quantity": {
+          "default": 1,
+          "type": "integer"
+        },
+        "level": {
+          "default": 0,
+          "type": "integer"
+        },
+        "level_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cursed_known": {
+          "default": false,
+          "type": "boolean"
+        },
+        "unique": {
+          "default": false,
+          "type": "boolean"
+        },
+        "kept_though_lost": {
+          "default": false,
+          "type": "boolean"
+        },
+        "energy": {
+          "default": 150,
+          "type": "integer"
         }
       },
       "type": "object"
@@ -5049,27 +8207,55 @@
                 "boomerang": "#/$defs/Boomerang",
                 "bow": "#/$defs/Bow",
                 "broken_seal": "#/$defs/BrokenSeal",
+                "chargrilled_meat": "#/$defs/ChargrilledMeat",
                 "cloak_of_shadows": "#/$defs/CloakOfShadows",
                 "dagger": "#/$defs/Dagger",
                 "dewdrop": "#/$defs/Dewdrop",
+                "elixir_aqua_rejuv": "#/$defs/ElixirOfAquaticRejuvenation",
                 "food": "#/$defs/Food",
                 "fury_potion": "#/$defs/FuryPotion",
                 "gold": "#/$defs/Gold",
+                "goo_blob": "#/$defs/GooBlob",
                 "health_potion": "#/$defs/HealthPotion",
                 "key": "#/$defs/Key",
                 "magical_holster": "#/$defs/MagicalHolster",
                 "melee_weapon": "#/$defs/MeleeWeapon",
                 "missile_weapon": "#/$defs/MissileWeapon",
                 "mystery_meat": "#/$defs/MysteryMeat",
+                "pasty": "#/$defs/Pasty",
                 "potion": "#/$defs/Potion",
                 "potion_bandolier": "#/$defs/PotionBandolier",
+                "potion_of_experience": "#/$defs/PotionOfExperience",
+                "potion_of_frost": "#/$defs/PotionOfFrost",
+                "potion_of_haste": "#/$defs/PotionOfHaste",
+                "potion_of_invisibility": "#/$defs/PotionOfInvisibility",
+                "potion_of_levitation": "#/$defs/PotionOfLevitation",
+                "potion_of_liquid_flame": "#/$defs/PotionOfLiquidFlame",
+                "potion_of_mind_vision": "#/$defs/PotionOfMindVision",
+                "potion_of_paralytic_gas": "#/$defs/PotionOfParalyticGas",
+                "potion_of_purity": "#/$defs/PotionOfPurity",
+                "potion_of_strength": "#/$defs/PotionOfStrength",
+                "potion_of_toxic_gas": "#/$defs/PotionOfToxicGas",
+                "ration": "#/$defs/Ration",
                 "reviving_potion": "#/$defs/RevivingPotion",
                 "ring": "#/$defs/Ring",
                 "scroll": "#/$defs/Scroll",
                 "scroll_holder": "#/$defs/ScrollHolder",
+                "scroll_of_identify": "#/$defs/ScrollOfIdentify",
+                "scroll_of_lullaby": "#/$defs/ScrollOfLullaby",
+                "scroll_of_magic_mapping": "#/$defs/ScrollOfMagicMapping",
                 "scroll_of_metamorphosis": "#/$defs/ScrollOfMetamorphosis",
+                "scroll_of_mirror_image": "#/$defs/ScrollOfMirrorImage",
                 "scroll_of_rage": "#/$defs/ScrollOfRage",
+                "scroll_of_recharging": "#/$defs/ScrollOfRecharging",
+                "scroll_of_remove_curse": "#/$defs/ScrollOfRemoveCurse",
+                "scroll_of_retribution": "#/$defs/ScrollOfRetribution",
+                "scroll_of_teleportation": "#/$defs/ScrollOfTeleportation",
+                "scroll_of_terror": "#/$defs/ScrollOfTerror",
+                "scroll_of_transmutation": "#/$defs/ScrollOfTransmutation",
+                "scroll_of_upgrade": "#/$defs/ScrollOfUpgrade",
                 "seed": "#/$defs/Seed",
+                "small_ration": "#/$defs/SmallRation",
                 "staff": "#/$defs/Staff",
                 "stone": "#/$defs/Stone",
                 "throwable": "#/$defs/Throwable",
@@ -5127,10 +8313,43 @@
                 "$ref": "#/$defs/FuryPotion"
               },
               {
-                "$ref": "#/$defs/Potion"
+                "$ref": "#/$defs/PotionOfStrength"
               },
               {
-                "$ref": "#/$defs/Scroll"
+                "$ref": "#/$defs/PotionOfHaste"
+              },
+              {
+                "$ref": "#/$defs/PotionOfInvisibility"
+              },
+              {
+                "$ref": "#/$defs/PotionOfLevitation"
+              },
+              {
+                "$ref": "#/$defs/PotionOfMindVision"
+              },
+              {
+                "$ref": "#/$defs/PotionOfFrost"
+              },
+              {
+                "$ref": "#/$defs/PotionOfLiquidFlame"
+              },
+              {
+                "$ref": "#/$defs/PotionOfToxicGas"
+              },
+              {
+                "$ref": "#/$defs/PotionOfParalyticGas"
+              },
+              {
+                "$ref": "#/$defs/PotionOfPurity"
+              },
+              {
+                "$ref": "#/$defs/PotionOfExperience"
+              },
+              {
+                "$ref": "#/$defs/ElixirOfAquaticRejuvenation"
+              },
+              {
+                "$ref": "#/$defs/Potion"
               },
               {
                 "$ref": "#/$defs/ScrollOfRage"
@@ -5139,16 +8358,64 @@
                 "$ref": "#/$defs/ScrollOfMetamorphosis"
               },
               {
-                "$ref": "#/$defs/Gold"
+                "$ref": "#/$defs/ScrollOfUpgrade"
               },
               {
-                "$ref": "#/$defs/Food"
+                "$ref": "#/$defs/ScrollOfIdentify"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfMagicMapping"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfTeleportation"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfRemoveCurse"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfRecharging"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfLullaby"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfTerror"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfMirrorImage"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfRetribution"
+              },
+              {
+                "$ref": "#/$defs/ScrollOfTransmutation"
+              },
+              {
+                "$ref": "#/$defs/Scroll"
+              },
+              {
+                "$ref": "#/$defs/Gold"
               },
               {
                 "$ref": "#/$defs/MysteryMeat"
               },
               {
                 "$ref": "#/$defs/Berry"
+              },
+              {
+                "$ref": "#/$defs/SmallRation"
+              },
+              {
+                "$ref": "#/$defs/Ration"
+              },
+              {
+                "$ref": "#/$defs/Pasty"
+              },
+              {
+                "$ref": "#/$defs/ChargrilledMeat"
+              },
+              {
+                "$ref": "#/$defs/Food"
               },
               {
                 "$ref": "#/$defs/Key"
@@ -5170,6 +8437,9 @@
               },
               {
                 "$ref": "#/$defs/Throwable"
+              },
+              {
+                "$ref": "#/$defs/GooBlob"
               },
               {
                 "$ref": "#/$defs/VelvetPouch"
@@ -5276,6 +8546,32 @@
       ],
       "type": "object"
     },
+    "WeightedCountDrop": {
+      "properties": {
+        "item_kind": {
+          "type": "string"
+        },
+        "weights": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "base_count": {
+          "default": 0,
+          "type": "integer"
+        },
+        "max_global": {
+          "default": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "item_kind",
+        "weights"
+      ],
+      "type": "object"
+    },
     "WornShortsword": {
       "properties": {
         "kind": {
@@ -5339,7 +8635,7 @@
           "type": "integer"
         },
         "damage": {
-          "default": 2,
+          "default": 1,
           "type": "integer"
         },
         "range": {
@@ -5375,6 +8671,10 @@
         "surprise_damage_floor": {
           "default": 0.0,
           "type": "number"
+        },
+        "tier": {
+          "default": 1,
+          "type": "integer"
         }
       },
       "type": "object"

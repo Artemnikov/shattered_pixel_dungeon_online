@@ -29,6 +29,13 @@ class SerializationMixin:
         if new_level in [Difficulty.EASY, Difficulty.NORMAL, Difficulty.HARD]:
             self.difficulty = new_level
 
+    KNOWN_CHALLENGES = {"stronger_bosses"}
+
+    def set_challenges(self, challenges_str: str):
+        self.challenges = {
+            c for c in challenges_str.split(",") if c in self.KNOWN_CHALLENGES
+        }
+
     # --- identification masking -------------------------------------------
     # Per-run scrambled display names for still-unidentified consumable kinds
     # (mirrors SPD's randomised potion colours / scroll runes).
@@ -168,6 +175,7 @@ class SerializationMixin:
                     "width": floor.width,
                     "height": floor.height,
                     "traps": admin_traps,
+                    "custom_tiles": floor.custom_tiles,
                 }
 
             visible_tiles = self.get_visible_tiles(
@@ -191,6 +199,7 @@ class SerializationMixin:
                 "width": floor.width,
                 "height": floor.height,
                 "traps": player_traps,
+                "custom_tiles": floor.custom_tiles,
             }
 
         floor = self._get_or_create_floor(self.depth)
@@ -204,4 +213,5 @@ class SerializationMixin:
             "width": floor.width,
             "height": floor.height,
             "traps": [],
+            "custom_tiles": floor.custom_tiles,
         }

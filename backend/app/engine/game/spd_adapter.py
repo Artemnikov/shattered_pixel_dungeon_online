@@ -433,6 +433,11 @@ def gen_level_to_floor_state(gen_level: GenLevel, depth: int) -> FloorState:
 
     key_spawns: Dict[str, Tuple[int, int]] = {}
 
+    alchemy_pots: List[Tuple[int, int]] = []
+    for cell, spd_val in enumerate(gen_level.map):
+        if spd_val == spd_terrain.ALCHEMY:
+            alchemy_pots.append((cell % w, cell // w))
+
     region = "sewers" if depth <= 5 else "prison" if depth <= 10 else "caves" if depth <= 15 else "city" if depth <= 20 else "halls"
 
     floor = FloorState(
@@ -452,6 +457,8 @@ def gen_level_to_floor_state(gen_level: GenLevel, depth: int) -> FloorState:
         },
         dk_summon_spots=list(getattr(gen_level, 'dk_summon_spots', [])),
         yog_pos=getattr(gen_level, 'yog_pos', None),
+        custom_tiles=list(getattr(gen_level, 'custom_tiles', [])),
+        alchemy_pots=alchemy_pots,
     )
     floor.rebuild_flags()
     return floor

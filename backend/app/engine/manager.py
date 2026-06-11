@@ -99,6 +99,10 @@ class GameInstance(
         self.difficulty = Difficulty.NORMAL
         self.player_count = 0
 
+        # Lobby challenge flags (SPD Challenges), comma-separated set parsed
+        # via set_challenges(). Currently only "stronger_bosses" is supported.
+        self.challenges: set = set()
+
         # Shared per-run identification knowledge (co-op semantics, mirrors SPD's
         # per-Dungeon catalog): once any player IDs a potion/scroll kind, the whole
         # party knows it. `kind_labels` holds the scrambled per-run display names

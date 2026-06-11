@@ -34,6 +34,7 @@ class InitMessage(_Envelope):
     width: int
     height: int
     traps: List[Dict[str, Any]]
+    custom_tiles: List[Dict[str, Any]] = []
     # Only set on the very first INIT after connecting; omitted on floor change.
     player_id: Optional[str] = None
 

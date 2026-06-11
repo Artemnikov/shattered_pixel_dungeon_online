@@ -74,7 +74,7 @@ def test_direction_delta_mapping():
 def test_init_first_connect_keys_match():
     init = InitMessage(player_id="p1", depth=1, grid=[[0]], width=1, height=1, traps=[])
     assert set(init.model_dump(exclude_none=True)) == {
-        "type", "player_id", "depth", "grid", "width", "height", "traps",
+        "type", "player_id", "depth", "grid", "width", "height", "traps", "custom_tiles",
     }
 
 
@@ -82,7 +82,7 @@ def test_init_floor_change_omits_player_id():
     init = InitMessage(depth=2, grid=[[0]], width=1, height=1, traps=[])
     dumped = init.model_dump(exclude_none=True)
     assert "player_id" not in dumped
-    assert set(dumped) == {"type", "depth", "grid", "width", "height", "traps"}
+    assert set(dumped) == {"type", "depth", "grid", "width", "height", "traps", "custom_tiles"}
 
 
 def test_state_update_keys_match():

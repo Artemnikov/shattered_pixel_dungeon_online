@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field
 from app.engine.entities.base import (
     Mob as MobEntity,
     DropEntry,
+    WeightedCountDrop,
     Faction,
     Position,
 )
@@ -287,14 +288,12 @@ class Goo(MobEntity):
     enraged_announced: bool = False
     fight_started: bool = False  # one-shot: fires GOO_FIGHT_STARTED on first notice
 
-    # 2-4 goo blobs on death (avg ~2.5, matching SPD Goo.die). The boss-floor key
-    # is dropped separately (see GameInstance.handle_boss_death) because it needs
-    # the floor-specific lock id.
-    loot_table: List[DropEntry] = [
-        DropEntry(item_kind="goo_blob", chance=1.0, max_global=0),
-        DropEntry(item_kind="goo_blob", chance=1.0, max_global=0),
-        DropEntry(item_kind="goo_blob", chance=0.3, max_global=0),
-        DropEntry(item_kind="goo_blob", chance=0.2, max_global=0),
+    # 2-4 goo blobs on death: SPD's Random.chances({0,0,6,3,1}) -> 60% chance of
+    # 2, 30% of 3, 10% of 4 (avg 2.5). The boss-floor key is dropped separately
+    # (see GameInstance.handle_boss_death) because it needs the floor-specific
+    # lock id.
+    weighted_drops: List[WeightedCountDrop] = [
+        WeightedCountDrop(item_kind="goo_blob", weights=[6, 3, 1], base_count=2),
     ]
 
     def is_enraged(self) -> bool:

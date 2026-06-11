@@ -25,7 +25,10 @@ before dispatch, so handlers can assume the action is legal for the item.
 from typing import Optional
 
 from app.engine.dungeon.constants import TileType
-from app.engine.entities.base import Action, Position, Player, Seed
+from app.engine.entities.base import (
+    Action, Position, Player, Seed,
+    GooBlob, HealthPotion, ElixirOfAquaticRejuvenation,
+)
 
 
 def _floor_drop(game, player, item) -> None:
@@ -81,7 +84,45 @@ def action_drink(game, player, item, tx=None, ty=None) -> None:
         if removed is not None and player.belongings.get_item(item.id) is None:
             player.quickslot.convert_to_placeholder(removed)
         game.add_event("DRINK", {"player": player.id, "type": "fury"}, floor_id=player.floor_id, source_player_id=player.id)
+    elif effect == "aqua_rejuv":
+        pool = round(player.get_total_max_hp() * 1.5)
+        player.aqua_heal_left = max(player.aqua_heal_left, pool)
+        removed = player.belongings.backpack.detach(item.id)
+        if removed is not None and player.belongings.get_item(item.id) is None:
+            player.quickslot.convert_to_placeholder(removed)
+        game.add_event("DRINK", {"player": player.id, "type": "aqua_rejuv"}, floor_id=player.floor_id, source_player_id=player.id)
     game.on_potion_drunk(player, item)
+
+
+def action_alchemize(game, player, item, tx=None, ty=None) -> None:
+    # GooBlob + Health Potion at an Alchemy Pot -> Elixir of Aquatic Rejuvenation
+    # (SPD ElixirOfAquaticRejuvenation.Recipe). Requires standing on the pot.
+    if not isinstance(item, GooBlob):
+        return
+    floor = game._get_or_create_floor(player.floor_id)
+    if (player.pos.x, player.pos.y) not in floor.alchemy_pots:
+        return
+    health_potion = next((it for it in player.inventory if isinstance(it, HealthPotion)), None)
+    if health_potion is None:
+        return
+
+    blob = player.belongings.backpack.detach(item.id)
+    if blob is None:
+        return
+    potion = player.belongings.backpack.detach(health_potion.id)
+    if potion is None:
+        # roll back the detached blob
+        player.belongings.backpack.collect(blob)
+        return
+    if player.belongings.get_item(item.id) is None:
+        player.quickslot.convert_to_placeholder(blob)
+    if player.belongings.get_item(health_potion.id) is None:
+        player.quickslot.convert_to_placeholder(potion)
+
+    elixir = ElixirOfAquaticRejuvenation()
+    player.belongings.backpack.collect(elixir)
+    game.add_event("ALCHEMIZE", {"player": player.id, "item": elixir.id},
+                   floor_id=player.floor_id, source_player_id=player.id)
 
 
 def action_affix(game, player, item, tx=None, ty=None) -> None:
@@ -221,6 +262,7 @@ ITEM_ACTION_DISPATCH = {
     Action.STEALTH: action_stealth,
     Action.EAT: action_eat_handler,
     Action.WEAR: action_wear_mask,
+    Action.ALCHEMIZE: action_alchemize,
     Action.OPEN: action_noop,
     Action.INFO: action_noop,
 }

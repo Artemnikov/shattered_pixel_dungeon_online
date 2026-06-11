@@ -135,6 +135,10 @@ class GenLevel:
         self.dk_summon_spots: list = []
         # Halls boss (YogDzewa) spawn position; set by YogDzewaBossRoom.paint()
         self.yog_pos: Optional[tuple] = None
+        # Decorative custom tilemaps (e.g. GooNest) -- cosmetic-only overlays
+        # painted on top of the base grid. Each entry:
+        # {"texture": str, "x": int, "y": int, "w": int, "h": int, "tiles": list[list[int]]}
+        self.custom_tiles: list[dict] = []
 
     def width(self) -> int:
         return self._width

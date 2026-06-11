@@ -16,6 +16,7 @@ from app.engine.entities.base import (
     Potion,
     Key,
     TenguMask,
+    GooBlob,
 )
 
 TIER2_WEAPONS = [
@@ -67,7 +68,35 @@ def roll_drops(
         items.append(item)
         if entry.max_global > 0:
             drop_counters[entry.item_kind] = drop_counters.get(entry.item_kind, 0) + 1
+
+    for wd in mob.weighted_drops:
+        if wd.max_global > 0 and drop_counters.get(wd.item_kind, 0) >= wd.max_global:
+            continue
+        count = wd.base_count + _weighted_choice(wd.weights)
+        for _ in range(count):
+            item = _make_item(wd.item_kind)
+            if item is None:
+                continue
+            item.id = str(uuid.uuid4())
+            item.pos = Position(x=death_x, y=death_y)
+            items.append(item)
+        if wd.max_global > 0:
+            drop_counters[wd.item_kind] = drop_counters.get(wd.item_kind, 0) + count
+
     return items
+
+
+def _weighted_choice(weights: List[float]) -> int:
+    # Mirrors SPD's Random.chances(): pick index i with probability
+    # weights[i] / sum(weights).
+    total = sum(weights)
+    r = random.random() * total
+    acc = 0.0
+    for i, w in enumerate(weights):
+        acc += w
+        if r < acc:
+            return i
+    return len(weights) - 1
 
 
 def _make_item(item_kind: str) -> Optional[ItemBase]:
@@ -92,7 +121,7 @@ def _make_item(item_kind: str) -> Optional[ItemBase]:
         effect = random.choice(RANDOM_POTIONS)
         return Potion(name="Potion", effect=effect)
     elif item_kind == "goo_blob":
-        return ItemBase(name="Goo Blob", type="scenery")
+        return GooBlob()
     elif item_kind == "tengu_mask":
         return TenguMask(name="Tengu's Mask")
     return None

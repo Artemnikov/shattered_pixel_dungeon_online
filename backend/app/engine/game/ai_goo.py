@@ -53,7 +53,7 @@ class GooAIMixin:
             odds = 2 if goo.is_enraged() else 5
             if random.randint(0, odds - 1) == 0:
                 goo.last_attack_time = now
-                goo.pumped_up = 1
+                goo.pumped_up = 2 if "stronger_bosses" in self.challenges else 1
                 self._goo_begin_charge(goo, target, floor_id)
                 return True
         return False
@@ -79,14 +79,17 @@ class GooAIMixin:
         goo.heal_cooldown = GOO_WATER_HEAL_INTERVAL
         self.add_event("HEAL", {"target": goo.id, "amount": goo.heal_inc,
                                 "x": goo.pos.x, "y": goo.pos.y}, floor_id=floor_id)
+        if "stronger_bosses" in self.challenges:
+            goo.heal_inc = min(3, goo.heal_inc + 1)
 
     def _goo_threatened_tiles(self, goo: Goo, floor_id: int):
         tiles = []
-        for dy in range(-2, 3):
-            for dx in range(-2, 3):
+        radius = max(1, goo.pumped_up)
+        for dy in range(-radius, radius + 1):
+            for dx in range(-radius, radius + 1):
                 if dx == 0 and dy == 0:
                     continue
-                if abs(dx) + abs(dy) > 2:
+                if abs(dx) + abs(dy) > radius:
                     continue
                 x, y = goo.pos.x + dx, goo.pos.y + dy
                 if self._is_in_los(goo.pos, Position(x=x, y=y), floor_id=floor_id):

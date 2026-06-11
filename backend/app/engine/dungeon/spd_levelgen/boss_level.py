@@ -252,6 +252,33 @@ def _boss_create_items(rng: SPDRandom, level: GenLevel) -> None:
 # Room types
 # ===========================================================================
 
+def _goo_nest_index(x: int, y: int, tile_w: int, tile_h: int) -> int:
+    """Port of GooBossRoom.GooNest.create()'s per-cell index pattern."""
+    # corners
+    if (x == 0 or x == tile_w - 1) and (y == 0 or y == tile_h - 1):
+        return -1
+    # adjacent to corners
+    if (x == 1 and y == 0) or (x == 0 and y == 1):
+        return 0
+    if (x == tile_w - 2 and y == 0) or (x == tile_w - 1 and y == 1):
+        return 1
+    if (x == 1 and y == tile_h - 1) or (x == 0 and y == tile_h - 2):
+        return 2
+    if (x == tile_w - 2 and y == tile_h - 1) or (x == tile_w - 1 and y == tile_h - 2):
+        return 3
+    # sides
+    if x == 0:
+        return 4
+    if y == 0:
+        return 5
+    if x == tile_w - 1:
+        return 6
+    if y == tile_h - 1:
+        return 7
+    # inside
+    return 8
+
+
 # ---- GooBossRoom base -----------------------------------------------------
 
 class GooBossRoom(StandardRoom):
@@ -280,9 +307,24 @@ class GooBossRoom(StandardRoom):
             return ThickPillarsGooRoom()
 
     def _setup_goo_nest(self, level: GenLevel) -> None:
-        """Port of GooBossRoom.setupGooNest() — visual-only custom tilemap
-        skipped (no RNG, no gameplay effect)."""
-        pass
+        """Port of GooBossRoom.setupGooNest() — decorative GooNest tilemap
+        centered in the room (no RNG, no gameplay effect)."""
+        tile_w = 4 + self.width() % 2
+        tile_h = 4 + self.height() % 2
+        ox = self.left + self.width() // 2 - 2
+        oy = self.top + self.height() // 2 - 2
+        tiles = [
+            [_goo_nest_index(x, y, tile_w, tile_h) for x in range(tile_w)]
+            for y in range(tile_h)
+        ]
+        level.custom_tiles.append({
+            "texture": "sewer_boss",
+            "x": ox,
+            "y": oy,
+            "w": tile_w,
+            "h": tile_h,
+            "tiles": tiles,
+        })
 
     def _place_goo(self, level: GenLevel, rng: SPDRandom) -> None:
         """Creates the Goo mob at the room's center (consumes center() RNG)."""

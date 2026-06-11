@@ -149,6 +149,14 @@
   cursor: pointer;
 }
 .hero-diff-btn.active { background: #e67e22; color: #fff; border-color: #d35400; }
+.hero-challenge-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ccc;
+  font-size: 13px;
+  cursor: pointer;
+}
 .hero-name-input {
   width: 220px;
   padding: 7px 12px;
