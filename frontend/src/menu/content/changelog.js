@@ -1,7 +1,19 @@
 // Brief, remake-specific changelog shown in the Changes panel.
-export const APP_VERSION = '0.2.0';
+export const APP_VERSION = '0.3.0';
 
 const CHANGELOG = [
+  {
+    version: 'v0.3.0',
+    title: 'Bosses & Dungeon Regions Update',
+    changes: [
+      'Full SPD-faithful level generation for all 5 dungeon regions: Sewers, Prison, Caves, City and Halls.',
+      'New floor 5/10/15/20/25 boss fights: Goo, Tengu, DM-300, Dwarf King and Yog-Dzewa, each with their own AI and arena.',
+      '24 new mob types added across the new regions.',
+      'Hunger system: characters start starving at 450 and food items reduce hunger.',
+      'All 12 base potions, 12 base scrolls and food items added.',
+      'New combat sound effects for blasts, lightning, rays, scrolls and locks.',
+    ],
+  },
   {
     version: 'v0.2.0',
     title: 'Combat & Controls Update',
