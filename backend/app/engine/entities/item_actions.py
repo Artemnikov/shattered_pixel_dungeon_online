@@ -25,9 +25,11 @@ before dispatch, so handlers can assume the action is legal for the item.
 from typing import Optional
 
 from app.engine.dungeon.constants import TileType
+import math
+
 from app.engine.entities.base import (
     Action, Position, Player, Seed,
-    GooBlob, HealthPotion, ElixirOfAquaticRejuvenation,
+    GooBlob, HealthPotion, ElixirOfAquaticRejuvenation, Waterskin,
 )
 
 
@@ -64,7 +66,50 @@ def action_drop(game, player, item, tx=None, ty=None) -> None:
     game.add_event("DROP", {"player": player.id, "item": detached.id}, floor_id=player.floor_id)
 
 
+def action_drink_waterskin(game, player, item, tx=None, ty=None) -> None:
+    # Mirrors SPD's Waterskin.execute(AC_DRINK): each drop is worth 5% of max HP,
+    # drunk instantly (not a gradual heal like potions). Shielding Dew (Warden T2)
+    # also tops up a "dew" shield, consuming extra drops to do so.
+    max_hp = player.get_total_max_hp()
+    missing_pct = 1.0 - (player.hp / max_hp if max_hp else 1.0)
+    drops_needed = missing_pct / 0.05
+
+    shielding_dew = player.talent_info.level("shielding_dew")
+    shield_drops = 0.0
+    if shielding_dew > 0:
+        max_shield = round(max_hp * 0.2 * shielding_dew)
+        cur_shield = player.get_shield("dew").amount if player.get_shield("dew") else 0
+        if max_shield > 0:
+            missing_shield_pct = (1 - cur_shield / max_shield) * 0.2 * shielding_dew
+            if missing_shield_pct > 0:
+                shield_drops = missing_shield_pct / 0.05
+
+    drops_to_consume = math.ceil(drops_needed + shield_drops - 0.01)
+    drops_to_consume = max(1, min(drops_to_consume, item.volume))
+
+    heal_drops = drops_to_consume
+    shield_amount = 0
+    if shielding_dew > 0 and drops_needed < drops_to_consume:
+        # excess drops (beyond what's needed to fill HP) go to shielding
+        heal_drops = max(0, math.ceil(drops_needed - 0.01))
+        shield_amount = round((drops_to_consume - heal_drops) * 0.05 * max_hp)
+
+    heal = round(heal_drops * 0.05 * max_hp)
+    if heal > 0:
+        player.hp = min(max_hp, player.hp + heal)
+        game.add_event("HEAL", {"target": player.id, "amount": heal, "x": player.pos.x, "y": player.pos.y}, floor_id=player.floor_id)
+    if shield_amount > 0:
+        player.add_shield("dew", shield_amount, priority=0)
+
+    item.volume -= drops_to_consume
+    game.add_event("DRINK", {"player": player.id, "type": "waterskin"}, floor_id=player.floor_id, source_player_id=player.id)
+
+
 def action_drink(game, player, item, tx=None, ty=None) -> None:
+    if isinstance(item, Waterskin):
+        action_drink_waterskin(game, player, item, tx, ty)
+        return
+
     # Mirrors PotionOfHealing: heal 0.8*maxHP+14 over time, 25% of the remaining
     # pool per heal-tick. Reviving potions are consumed by reviving a downed ally
     # (see move_entity), not by self-drinking, so they no-op here.
@@ -91,6 +136,13 @@ def action_drink(game, player, item, tx=None, ty=None) -> None:
         if removed is not None and player.belongings.get_item(item.id) is None:
             player.quickslot.convert_to_placeholder(removed)
         game.add_event("DRINK", {"player": player.id, "type": "aqua_rejuv"}, floor_id=player.floor_id, source_player_id=player.id)
+    elif effect == "mind_vision":
+        # SPD MindVision: 20-turn buff revealing every mob's position through walls.
+        player.add_buff("mind_vision", duration=20.0)
+        removed = player.belongings.backpack.detach(item.id)
+        if removed is not None and player.belongings.get_item(item.id) is None:
+            player.quickslot.convert_to_placeholder(removed)
+        game.add_event("DRINK", {"player": player.id, "type": "mind_vision"}, floor_id=player.floor_id, source_player_id=player.id)
     game.on_potion_drunk(player, item)
 
 

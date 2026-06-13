@@ -144,6 +144,27 @@ class AdminTeleport(_ClientMessageBase):
     target_floor: int
 
 
+class NpcInteract(_ClientMessageBase):
+    type: Literal["NPC_INTERACT"]
+    npc_id: str
+
+
+class ShopBuy(_ClientMessageBase):
+    type: Literal["SHOP_BUY"]
+    npc_id: str
+    item_id: str
+
+
+class ShopSell(_ClientMessageBase):
+    type: Literal["SHOP_SELL"]
+    item_id: str
+
+
+class ImpClaimReward(_ClientMessageBase):
+    type: Literal["IMP_CLAIM_REWARD"]
+    npc_id: str
+
+
 ClientMessage = Annotated[
     Union[
         Ping,
@@ -169,6 +190,10 @@ ClientMessage = Annotated[
         MetamorphChoose,
         MetamorphReplace,
         AdminTeleport,
+        NpcInteract,
+        ShopBuy,
+        ShopSell,
+        ImpClaimReward,
     ],
     Field(discriminator="type"),
 ]

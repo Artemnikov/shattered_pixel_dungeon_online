@@ -131,6 +131,7 @@ class SerializationMixin:
                 node["actions"] = live.actions(p)
                 node["default_action"] = live.default_action()
                 node["description"] = live.description(p)
+                node["value"] = live.value(identified=live.kind in self.identified_kinds)
             self._mask_item_dict(node)
 
         belongings = d.get("belongings", {})
@@ -147,7 +148,9 @@ class SerializationMixin:
         return d
 
     def _serialize_floor_item(self, item) -> dict:
-        return self._mask_item_dict(item.model_dump())
+        d = item.model_dump()
+        d["value"] = item.value(identified=item.kind in self.identified_kinds)
+        return self._mask_item_dict(d)
 
     def get_state(self, player_id: Optional[str] = None):
         # Occupancy-based open doors and entity positions may have changed since
@@ -179,7 +182,8 @@ class SerializationMixin:
                 }
 
             visible_tiles = self.get_visible_tiles(
-                player.pos, radius=self._view_distance(player), floor_id=player.floor_id)
+                player.pos, radius=self._view_distance(player), floor_id=player.floor_id,
+                viewer_id=player.id)
             visible_set = set(visible_tiles)
 
             player_traps = [
@@ -188,10 +192,28 @@ class SerializationMixin:
                 if (x, y) in visible_set and not t.hidden
             ]
 
+            # SPD MindVision: while active, every mob's 3x3 neighbourhood is
+            # revealed regardless of walls/FOV.
+            mind_vision_set = set()
+            if player.has_buff("mind_vision"):
+                for m in floor.mobs.values():
+                    if not m.is_alive:
+                        continue
+                    for dx in (-1, 0, 1):
+                        for dy in (-1, 0, 1):
+                            mind_vision_set.add((m.pos.x + dx, m.pos.y + dy))
+
+            # SPD heap.seen: first-discovery latch, set once an item's cell
+            # enters FOV.
+            for i in floor.items.values():
+                if i.pos and (i.pos.x, i.pos.y) in visible_set:
+                    i.seen = True
+
             return {
                 "depth": player.floor_id,
                 "players": [self._serialize_player(p) for p in floor_players],
-                "mobs": [m.model_dump() for m in floor.mobs.values() if m.is_alive and (m.pos.x, m.pos.y) in visible_set],
+                "mobs": [m.model_dump() for m in floor.mobs.values() if m.is_alive
+                         and ((m.pos.x, m.pos.y) in visible_set or (m.pos.x, m.pos.y) in mind_vision_set)],
                 "items": [self._serialize_floor_item(i) for i in floor.items.values() if i.pos and (i.pos.x, i.pos.y) in visible_set],
                 "visible_tiles": visible_tiles,
                 "open_doors": self._get_open_doors(floor),

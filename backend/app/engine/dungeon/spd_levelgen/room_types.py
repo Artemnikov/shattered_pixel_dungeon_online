@@ -23,7 +23,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import List, Optional
 
-from app.engine.dungeon.spd_levelgen.room import ALL, Door, Room
+from app.engine.dungeon.spd_levelgen.room import ALL, Door, DoorType, Room
 from app.engine.dungeon.spd_random import SPDRandom
 
 
@@ -144,5 +144,192 @@ class SecretRoom(SpecialRoom):
     pass
 
 
+class AmbitiousImpRoom(SpecialRoom):
+    """Port of rooms/quest/AmbitiousImpRoom.java (Imp quest, depths 17-19).
+    Fixed 9x9 room with the Imp NPC near its entrance. The branch-level
+    transition created by upstream SPD leads to the unrelated, unimplemented
+    Daria's Vault feature and is intentionally omitted here."""
+
+    def min_width(self) -> int:
+        return 9
+
+    def max_width(self) -> int:
+        return 9
+
+    def min_height(self) -> int:
+        return 9
+
+    def max_height(self) -> int:
+        return 9
+
+    def paint(self, level, rng: SPDRandom) -> None:
+        from app.engine.dungeon.spd_levelgen import terrain
+        from app.engine.dungeon.spd_levelgen.mob_spawner import GenMob
+        from app.engine.dungeon.spd_levelgen.painter import Painter
+
+        Painter.fill(level, self, terrain.WALL_DECO)
+        Painter.fill(level, self, 1, terrain.EMPTY)
+
+        c = self.center(rng)
+        entrance = self.entrance()
+        pos = level.point_to_cell(c)
+
+        if entrance.x == self.left or entrance.x == self.right:
+            pos += rng.IntRange(-1, 1) * level.width()
+            pos += -2 if entrance.x == self.left else 2
+        elif entrance.y == self.top or entrance.y == self.bottom:
+            pos += rng.IntRange(-1, 1)
+            pos += level.width() * (-2 if entrance.y == self.top else 2)
+
+        level.mobs.append(GenMob(cls_name="Imp", pos=pos))
+
+        Painter.draw_inside(level, self, entrance, 1, terrain.EMPTY)
+        entrance.set(DoorType.REGULAR)
+
+
 class ShopRoom(SpecialRoom):
-    pass
+    def paint(self, level, rng: SPDRandom) -> None:
+        from app.engine.dungeon.spd_levelgen import terrain
+        from app.engine.dungeon.spd_levelgen.mob_spawner import GenMob
+        from app.engine.dungeon.spd_levelgen.painter import Painter
+        from app.engine.dungeon.spd_levelgen.shop_items import shop_room_item_list
+        from app.engine.dungeon.spd_levelgen.geom import Point
+
+        Painter.fill(level, self, terrain.WALL)
+        Painter.fill(level, self, 1, terrain.EMPTY_SP)
+
+        pos = level.point_to_cell(self.center(rng))
+        level.mobs.append(GenMob(cls_name="Shopkeeper", pos=pos))
+
+        items = shop_room_item_list(rng, level.depth)
+        _place_shop_items(level, self, items)
+
+        for door in self.connected.values():
+            door.set(DoorType.REGULAR)
+
+
+def _place_shop_items(level, room: "ShopRoom", items: list) -> None:
+    """Port of ShopRoom.placeItems()'s clockwise spiral placement."""
+    from app.engine.dungeon.spd_levelgen import terrain
+    from app.engine.dungeon.spd_levelgen.geom import Point
+
+    entrance = room.entrance()
+    entry_inset = Point(entrance.x, entrance.y)
+    if entry_inset.y == room.top:
+        entry_inset.y += 1
+    elif entry_inset.y == room.bottom:
+        entry_inset.y -= 1
+    elif entry_inset.x == room.left:
+        entry_inset.x += 1
+    else:
+        entry_inset.x -= 1
+
+    cur = entry_inset.clone()
+    inset = 1
+
+    def _step(p: Point) -> None:
+        if p.x == room.left + inset and p.y != room.top + inset:
+            p.y -= 1
+        elif p.y == room.top + inset and p.x != room.right - inset:
+            p.x += 1
+        elif p.x == room.right - inset and p.y != room.bottom - inset:
+            p.y += 1
+        else:
+            p.x -= 1
+
+    remaining = list(items)
+    while remaining:
+        item = remaining[0]
+
+        _step(cur)
+
+        if cur == entry_inset:
+            if entry_inset.y == room.top + inset:
+                entry_inset.y += 1
+            elif entry_inset.y == room.bottom - inset:
+                entry_inset.y -= 1
+            if entry_inset.x == room.left + inset:
+                entry_inset.x += 1
+            elif entry_inset.x == room.right - inset:
+                entry_inset.x -= 1
+            inset += 1
+
+            if inset > (min(room.width(), room.height()) - 3) // 2:
+                break  # out of space
+
+            cur = entry_inset.clone()
+            _step(cur)
+
+        cell = level.point_to_cell(cur)
+        if level.map[cell] == terrain.HIGH_GRASS:
+            level.map[cell] = terrain.GRASS
+            level.los_blocking[cell] = False
+
+        level.drop(item, cell)
+        remaining.pop(0)
+
+    # fill in any leftover items wherever there's free space
+    if remaining:
+        for x in range(room.left, room.right + 1):
+            for y in range(room.top, room.bottom + 1):
+                if not remaining:
+                    break
+                p = Point(x, y)
+                cell = level.point_to_cell(p)
+                if (level.map[cell] in (terrain.EMPTY_SP, terrain.EMPTY)
+                        and level.heaps.get(cell) is None
+                        and level.find_mob(cell) is None):
+                    level.drop(remaining.pop(0), cell)
+            if not remaining:
+                break
+
+
+class ImpShopRoom(SpecialRoom):
+    """Port of rooms/standard/ImpShopRoom.java (city boss floor 20). Fixed
+    9x9 room, carved like a normal ShopRoom but only populated once
+    Imp.Quest is completed -- immediately if already completed when floor 20
+    is generated, otherwise the Shopkeeper + stock are decided here and
+    stashed on the level for retroactive placement (see
+    GameInstance._spawn_imp_shop)."""
+
+    def min_width(self) -> int:
+        return 9
+
+    def max_width(self) -> int:
+        return 9
+
+    def min_height(self) -> int:
+        return 9
+
+    def max_height(self) -> int:
+        return 9
+
+    def max_connections(self, direction: int) -> int:
+        return 2
+
+    def paint(self, level, rng: SPDRandom) -> None:
+        from app.engine.dungeon.spd_levelgen import terrain
+        from app.engine.dungeon.spd_levelgen.mob_spawner import GenMob
+        from app.engine.dungeon.spd_levelgen.painter import Painter
+        from app.engine.dungeon.spd_levelgen.shop_items import shop_room_item_list
+
+        Painter.fill(level, self, terrain.WALL)
+        Painter.fill(level, self, 1, terrain.EMPTY_SP)
+
+        for door in self.connected.values():
+            door.set(DoorType.REGULAR)
+
+        items = shop_room_item_list(rng, level.depth)
+
+        if level.run_state.imp_quest.completed:
+            pos = level.point_to_cell(self.center(rng))
+            level.mobs.append(GenMob(cls_name="Shopkeeper", pos=pos))
+            _place_shop_items(level, self, items)
+        else:
+            entrance = self.entrance()
+            level.imp_shop_room = {
+                "left": self.left, "top": self.top,
+                "right": self.right, "bottom": self.bottom,
+                "entrance": (entrance.x, entrance.y),
+                "items": items,
+            }

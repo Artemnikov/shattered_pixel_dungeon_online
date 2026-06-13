@@ -121,6 +121,35 @@ class DropData(_EventData):
     item: str
 
 
+class CollectDewData(_EventData):
+    player: str
+    item: str
+
+
+class PickupGoldData(_EventData):
+    player: str
+    amount: int
+
+
+class ShopOpenData(_EventData):
+    player: str
+    npc: str
+    stock: List[dict]
+    gold: int
+
+
+class ShopBuyData(_EventData):
+    player: str
+    item: str
+    price: int
+
+
+class ShopSellData(_EventData):
+    player: str
+    item: str
+    price: int
+
+
 class StairsDownData(_EventData):
     player: str
 
@@ -215,6 +244,20 @@ class TenguBadgeQualifiedData(_EventData):
     pass  # no required payload
 
 
+class ImpDialogueData(_EventData):
+    player: str
+    npc: str
+    text: str
+    can_claim: bool
+    tokens: Optional[int] = None
+
+
+class ImpRewardData(_EventData):
+    player: str
+    npc: str
+    item: str
+
+
 # event "type" -> payload model. Used by the opt-in dev validation hook.
 EVENT_MODELS = {
     "ATTACK": AttackData,
@@ -232,6 +275,11 @@ EVENT_MODELS = {
     "MAP_PATCH": MapPatchData,
     "PICKUP": PickupData,
     "DROP": DropData,
+    "COLLECT_DEW": CollectDewData,
+    "PICKUP_GOLD": PickupGoldData,
+    "SHOP_OPEN": ShopOpenData,
+    "SHOP_BUY": ShopBuyData,
+    "SHOP_SELL": ShopSellData,
     "STAIRS_DOWN": StairsDownData,
     "STAIRS_UP": StairsUpData,
     "REVIVE": ReviveData,
@@ -250,4 +298,6 @@ EVENT_MODELS = {
     "METAMORPH_OPTIONS": MetamorphOptionsData,
     "TALENT_METAMORPHED": TalentMetamorphData,
     "TENGU_BADGE_QUALIFIED": TenguBadgeQualifiedData,
+    "IMP_DIALOGUE": ImpDialogueData,
+    "IMP_REWARD": ImpRewardData,
 }

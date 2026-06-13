@@ -169,6 +169,8 @@ interface HookProps {
   onMetamorphOptions?: (data: { old_talent: string; options: string[] }) => void;
   onGooFightStarted?: (data: { mob: string }) => void;
   onTenguFightStarted?: (data: { mob: string }) => void;
+  onShopOpen?: (data: { npc: string; stock: SerializedItem[]; gold: number }) => void;
+  onImpDialogue?: (data: { npc: string; text: string; can_claim: boolean; tokens?: number | null }) => void;
 }
 
 type HandlerCtx = Pick<
@@ -195,6 +197,8 @@ type HandlerCtx = Pick<
   onMetamorphOptions?: HookProps['onMetamorphOptions'];
   onGooFightStarted?: HookProps['onGooFightStarted'];
   onTenguFightStarted?: HookProps['onTenguFightStarted'];
+  onShopOpen?: HookProps['onShopOpen'];
+  onImpDialogue?: HookProps['onImpDialogue'];
 };
 
 export default function useGameSocket({
@@ -243,6 +247,8 @@ export default function useGameSocket({
   onMetamorphOptions,
   onGooFightStarted,
   onTenguFightStarted,
+  onShopOpen,
+  onImpDialogue,
 }: HookProps) {
   useEffect(() => {
     if (!enabled) return;
@@ -526,6 +532,7 @@ export default function useGameSocket({
             searchEffectsRef, floatingTextRef, warnedTilesRef,
             onLevelUp, onSubclassChoiceAvailable, onArmorAbilityChoiceAvailable, onTalentUpgraded,
             onMetamorphOpen, onMetamorphOptions, onGooFightStarted, onTenguFightStarted,
+            onShopOpen, onImpDialogue,
           });
         });
       }
@@ -555,6 +562,7 @@ function handleEvent(event: GameEvent, {
   searchEffectsRef, floatingTextRef, warnedTilesRef,
   onLevelUp, onSubclassChoiceAvailable, onArmorAbilityChoiceAvailable, onTalentUpgraded,
   onMetamorphOpen, onMetamorphOptions, onGooFightStarted, onTenguFightStarted,
+  onShopOpen, onImpDialogue,
 }: HandlerCtx) {
   if (event.type === 'PLAY_SOUND') {
     AudioManager.play(event.data.sound);
@@ -869,6 +877,11 @@ function handleEvent(event: GameEvent, {
     return;
   }
 
+  if (event.type === 'PICKUP_GOLD' && event.data.player === myPlayerIdRef.current) {
+    AudioManager.play('GOLD');
+    return;
+  }
+
   if (event.type === 'STAIRS_DOWN' && event.data.player === myPlayerIdRef.current) {
     AudioManager.play('STAIRS_DOWN');
     return;
@@ -1054,6 +1067,44 @@ function handleEvent(event: GameEvent, {
   if (event.type === 'METAMORPH_OPTIONS') {
     if (event.data.player === myPlayerIdRef.current) {
       onMetamorphOptions?.(event.data);
+    }
+    return;
+  }
+
+  if (event.type === 'SHOP_OPEN') {
+    if (event.data.player === myPlayerIdRef.current) {
+      onShopOpen?.({ npc: event.data.npc, stock: event.data.stock, gold: event.data.gold });
+    }
+    return;
+  }
+
+  if (event.type === 'SHOP_BUY' || event.type === 'SHOP_SELL') {
+    if (event.data.player === myPlayerIdRef.current) {
+      AudioManager.play('CLICK');
+    }
+    return;
+  }
+
+  if (event.type === 'IMP_DIALOGUE') {
+    if (event.data.player === myPlayerIdRef.current) {
+      onImpDialogue?.({
+        npc: event.data.npc, text: event.data.text,
+        can_claim: event.data.can_claim, tokens: event.data.tokens,
+      });
+    }
+    return;
+  }
+
+  if (event.type === 'IMP_REWARD') {
+    if (event.data.player === myPlayerIdRef.current) {
+      AudioManager.play('BOSS');
+    }
+    return;
+  }
+
+  if (event.type === 'COLLECT_DEW') {
+    if (event.data.player === myPlayerIdRef.current) {
+      AudioManager.play('DEWDROP');
     }
     return;
   }

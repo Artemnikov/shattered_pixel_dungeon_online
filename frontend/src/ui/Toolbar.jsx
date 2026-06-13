@@ -52,6 +52,8 @@ export default function Toolbar({
   onQuickBag,
   onSlotClick,
   onSlotDoubleClick,
+  onSlotLongPress,
+  onSlotContextMenu,
   onSwap,
 }) {
   const canvasRef = useRef(null);
@@ -92,11 +94,9 @@ export default function Toolbar({
       ? (swappedQuickslots ? 3 : 0) : 0;
     const endingSlot = quickSwapper && quickslotsToShow < 6
       ? startingSlot + 2 : Math.min(startingSlot + quickslotsToShow - 1, 5);
-    const finalQuickslots = endingSlot - startingSlot + 1;
     const showSwap = quickSwapper && quickslotsToShow < 6;
 
     const btnW = BTN_INVENTORY.w + TOOL_PAD;
-    const btnH = BTN_INVENTORY.h + TOOL_PAD;
 
     const qsWidths = [];
     for (let i = startingSlot; i <= endingSlot; i++) {
@@ -219,7 +219,24 @@ export default function Toolbar({
         const availH = slotH;
         const ix = dx + padL + (availW - sw * S) / 2;
         const iy = dy + (availH - sh * S) / 2;
+        if (item.is_placeholder) ctx.globalAlpha = 0.35;
         ctx.drawImage(ii, coords[0] * 16 + rx, coords[1] * 16 + ry, sw, sh, ix, iy, sw * S, sh * S);
+        if (item.is_placeholder) ctx.globalAlpha = 1.0;
+      }
+
+      function isArmedSlot(item) {
+        if (!item || !targetingMode) return false;
+        if (typeof targetingMode === 'string') return item.id === targetingMode;
+        if (typeof targetingMode === 'object' && targetingMode.itemId) return item.id === targetingMode.itemId;
+        return false;
+      }
+
+      function drawArmedHighlight(dx, dy, dw, dh) {
+        ctx.save();
+        ctx.strokeStyle = '#f1c40f';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(dx + 1, dy + 1, dw - 2, dh - 2);
+        ctx.restore();
       }
 
       const sc = S;
@@ -257,6 +274,7 @@ export default function Toolbar({
           const a = areas.quickslots[qIdx];
           const spec = drawQuickslotFrame(i, a.x * sc, yOff + a.y * sc, a.w * sc, a.h * sc);
           drawItemSprite(items[i], a.x * sc, yOff + a.y * sc, a.w * sc, a.h * sc, spec.borderL, spec.borderR);
+          if (isArmedSlot(items[i])) drawArmedHighlight(a.x * sc, yOff + a.y * sc, a.w * sc, a.h * sc);
         }
       } else {
         let right = canvas.width / sc;
@@ -301,6 +319,7 @@ export default function Toolbar({
           areas.quickslots.forEach((a, idx) => {
             const spec = drawQuickslotFrame(startingSlot + idx, a.x * sc, yOff + a.y * sc, a.w * sc, a.h * sc);
             drawItemSprite(items[startingSlot + idx], a.x * sc, yOff + a.y * sc, a.w * sc, a.h * sc, spec.borderL, spec.borderR);
+            if (isArmedSlot(items[startingSlot + idx])) drawArmedHighlight(a.x * sc, yOff + a.y * sc, a.w * sc, a.h * sc);
           });
 
           if (showSwap && areas.swap) {
@@ -347,6 +366,7 @@ export default function Toolbar({
           areas.quickslots.forEach((a, idx) => {
             const spec = drawQuickslotFrame(startingSlot + idx, a.x * sc, yOff + a.y * sc, a.w * sc, a.h * sc);
             drawItemSprite(items[startingSlot + idx], a.x * sc, yOff + a.y * sc, a.w * sc, a.h * sc, spec.borderL, spec.borderR);
+            if (isArmedSlot(items[startingSlot + idx])) drawArmedHighlight(a.x * sc, yOff + a.y * sc, a.w * sc, a.h * sc);
           });
 
           if (showSwap && areas.swap) {
@@ -371,7 +391,7 @@ export default function Toolbar({
   }, [mode, interfaceSize, flipToolbar, quickSwapper, swappedQuickslots, canvasWidth, items, equippedItems, targetingMode]);
 
   const handlePointerDown = (e) => {
-    if (e.pointerType !== 'touch' || !onQuickBag) return;
+    if (e.pointerType !== 'touch') return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
@@ -381,13 +401,26 @@ export default function Toolbar({
 
     function hit(a) { return a && mx >= a.x && mx <= a.x + a.w && my >= a.y && my <= a.y + a.h; }
 
-    if (hit(areas.inventory)) {
+    if (onQuickBag && hit(areas.inventory)) {
       longPressFiredRef.current = false;
       touchTimerRef.current = setTimeout(() => {
         longPressFiredRef.current = true;
         AudioManager.play('CLICK');
         if (onQuickBag) onQuickBag();
       }, 500);
+      return;
+    }
+
+    for (let i = 0; i < areas.quickslots.length; i++) {
+      if (hit(areas.quickslots[i])) {
+        longPressFiredRef.current = false;
+        touchTimerRef.current = setTimeout(() => {
+          longPressFiredRef.current = true;
+          AudioManager.play('CLICK');
+          if (onSlotLongPress) onSlotLongPress(items[i], i);
+        }, 500);
+        return;
+      }
     }
   };
 
@@ -437,6 +470,26 @@ export default function Toolbar({
     }
   };
 
+  const handleContextMenu = (e) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / S;
+    const my = (e.clientY - rect.top) / S;
+    const areas = areasRef.current;
+
+    function hit(a) { return a && mx >= a.x && mx <= a.x + a.w && my >= a.y && my <= a.y + a.h; }
+
+    for (let i = 0; i < areas.quickslots.length; i++) {
+      if (hit(areas.quickslots[i])) {
+        e.preventDefault();
+        AudioManager.play('CLICK');
+        if (onSlotContextMenu) onSlotContextMenu(items[i], i);
+        return;
+      }
+    }
+  };
+
   const handleDoubleClick = (e) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -462,6 +515,7 @@ export default function Toolbar({
       className="toolbar-canvas"
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
+      onContextMenu={handleContextMenu}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}

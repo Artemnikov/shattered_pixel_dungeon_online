@@ -42,6 +42,11 @@ class FloorState:
     map_version: int = 0
     prison_stored_items: List[Item] = field(default_factory=list)
 
+    # Dynamic per-floor view-distance override (mirrors SPD Level.viewDistance).
+    # Set by YogDzewa's fight to shrink hero vision per phase; None = use the
+    # viewer's own view_distance.
+    view_distance: Optional[int] = None
+
     def rebuild_flags(self) -> None:
         self.flags = build_flag_maps(self.grid)
 

@@ -134,6 +134,24 @@ export const SWARM_FW = 16;
 export const SWARM_FH = 16;
 export const SWARM_DEST = { dx: 0, dy: 0, dw: 32, dh: 32 };
 
+// Shopkeeper: 14x14 frames (ShopkeeperSprite TextureFilm(texture, 14, 14)),
+// shopkeeper.png. Centered/bottom-aligned in the 32px tile, scaled 2x -> 28x28 @ +2,+2.
+export const KEEPER_FW = 14;
+export const KEEPER_FH = 14;
+export const KEEPER_DEST = { dx: 2, dy: 2, dw: 28, dh: 28 };
+
+// Imp: 12x14 frames (ImpSprite TextureFilm(texture, 12, 14)), demon.png.
+// Centered/bottom-aligned in the 32px tile, scaled 2x -> 24x28 @ +4,+4.
+export const IMP_FW = 12;
+export const IMP_FH = 14;
+export const IMP_DEST = { dx: 4, dy: 4, dw: 24, dh: 28 };
+
+// Rat King: 16x17 frames (RatKingSprite TextureFilm(texture, 16, 17)), ratking.png.
+// Centered/bottom-aligned in the 32px tile, scaled 2x -> 32x34 @ 0,-2.
+export const RATKING_FW = 16;
+export const RATKING_FH = 17;
+export const RATKING_DEST = { dx: 0, dy: -2, dw: 32, dh: 34 };
+
 const isEntityMoving = (mob) =>
   mob.targetPos &&
   (Math.abs(mob.targetPos.x - mob.renderPos.x) > 0.05 ||
@@ -499,6 +517,21 @@ export const getSwarmFrame = (mob, mobAnim, now) => {
   }
   return [0, 1, 2, 3, 4, 5][Math.floor(now / 67) % 6] * SWARM_FW;
 };
+
+// Faithful to original SPD ShopkeeperSprite (14x14 frames, shopkeeper.png):
+//   idle 10fps loop [1,1,1,1,1,0,0,0,0]
+export const getKeeperFrame = (mob, mobAnim, now) =>
+  [1, 1, 1, 1, 1, 0, 0, 0, 0][Math.floor(now / 100) % 9] * KEEPER_FW;
+
+// Imp: simplified idle wobble loop (full ImpSprite idle is a long mostly-static
+// cycle of frames 0/4 with occasional 1-3), demon.png, 12x14 frames.
+export const getImpFrame = (mob, mobAnim, now) =>
+  [0, 0, 0, 1, 2, 3, 0, 0, 0, 4, 4, 4, 4, 4, 4][Math.floor(now / 100) % 15] * IMP_FW;
+
+// Faithful to original SPD RatKingSprite (16x17 frames, ratking.png):
+//   idle 2fps loop [0,0,0,1]
+export const getRatKingFrame = (mob, mobAnim, now) =>
+  [0, 0, 0, 1][Math.floor(now / 500) % 4] * RATKING_FW;
 
 // dest (optional): in-tile placement {dx,dy,dw,dh} for sprites whose native frame is not a
 // full 32x32 tile (e.g. gnoll's 12x15 -> 24x30 @ +4,+2). Omitted = legacy full-tile draw.

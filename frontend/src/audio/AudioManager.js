@@ -28,6 +28,8 @@ import raySound from '../assets/sounds/ray.mp3';
 import blastSound from '../assets/sounds/blast.mp3';
 import lightningSound from '../assets/sounds/lightning.mp3';
 import puffSound from '../assets/sounds/puff.mp3';
+import goldSound from '../assets/pixel-dungeon/audio/gold.mp3';
+import dewdropSound from '../assets/pixel-dungeon/audio/dewdrop.mp3';
 import { effectiveSfxVolume } from '../menu/menuSettings';
 
 class AudioManager {
@@ -73,6 +75,8 @@ class AudioManager {
         this.loadSound('BLAST', blastSound);
         this.loadSound('LIGHTNING', lightningSound);
         this.loadSound('PUFF', puffSound);
+        this.loadSound('GOLD', goldSound);
+        this.loadSound('DEWDROP', dewdropSound);
 
         const doorSounds = import.meta.glob('../assets/sounds/door_open.mp3', { eager: true, query: '?url' });
         const doorUrl = doorSounds['../assets/sounds/door_open.mp3']?.default;

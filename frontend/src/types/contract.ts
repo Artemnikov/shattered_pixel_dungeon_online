@@ -242,6 +242,48 @@ export interface DropEvent {
   data: { player: string; item: string };
 }
 
+/** Waterskin auto-collects a Dewdrop underfoot (mirrors Waterskin.collect()). */
+export interface CollectDewEvent {
+  type: 'COLLECT_DEW';
+  data: { player: string; item: string };
+}
+
+/** Gold pile picked up — added directly to the gold counter, not the inventory. */
+export interface PickupGoldEvent {
+  type: 'PICKUP_GOLD';
+  data: { player: string; amount: number };
+}
+
+/** Player interacted with a Shopkeeper NPC — opens the shop window. */
+export interface ShopOpenEvent {
+  type: 'SHOP_OPEN';
+  data: { player: string; npc: string; stock: SerializedItem[]; gold: number };
+}
+
+/** Player bought an item from a Shopkeeper. */
+export interface ShopBuyEvent {
+  type: 'SHOP_BUY';
+  data: { player: string; item: string; price: number };
+}
+
+/** Player sold an item to a Shopkeeper. */
+export interface ShopSellEvent {
+  type: 'SHOP_SELL';
+  data: { player: string; item: string; price: number };
+}
+
+/** Imp NPC dialogue (quest offer / reminder / reward-ready). */
+export interface ImpDialogueEvent {
+  type: 'IMP_DIALOGUE';
+  data: { player: string; npc: string; text: string; can_claim: boolean; tokens?: number | null };
+}
+
+/** Player claimed the Imp's quest reward; the Imp despawns. */
+export interface ImpRewardEvent {
+  type: 'IMP_REWARD';
+  data: { player: string; npc: string; item: string };
+}
+
 export interface StairsDownEvent {
   type: 'STAIRS_DOWN';
   data: { player: string };
@@ -448,6 +490,13 @@ export type GameEvent =
   | MapPatchEvent
   | PickupEvent
   | DropEvent
+  | CollectDewEvent
+  | PickupGoldEvent
+  | ShopOpenEvent
+  | ShopBuyEvent
+  | ShopSellEvent
+  | ImpDialogueEvent
+  | ImpRewardEvent
   | StairsDownEvent
   | StairsUpEvent
   | ReviveEvent
@@ -569,4 +618,8 @@ export type ClientMessage =
   | { type: 'PREPARATION_STRIKE'; target_x: number; target_y: number }
   | { type: 'METAMORPH_CHOOSE'; talent: string }
   | { type: 'METAMORPH_REPLACE'; old_talent: string; new_talent: string }
-  | { type: 'ADMIN_TELEPORT'; target_floor: number };
+  | { type: 'ADMIN_TELEPORT'; target_floor: number }
+  | { type: 'NPC_INTERACT'; npc_id: string }
+  | { type: 'SHOP_BUY'; npc_id: string; item_id: string }
+  | { type: 'SHOP_SELL'; item_id: string }
+  | { type: 'IMP_CLAIM_REWARD'; npc_id: string };

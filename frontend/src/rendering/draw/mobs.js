@@ -74,6 +74,15 @@ import {
   SWARM_FW,
   SWARM_FH,
   SWARM_DEST,
+  KEEPER_FW,
+  KEEPER_FH,
+  KEEPER_DEST,
+  IMP_FW,
+  IMP_FH,
+  IMP_DEST,
+  RATKING_FW,
+  RATKING_FH,
+  RATKING_DEST,
   drawMobSprite,
   getCrabFrame,
   getHermitCrabFrame,
@@ -109,6 +118,9 @@ import {
   getBruteFrame,
   getBanditFrame,
   getSwarmFrame,
+  getKeeperFrame,
+  getImpFrame,
+  getRatKingFrame,
 } from '../mobs';
 
 // Gnoll's 12x15 frame, centered/bottom-aligned in the 32px tile per SPD placement
@@ -261,6 +273,15 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     } else if (mob.name === 'Brute' || mob.name === 'Armored Brute') {
       mobSprite = assetImages.brute;
       sx = getBruteFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Shopkeeper') {
+      mobSprite = assetImages.shopkeeper;
+      sx = getKeeperFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Imp') {
+      mobSprite = assetImages.imp;
+      sx = getImpFrame(mob, mobAnimRef.current, now);
+    } else if (mob.name === 'Rat King') {
+      mobSprite = assetImages.ratking;
+      sx = getRatKingFrame(mob, mobAnimRef.current, now);
     }
 
     const isScorpio = mob.name === 'Scorpio' || mob.name === 'Yog Scorpio';
@@ -299,6 +320,9 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     const isDM300 = mob.name === 'DM-300';
     const isBrute = mob.name === 'Brute';
     const isArmoredBrute = mob.name === 'Armored Brute';
+    const isShopkeeper = mob.name === 'Shopkeeper';
+    const isImp = mob.name === 'Imp';
+    const isRatKing = mob.name === 'Rat King';
     const flash = !!(mobAnimRef.current[mob.id]?.flashUntil && now < mobAnimRef.current[mob.id].flashUntil);
     if (isGnoll) {
       drawMobSprite(ctx, mob, mobSprite, sx, GNOLL_FW, GNOLL_FH, flash, GNOLL_DEST);
@@ -362,6 +386,12 @@ export function drawMobs(ctx, { entitiesRef, visionRef, assetImages, mobAnimRef,
     } else if (isBrute || isArmoredBrute) {
       // brute.png stacks variants in 16px rows: Brute = row 0, Armored Brute = row 1.
       drawMobSprite(ctx, mob, mobSprite, sx, BRUTE_FW, BRUTE_FH, flash, BRUTE_DEST, 1, isArmoredBrute ? BRUTE_FH : 0);
+    } else if (isShopkeeper) {
+      drawMobSprite(ctx, mob, mobSprite, sx, KEEPER_FW, KEEPER_FH, flash, KEEPER_DEST);
+    } else if (isImp) {
+      drawMobSprite(ctx, mob, mobSprite, sx, IMP_FW, IMP_FH, flash, IMP_DEST);
+    } else if (isRatKing) {
+      drawMobSprite(ctx, mob, mobSprite, sx, RATKING_FW, RATKING_FH, flash, RATKING_DEST);
     } else {
       drawMobSprite(ctx, mob, mobSprite, sx,
         isScorpio ? SCORPIO_FW : FRAME_W,

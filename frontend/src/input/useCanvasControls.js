@@ -158,7 +158,7 @@ export default function useCanvasControls({
 
       const myPlayer = entitiesRef?.current?.players?.[myPlayerIdRef?.current];
       const playerTile = myPlayer ? (myPlayer.targetPos || myPlayer.renderPos) : null;
-      const action = resolveTapAction({ tileX, tileY, playerTile });
+      const action = resolveTapAction({ tileX, tileY, playerTile, mobs: entitiesRef?.current?.mobs });
       if (action.type === 'MOVE_TO') isRefocusingRef.current = true;
       socketRef.current.send(JSON.stringify(action));
     };

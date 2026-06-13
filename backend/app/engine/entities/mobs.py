@@ -336,6 +336,7 @@ class Tengu(MobEntity):
     max_lvl: int = 25
     attack_range: int = 6
     attack_cooldown: float = 1.5
+    view_distance: int = 12
 
     phase2: bool = False
     enrage_announced: bool = False
@@ -860,6 +861,7 @@ class Succubus(MobEntity):
     exp: int = 12
     max_lvl: int = 25
     flying: bool = True
+    view_distance: int = 6
     properties: List[str] = ["DEMONIC"]
     loot_table: List[DropEntry] = [
         DropEntry(item_kind="scroll", chance=0.33, max_global=0),
@@ -880,6 +882,7 @@ class Eye(MobEntity):
     exp: int = 13
     max_lvl: int = 26
     flying: bool = True
+    view_distance: int = 6
     loot_table: List[DropEntry] = [
         DropEntry(item_kind="health_potion", chance=1.0, max_global=0),
     ]
@@ -898,6 +901,7 @@ class Scorpio(MobEntity):
     attack_range: int = 5
     exp: int = 14
     max_lvl: int = 27
+    view_distance: int = 6
     loot_table: List[DropEntry] = [
         DropEntry(item_kind="potion", chance=0.5, max_global=0),
     ]
@@ -921,6 +925,7 @@ class RipperDemon(MobEntity):
     exp: int = 9
     max_lvl: int = -2
     flying: bool = True
+    view_distance: int = 6
     properties: List[str] = ["DEMONIC"]
 
 
@@ -1081,6 +1086,7 @@ class Bee(MobEntity):
     exp: int = 0
     max_lvl: int = -2
     flying: bool = True
+    view_distance: int = 4
     # Runtime
     floor_level: int = 1
     honey_pot_id: str = ""
@@ -1168,6 +1174,7 @@ class YogDzewa(MobEntity):
     exp: int = 50
     max_lvl: int = -2
     flying: bool = True
+    view_distance: int = 12
     properties: List[str] = ["DEMONIC", "IMMOVABLE"]
     loot_table: List[DropEntry] = []
 
@@ -1209,6 +1216,7 @@ class _YogFistMixin(BaseModel):
     """Shared state/behavior for YogDzewa's six fist minions."""
     paired_fist_id: str = ""
     yog_id: str = ""
+    view_distance: int = 6
 
     def defense_proc(self, damage: int, attacker, floor_mobs: dict, tile_x: int, tile_y: int) -> int:
         if _is_fist_near_yog(self, floor_mobs):
@@ -1500,4 +1508,57 @@ class RatKing(MobEntity):
 
     def get_effective_defense_skill(self) -> int:
         # RatKing.defenseSkill(): INFINITE_EVASION — always dodges.
+        return 10 ** 9
+
+
+class Shopkeeper(MobEntity):
+    """Friendly trader NPC (Shopkeeper.java): immune, never wakes/attacks,
+    sells from a fixed stock and buys items from the player."""
+    name: str = "Shopkeeper"
+    type: str = "npc"
+    faction: str = Faction.PLAYER
+    hp: int = 1
+    max_hp: int = 1
+    attack_skill: int = 0
+    defense_skill: int = 0
+    damage_min: int = 0
+    damage_max: int = 0
+    dr_min: int = 0
+    dr_max: int = 0
+    exp: int = 0
+    max_lvl: int = -2
+    loot_table: List[DropEntry] = []
+    ai_state: str = "sleeping"
+    never_wakes: bool = True
+
+    def take_damage(self, amount: int):
+        # Shopkeeper.damage(): immune to all damage.
+        return 0
+
+
+class Imp(MobEntity):
+    """Imp quest-giver NPC (actors/mobs/npcs/Imp.java): immune, never wakes
+    or attacks; offers the Golem/Monk token-collection quest."""
+    name: str = "Imp"
+    type: str = "npc"
+    faction: str = Faction.PLAYER
+    hp: int = 1
+    max_hp: int = 1
+    attack_skill: int = 0
+    defense_skill: int = 0
+    damage_min: int = 0
+    damage_max: int = 0
+    dr_min: int = 0
+    dr_max: int = 0
+    exp: int = 0
+    max_lvl: int = -2
+    loot_table: List[DropEntry] = []
+    ai_state: str = "sleeping"
+    never_wakes: bool = True
+
+    def take_damage(self, amount: int):
+        # Imp.damage(): immune to all damage.
+        return 0
+
+    def get_effective_defense_skill(self) -> int:
         return 10 ** 9

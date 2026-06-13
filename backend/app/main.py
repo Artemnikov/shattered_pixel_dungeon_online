@@ -413,6 +413,18 @@ async def game_websocket(websocket: WebSocket, game_id: str, class_type: str = "
             elif isinstance(message, msg.AdminTeleport):
                 game.admin_teleport(player_id, message.target_floor)
 
+            elif isinstance(message, msg.NpcInteract):
+                game.npc_interact(player_id, message.npc_id)
+
+            elif isinstance(message, msg.ShopBuy):
+                game.shop_buy(player_id, message.npc_id, message.item_id)
+
+            elif isinstance(message, msg.ShopSell):
+                game.shop_sell(player_id, message.item_id)
+
+            elif isinstance(message, msg.ImpClaimReward):
+                game.imp_claim_reward(player_id, message.npc_id)
+
     except WebSocketDisconnect:
         # Keep the hero alive for the reconnect grace window (see reaper); the
         # player is only removed once the deadline elapses without a reconnect.

@@ -24,6 +24,8 @@ import BossHealthBar from './ui/BossHealthBar';
 import Toolbar from './ui/Toolbar';
 import InventoryPane from './ui/InventoryPane';
 import WndBag from './ui/WndBag';
+import WndShop from './ui/WndShop';
+import WndImp from './ui/WndImp';
 import WndQuickBag from './ui/WndQuickBag';
 import RadialMenu from './ui/RadialMenu';
 import WndUseItem from './ui/WndUseItem';
@@ -101,6 +103,7 @@ function App() {
   const [equippedItems, setEquippedItems] = useState({ weapon: null, wearable: null });
   const [belongings, setBelongings] = useState(null);
   const [quickslot, setQuickslot] = useState(null);
+  const [quickslotPicker, setQuickslotPicker] = useState(null);
   const [targetingMode, setTargetingMode] = useState(false);
   // Examine mode: 1st search trigger arms it (click a cell to inspect), 2nd trigger
   // performs the reveal. Mirrors the original's btnSearch examine→search two-step.
@@ -112,12 +115,6 @@ function App() {
   const [bossFightActive, setBossFightActive] = useState(false);
   const [depth, setDepth] = useState(1);
   const [, setCamera] = useState({ x: 0, y: 0 });
-  const getInitialInterfaceSize = () => {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    return (w > h && Math.min(w / 360, h / 200) >= 2) ? 2 : 0;
-  };
-  const [interfaceSize, setInterfaceSize] = useState(getInitialInterfaceSize());
   const [gold, setGold] = useState(0);
   const [energy, setEnergy] = useState(0);
   const [showQuickBag, setShowQuickBag] = useState(false);
@@ -139,6 +136,8 @@ function App() {
   const [showMetamorphMode, setShowMetamorphMode] = useState(false);
   const [metamorphOldTalent, setMetamorphOldTalent] = useState(null);
   const [metamorphOptions, setMetamorphOptions] = useState(null);
+  const [shopWindow, setShopWindow] = useState(null);
+  const [impWindow, setImpWindow] = useState(null);
 
   // --- shared refs ---
   const canvasRef = useRef(null);
@@ -203,11 +202,8 @@ function App() {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    const canFitFullUI = Math.min(viewport.width / 360, viewport.height / 200) >= 2;
-    const detected = (viewport.width > viewport.height && canFitFullUI) ? 2 : 0;
-    setInterfaceSize(detected);
-  }, [viewport]);
+  const canFitFullUI = Math.min(viewport.width / 360, viewport.height / 200) >= 2;
+  const interfaceSize = (viewport.width > viewport.height && canFitFullUI) ? 2 : 0;
 
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -226,14 +222,17 @@ function App() {
   }, []);
 
   // Sync talentPoints from myStats (updated every STATE_UPDATE)
-  useEffect(() => {
+  const [syncedTalentPoints, setSyncedTalentPoints] = useState(myStats.talentPoints);
+  if (myStats.talentPoints !== syncedTalentPoints) {
+    setSyncedTalentPoints(myStats.talentPoints);
     if (myStats.talentPoints) setTalentPoints(myStats.talentPoints);
-  }, [myStats.talentPoints]);
+  }
 
-  // Fetch talent definitions when class or game state changes
+  // Fetch talent definitions when class or game state changes.
   useEffect(() => {
     if (gameState !== 'PLAYING') return;
     const classType = myStats.classType || selectedClass;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting loading/error before the fetch is intentional
     setTalentDefsLoading(true);
     setTalentDefsError(null);
     fetch(`${getApiBaseUrl()}/api/talents/${classType}`)
@@ -294,6 +293,12 @@ function App() {
       setMetamorphOldTalent(old_talent);
       setMetamorphOptions(options);
     },
+    onShopOpen: ({ npc, stock, gold: shopGold }) => {
+      setShopWindow({ npc, stock, gold: shopGold });
+    },
+    onImpDialogue: ({ npc, text, can_claim, tokens }) => {
+      setImpWindow({ npc, text, canClaim: can_claim, tokens });
+    },
     onTalentUpgraded: ({ talent }) => {
       if (!talentDefs) return;
       for (const [tierKey, tierData] of Object.entries(talentDefs.tiers)) {
@@ -339,8 +344,7 @@ function App() {
     }
   };
   const equipItem = (itemId) => sendMessage({ type: 'EQUIP_ITEM', item_id: itemId });
-  const dropItem = (itemId) => sendMessage({ type: 'DROP_ITEM', item_id: itemId });
-  const useItem = (itemId) => sendMessage({ type: 'USE_ITEM', item_id: itemId });
+  const sendUseItem = (itemId) => sendMessage({ type: 'USE_ITEM', item_id: itemId });
 
   // --- SPD-style generic item-action dispatch ---
   const TARGETED_ACTIONS = ['THROW', 'ZAP'];
@@ -513,9 +517,10 @@ function App() {
     const DISMISS_MS = 3000;
     let raf;
     let lastSub;
-    let lastActive = performance.now();
+    let lastActive = null;
     const tick = () => {
       const now = performance.now();
+      if (lastActive == null) lastActive = now;
 
       // Resolve the live secondary line (a mob's current HP), and bump the activity
       // timestamp whenever it changes so active combat keeps the popup on screen.
@@ -593,19 +598,16 @@ function App() {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       const myPlayer = entitiesRef.current.players[myPlayerIdRef.current];
       const playerTile = myPlayer ? (myPlayer.targetPos || myPlayer.renderPos) : null;
-      const action = resolveTapAction({ tileX, tileY, playerTile });
+      const action = resolveTapAction({ tileX, tileY, playerTile, mobs: entitiesRef.current.mobs });
       if (action.type === 'MOVE_TO' || action.type === 'MOVE') isRefocusingRef.current = true;
       socketRef.current.send(JSON.stringify(action));
     }
   };
 
   const handleToolbarClick = (item) => {
-    if (!item) {
-      setShowInventory(true);
-      return;
-    }
+    if (!item) return;
     if (item.type === 'potion') {
-      useItem(item.id);
+      sendUseItem(item.id);
       return;
     }
     if (item.type === 'weapon') {
@@ -629,6 +631,14 @@ function App() {
       } else {
         setTargetingMode({ itemId: item.id, action: 'THROW' });
       }
+    } else if (item.type === 'wand') {
+      if (targetingMode && typeof targetingMode === 'object' && targetingMode.itemId === item.id) {
+        setTargetingMode(false);
+      } else {
+        executeItemAction(item.id, 'ZAP');
+      }
+    } else if (item.default_action) {
+      executeItemAction(item.id, item.default_action);
     }
   };
 
@@ -757,8 +767,15 @@ function App() {
   // resolving each slot's item id against the flattened belongings.
   const toolbarItems = Array.from({ length: 6 }).map((_, i) => {
     const slot = quickslot?.slots?.[i];
-    return slot && slot.item_id ? (itemsById[slot.item_id] || null) : null;
+    if (!slot) return null;
+    if (slot.item_id) return itemsById[slot.item_id] || null;
+    if (slot.is_placeholder && slot.placeholder_kind) {
+      return { id: null, kind: slot.placeholder_kind, name: '', type: null, is_placeholder: true };
+    }
+    return null;
   });
+
+  const openQuickslotPicker = (idx) => setQuickslotPicker(idx);
 
   return (
     <>
@@ -844,8 +861,16 @@ function App() {
           onSearch={handleExamineOrReveal}
           onInventory={() => setShowInventory(v => !v)}
           onQuickBag={handleQuickBag}
-          onSlotClick={handleToolbarClick}
+          onSlotClick={(item, idx) => {
+            if (!item || item.is_placeholder || item.default_action == null) {
+              openQuickslotPicker(idx);
+            } else {
+              handleToolbarClick(item);
+            }
+          }}
           onSlotDoubleClick={handleToolbarDoubleClick}
+          onSlotLongPress={(item, idx) => openQuickslotPicker(idx)}
+          onSlotContextMenu={(item, idx) => openQuickslotPicker(idx)}
           onSwap={handleSwap}
         />
         <AbilityButton
@@ -921,6 +946,34 @@ function App() {
         />
       )}
 
+      {shopWindow && (
+        <WndShop
+          npcId={shopWindow.npc}
+          stock={shopWindow.stock}
+          gold={gold}
+          backpackItems={Object.values(itemsById)}
+          onBuy={(npcId, itemId) => {
+            send({ type: 'SHOP_BUY', npc_id: npcId, item_id: itemId });
+            setShopWindow(w => w && { ...w, stock: w.stock.filter(i => i.id !== itemId) });
+          }}
+          onSell={(itemId) => send({ type: 'SHOP_SELL', item_id: itemId })}
+          onClose={() => setShopWindow(null)}
+        />
+      )}
+
+      {impWindow && (
+        <WndImp
+          npcId={impWindow.npc}
+          text={impWindow.text}
+          canClaim={impWindow.canClaim}
+          onClaim={(npcId) => {
+            send({ type: 'IMP_CLAIM_REWARD', npc_id: npcId });
+            setImpWindow(null);
+          }}
+          onClose={() => setImpWindow(null)}
+        />
+      )}
+
       {showQuickBag && (
         <WndQuickBag
           belongings={belongings}
@@ -933,8 +986,25 @@ function App() {
         <RadialMenu
           items={toolbarItems}
           size={isDesktop ? 200 : 140}
-          onSelect={(idx) => { handleToolbarClick(toolbarItems[idx], idx); }}
+          onSelect={(idx) => { handleToolbarClick(toolbarItems[idx]); }}
+          onAssign={(idx) => openQuickslotPicker(idx)}
           onClose={() => setRadialOpen(false)}
+        />
+      )}
+
+      {quickslotPicker !== null && (
+        <WndBag
+          belongings={belongings}
+          gold={gold}
+          energy={energy}
+          strength={myStats.strength}
+          selectMode
+          title="Quickslot an item"
+          onSelectItem={(item) => {
+            send({ type: 'SET_QUICKSLOT', index: quickslotPicker, item_id: item.id });
+            setQuickslotPicker(null);
+          }}
+          onClose={() => setQuickslotPicker(null)}
         />
       )}
 

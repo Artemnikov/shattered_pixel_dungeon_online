@@ -26,6 +26,14 @@ from app.engine.entities.mobs import (
 from app.engine.game.floor_state import FloorState
 
 
+def _yog_phase_view_distance(phase: int) -> int:
+    """SPD: level.viewDistance during the Yog fight, shrinking each phase
+    (phase 1->4, 2->3, 3->2, 4->1, 5->1)."""
+    if phase <= 1:
+        return 4
+    return max(4 - (phase - 1), 1)
+
+
 class YogDzewaAIMixin:
     def _update_yog_dzewa(self, yog: YogDzewa, floor: FloorState, floor_id: int):
         if not yog.fight_started:
@@ -39,6 +47,7 @@ class YogDzewaAIMixin:
                 fist_order = [pair_a, pair_b, pair_c]
                 random.shuffle(fist_order)
                 yog.fist_order = fist_order
+                floor.view_distance = _yog_phase_view_distance(yog.phase)
                 self.add_event("YOG_FIGHT_STARTED", {"mob": yog.id}, floor_id=floor_id)
             return
 
@@ -70,11 +79,13 @@ class YogDzewaAIMixin:
                                {"mob": yog.id, "fist": new_fist.id, "cls": next_cls_name},
                                floor_id=floor_id)
             yog.phase += 1
+            floor.view_distance = _yog_phase_view_distance(yog.phase)
             self.add_event("YOG_PHASE_CHANGE", {"mob": yog.id, "phase": yog.phase},
                            floor_id=floor_id)
 
         if yog.phase == 4 and len(alive_fists) == 0:
             yog.phase = 5
+            floor.view_distance = _yog_phase_view_distance(yog.phase)
             self.add_event("YOG_FINAL_PHASE", {"mob": yog.id}, floor_id=floor_id)
 
         if yog.phase < 5 and yog.hp < HP_FLOORS[yog.phase]:

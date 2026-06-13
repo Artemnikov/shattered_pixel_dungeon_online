@@ -110,7 +110,6 @@ export default function useDebugApi({
     };
 
     window.__debug = api;
-    // eslint-disable-next-line no-console
     console.info('[debug] window.__debug ready — __debug.help()');
 
     return () => {

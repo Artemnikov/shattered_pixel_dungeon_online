@@ -723,7 +723,7 @@ def _build_city_boss_floor(rng: SPDRandom, depth: int, run_state: RunState) -> T
         if rooms is not None:
             break
 
-    painter = (CityPainter()
+    painter = (CityPainter(depth)
                .set_water(0.10, 4)
                .set_grass(0.05, 3)
                .set_traps(0, (), ()))
@@ -753,6 +753,12 @@ def _city_boss_init_rooms(rng: SPDRandom, depth: int) -> List[Room]:
     boss_room = DwarfKingBossRoom()
     boss_room.init_size_cat(rng)
     rooms.append(boss_room)
+
+    # ImpShopRoom (Imp quest reward shop): always part of the layout, but
+    # only populated once Imp.Quest is completed (room_types.ImpShopRoom.paint).
+    from app.engine.dungeon.spd_levelgen.room_types import ImpShopRoom
+    rooms.append(ImpShopRoom())
+
     return rooms
 
 

@@ -288,6 +288,13 @@ class ItemBase(BaseModel):
     cursed_known: bool = False
     unique: bool = False
     kept_though_lost: bool = False
+    # Sitting on a Shopkeeper's stock pile (SPD's Heap.Type.FOR_SALE) — not
+    # auto-picked-up by walking over it; bought via SHOP_BUY instead.
+    for_sale: bool = False
+
+    # First-discovery latch: set true once this floor item's cell enters a
+    # player's FOV (mirrors SPD's Heap.seen).
+    seen: bool = False
 
     # Type-intrinsic, so kept off the wire as ClassVars.
     stackable: ClassVar[bool] = False
@@ -340,6 +347,37 @@ class ItemBase(BaseModel):
         clone.quantity = amount
         self.quantity -= amount
         return clone
+
+    def value(self, identified: bool = False) -> int:
+        # SPD's Item.value(): base price for shop sell-back. `identified` is
+        # whether this item's *kind* has been identified this run (used by
+        # potions/scrolls whose price depends on identification, not just
+        # this instance's level/curse state).
+        return 0
+
+
+def _tiered_value(tier: int, level: int, level_known: bool, cursed: bool, cursed_known: bool) -> int:
+    # Shared by MeleeWeapon/Armor: SPD's `20 * tier` formula with
+    # cursed/level price modifiers.
+    price = 20 * tier
+    if cursed_known and cursed:
+        price /= 2
+    if level_known and level > 0:
+        price *= (level + 1)
+    return max(1, round(price))
+
+
+def _charm_value(level: int, level_known: bool, cursed: bool, cursed_known: bool) -> int:
+    # Shared by Wand/Ring: SPD's flat 75 base with cursed/level price modifiers.
+    price = 75
+    if cursed and cursed_known:
+        price /= 2
+    if level_known:
+        if level > 0:
+            price *= (level + 1)
+        elif level < 0:
+            price /= (1 - level)
+    return max(1, round(price))
 
 
 class EquipableItem(ItemBase):
@@ -400,6 +438,9 @@ class MeleeWeapon(KindOfWeapon):
     def dmg_max(self, lvl: int = 0) -> int:
         return 5 * (self.tier + 1) + lvl * (self.tier + 1)
 
+    def value(self, identified: bool = False) -> int:
+        return _tiered_value(self.tier, self.level, self.level_known, self.cursed, self.cursed_known)
+
 
 class Dagger(MeleeWeapon):
     kind: Literal["dagger"] = "dagger"
@@ -441,11 +482,20 @@ class Staff(KindOfWeapon):
 
 class MissileWeapon(KindOfWeapon):
     kind: Literal["missile_weapon"] = "missile_weapon"
+    tier: int = 1
     stackable: ClassVar[bool] = True
     DESC: ClassVar[str] = "A thrown weapon. Hurl it at an enemy from afar."
 
     def default_action(self) -> Optional[str]:
         return Action.THROW
+
+    def value(self, identified: bool = False) -> int:
+        price = 5 * self.tier * self.quantity
+        if self.cursed_known and self.cursed:
+            price /= 2
+        if self.level_known and self.level > 0:
+            price *= (self.level + 1)
+        return max(1, round(price))
 
 
 class ArmorEnchantment(BaseModel):
@@ -467,6 +517,9 @@ class Armor(EquipableItem):
     def dr_max(self, upgrade_level: int = 0) -> int:
         return self.tier * (2 + upgrade_level)
 
+    def value(self, identified: bool = False) -> int:
+        return _tiered_value(self.tier, self.level, self.level_known, self.cursed, self.cursed_known)
+
 
 class KindofMisc(EquipableItem):
     pass
@@ -477,6 +530,9 @@ class Ring(KindofMisc):
     type: str = "ring"
     category: ClassVar[str] = ItemCategory.RING
     DESC: ClassVar[str] = "A magical ring that grants a passive bonus while worn."
+
+    def value(self, identified: bool = False) -> int:
+        return _charm_value(self.level, self.level_known, self.cursed, self.cursed_known)
 
 
 class Artifact(KindofMisc):
@@ -510,6 +566,9 @@ class Wand(ItemBase):
         lines.append(f"It currently holds {self.charges} of {self.max_charges} charges.")
         return lines
 
+    def value(self, identified: bool = False) -> int:
+        return _charm_value(self.level, self.level_known, self.cursed, self.cursed_known)
+
 
 class Potion(ItemBase):
     kind: Literal["potion"] = "potion"
@@ -526,6 +585,9 @@ class Potion(ItemBase):
 
     def default_action(self) -> Optional[str]:
         return Action.DRINK
+
+    def value(self, identified: bool = False) -> int:
+        return 30 * self.quantity
 
 
 class HealthPotion(Potion):
@@ -625,12 +687,18 @@ class PotionOfExperience(Potion):
     effect: str = "experience"
     DESC: ClassVar[str] = "Drinking this immediately grants a full level's worth of experience."
 
+    def value(self, identified: bool = False) -> int:
+        return (50 if identified else 30) * self.quantity
+
 
 class ElixirOfAquaticRejuvenation(Potion):
     kind: Literal["elixir_aqua_rejuv"] = "elixir_aqua_rejuv"
     name: str = "Elixir of Aquatic Rejuvenation"
     effect: str = "aqua_rejuv"
     DESC: ClassVar[str] = "A murky elixir brewed from a Health Potion and a Goo Blob. While its power lasts, you heal whenever you stand in water."
+
+    def value(self, identified: bool = False) -> int:
+        return 60 * self.quantity
 
 
 class Scroll(ItemBase):
@@ -645,6 +713,9 @@ class Scroll(ItemBase):
 
     def default_action(self) -> Optional[str]:
         return Action.READ
+
+    def value(self, identified: bool = False) -> int:
+        return 30 * self.quantity
 
 
 class Gold(ItemBase):
@@ -665,6 +736,9 @@ class Food(ItemBase):
 
     def default_action(self) -> Optional[str]:
         return Action.EAT
+
+    def value(self, identified: bool = False) -> int:
+        return 10 * self.quantity
 
 
 class Key(ItemBase):
@@ -774,6 +848,9 @@ class ScrollOfUpgrade(Scroll):
     name: str = "Scroll of Upgrade"
     DESC: ClassVar[str] = "Reading this scroll permanently upgrades one of your equipped items."
 
+    def value(self, identified: bool = False) -> int:
+        return (50 if identified else 30) * self.quantity
+
 
 class ScrollOfIdentify(Scroll):
     kind: Literal["scroll_of_identify"] = "scroll_of_identify"
@@ -785,6 +862,9 @@ class ScrollOfMagicMapping(Scroll):
     kind: Literal["scroll_of_magic_mapping"] = "scroll_of_magic_mapping"
     name: str = "Scroll of Magic Mapping"
     DESC: ClassVar[str] = "Reading this scroll reveals the entire layout of the current floor."
+
+    def value(self, identified: bool = False) -> int:
+        return (40 if identified else 30) * self.quantity
 
 
 class ScrollOfTeleportation(Scroll):
@@ -860,6 +940,9 @@ class Stone(Throwable):
     consumable: bool = True
     projectile_type: str = "stone"
 
+    def value(self, identified: bool = False) -> int:
+        return round(2.5 * self.quantity)
+
 
 class Boomerang(Throwable):
     kind: Literal["boomerang"] = "boomerang"
@@ -868,6 +951,9 @@ class Boomerang(Throwable):
     range: int = 6
     consumable: bool = False
     projectile_type: str = "boomerang"
+
+    def value(self, identified: bool = False) -> int:
+        return 20 * self.quantity
 
 
 class ThrowableDagger(Throwable):
@@ -878,6 +964,9 @@ class ThrowableDagger(Throwable):
     consumable: bool = True
     projectile_type: str = "dagger"
 
+    def value(self, identified: bool = False) -> int:
+        return 5 * self.quantity
+
 
 class Seed(ItemBase):
     kind: Literal["seed"] = "seed"
@@ -886,6 +975,9 @@ class Seed(ItemBase):
     stackable: ClassVar[bool] = True
     plant_type: str = "sungrass"
     DESC: ClassVar[str] = "A magical seed. Plant it to release its effect."
+
+    def value(self, identified: bool = False) -> int:
+        return 10 * self.quantity
 
 
 class MysteryMeat(Food):
@@ -901,6 +993,37 @@ class Dewdrop(ItemBase):
     category: ClassVar[str] = ItemCategory.POTION
     stackable: ClassVar[bool] = True
     DESC: ClassVar[str] = "A drop of magical dew. It radiates healing energy."
+
+
+class Waterskin(ItemBase):
+    kind: Literal["waterskin"] = "waterskin"
+    name: str = "Waterskin"
+    type: str = "waterskin"
+    category: ClassVar[str] = ItemCategory.MISC
+    stackable: ClassVar[bool] = False
+    unique: bool = True
+    MAX_VOLUME: ClassVar[int] = 20
+    volume: int = 0
+    DESC: ClassVar[str] = (
+        "A leather pouch that can hold magical dew. Drinking from it restores health."
+    )
+
+    def actions(self, player: Optional["Player"] = None) -> List[str]:
+        base = super().actions(player)
+        if self.volume > 0:
+            return [Action.DRINK] + base
+        return base
+
+    def default_action(self) -> Optional[str]:
+        return Action.DRINK if self.volume > 0 else None
+
+    def is_full(self) -> bool:
+        return self.volume >= self.MAX_VOLUME
+
+    def _info_lines(self, player: Optional["Player"] = None) -> List[str]:
+        if self.volume == 0:
+            return ["It is currently empty."]
+        return [f"It contains {self.volume}/{self.MAX_VOLUME} drops of dew."]
 
 
 class Berry(Food):
@@ -954,6 +1077,22 @@ class GooBlob(ItemBase):
         if player is not None and any(isinstance(it, HealthPotion) for it in player.inventory):
             return [Action.ALCHEMIZE] + base
         return base
+
+    def value(self, identified: bool = False) -> int:
+        return 30 * self.quantity
+
+
+class DwarfToken(ItemBase):
+    # Imp quest reward token (SPD items.quest.DwarfToken): stackable, always
+    # identified, dropped by Golems/Monks once the quest is given. Not sellable.
+    kind: Literal["dwarf_token"] = "dwarf_token"
+    name: str = "Dwarf token"
+    type: str = "misc"
+    category: ClassVar[str] = ItemCategory.MISC
+    stackable: ClassVar[bool] = True
+    level_known: bool = True
+    cursed_known: bool = True
+    DESC: ClassVar[str] = "A small clay token, traded by dwarves of the Imp's homeland."
 
 
 class Scenery(ItemBase):
@@ -1079,11 +1218,17 @@ class VelvetPouch(Bag):
     name: str = "Velvet Pouch"
     accepts: ClassVar[Optional[set]] = {ItemCategory.SEED, ItemCategory.STONE}
 
+    def value(self, identified: bool = False) -> int:
+        return 30
+
 
 class ScrollHolder(Bag):
     kind: Literal["scroll_holder"] = "scroll_holder"
     name: str = "Scroll Holder"
     accepts: ClassVar[Optional[set]] = {ItemCategory.SCROLL}
+
+    def value(self, identified: bool = False) -> int:
+        return 40
 
 
 class MagicalHolster(Bag):
@@ -1091,11 +1236,17 @@ class MagicalHolster(Bag):
     name: str = "Magical Holster"
     accepts: ClassVar[Optional[set]] = {ItemCategory.WAND, ItemCategory.STONE}
 
+    def value(self, identified: bool = False) -> int:
+        return 60
+
 
 class PotionBandolier(Bag):
     kind: Literal["potion_bandolier"] = "potion_bandolier"
     name: str = "Potion Bandolier"
     accepts: ClassVar[Optional[set]] = {ItemCategory.POTION}
+
+    def value(self, identified: bool = False) -> int:
+        return 40
 
 
 # Discriminated union of everything that can live inside a Bag / equip slot.
@@ -1120,8 +1271,8 @@ AnyItem = Annotated[
         Gold,
         MysteryMeat, Berry, SmallRation, Ration, Pasty, ChargrilledMeat, Food,
         Key,
-        Seed, Dewdrop, Stone, Boomerang, ThrowableDagger, Throwable,
-        GooBlob,
+        Seed, Dewdrop, Waterskin, Stone, Boomerang, ThrowableDagger, Throwable,
+        GooBlob, DwarfToken,
         VelvetPouch, ScrollHolder, MagicalHolster, PotionBandolier, Bag,
     ],
     Field(discriminator="kind"),

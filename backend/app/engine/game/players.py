@@ -40,6 +40,7 @@ from app.engine.entities.base import (
     Staff,
     Stone,
     ThrowableDagger,
+    Waterskin,
     Weapon,
     WornShortsword,
 )
@@ -122,6 +123,11 @@ class PlayersMixin:
                 attack_cooldown=3.5,
             )
 
+        # HeroClass.initHero(): every hero starts with a Waterskin in the
+        # backpack, bound to the first empty quickslot.
+        waterskin = Waterskin(id=str(uuid.uuid4()))
+        belongings.backpack.collect(waterskin)
+
         # SPD identifies a hero's starting gear (HeroClass.java's .identify()), so
         # its STR requirement renders in white (":N") instead of the orange,
         # unidentified "N?" form, and the slot carries no unknown-item tint.
@@ -144,6 +150,9 @@ class PlayersMixin:
             floor_id=1,
             is_admin=is_admin,
         )
+
+        # HeroClass.initHero(): bind the Waterskin to quickslot 2.
+        player.quickslot.set_slot(1, waterskin)
 
         self.players[player_id] = player
         self.depth = 1

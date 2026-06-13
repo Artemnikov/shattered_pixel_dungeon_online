@@ -23,6 +23,9 @@ import slimeSprite from '../assets/pixel-dungeon/sprites/slime.png';
 import snakeSprite from '../assets/pixel-dungeon/sprites/snake.png';
 import batSprite from '../assets/pixel-dungeon/sprites/bat.png';
 import gnollSprite from '../assets/pixel-dungeon/sprites/gnoll.png';
+import shopkeeperSprite from '../assets/pixel-dungeon/sprites/shopkeeper.png';
+import impSprite from '../assets/pixel-dungeon/sprites/demon.png';
+import ratKingSprite from '../assets/pixel-dungeon/sprites/ratking.png';
 import gooSprite from '../assets/pixel-dungeon/sprites/goo.png';
 import scorpioSprite from '../assets/pixel-dungeon/sprites/scorpio.png';
 import skeletonSprite from '../assets/pixel-dungeon/sprites/skeleton.png';
@@ -75,6 +78,9 @@ export default function useAssetImages() {
     snake: null,
     bat: null,
     gnoll: null,
+    shopkeeper: null,
+    imp: null,
+    ratking: null,
     goo: null,
     scorpio: null,
     skeleton: null,
@@ -167,6 +173,9 @@ export default function useAssetImages() {
     loadImage(snakeSprite, 'snake');
     loadImage(batSprite, 'bat');
     loadImage(gnollSprite, 'gnoll');
+    loadImage(shopkeeperSprite, 'shopkeeper');
+    loadImage(impSprite, 'imp');
+    loadImage(ratKingSprite, 'ratking');
     loadImage(gooSprite, 'goo');
     loadImage(scorpioSprite, 'scorpio');
     loadImage(skeletonSprite, 'skeleton');

@@ -281,29 +281,35 @@ class TickMixin:
                     target_player = None
                 elif target_player and getattr(mob, "ai_state", "") in ("idle", "sleeping"):
                     dist = self._get_distance(mob.pos, target_player.pos)
-                    stealth = target_player.get_stealth()
-                    detect_chance = 1.0 / max(0.01, dist + stealth)
-                    subclass_info = getattr(target_player, "subclass_info", None)
-                    if subclass_info:
-                        silent_level = subclass_info.talent_info.level("silent_steps")
-                        if silent_level > 0 and dist >= 4 - silent_level:
-                            detect_chance = 0.0
-                    if random.random() >= detect_chance:
+                    if dist > self._view_distance(mob):
                         target_player = None
                     else:
-                        mob.ai_state = "hunting"
+                        stealth = target_player.get_stealth()
+                        detect_chance = 1.0 / max(0.01, dist + stealth)
+                        subclass_info = getattr(target_player, "subclass_info", None)
+                        if subclass_info:
+                            silent_level = subclass_info.talent_info.level("silent_steps")
+                            if silent_level > 0 and dist >= 4 - silent_level:
+                                detect_chance = 0.0
+                        if random.random() >= detect_chance:
+                            target_player = None
+                        else:
+                            mob.ai_state = "hunting"
 
                 if target_player and getattr(mob, "ai_state", "") == "wandering":
                     dist = self._get_distance(mob.pos, target_player.pos)
-                    stealth = target_player.get_stealth()
-                    subclass_info = getattr(target_player, "subclass_info", None)
-                    if subclass_info:
-                        stealth += subclass_info.talent_info.level("heightened_senses") * 2
-                    detect_chance = 1.0 / max(0.01, dist / 2 + stealth)
-                    if random.random() >= detect_chance:
+                    if dist > self._view_distance(mob):
                         target_player = None
                     else:
-                        mob.ai_state = "hunting"
+                        stealth = target_player.get_stealth()
+                        subclass_info = getattr(target_player, "subclass_info", None)
+                        if subclass_info:
+                            stealth += subclass_info.talent_info.level("heightened_senses") * 2
+                        detect_chance = 1.0 / max(0.01, dist / 2 + stealth)
+                        if random.random() >= detect_chance:
+                            target_player = None
+                        else:
+                            mob.ai_state = "hunting"
 
                 if (isinstance(mob, Goo) and mob.ai_state == "hunting" and not mob.fight_started
                         and target_player is not None

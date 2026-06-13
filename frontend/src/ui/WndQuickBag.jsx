@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import AudioManager from '../audio/AudioManager';
 import ItemIcon from './ItemIcon';
 
@@ -43,10 +43,10 @@ function filteredQuickItems(backpack, belongings) {
 }
 
 export default function WndQuickBag({ belongings, onUse, onClose }) {
-  const itemsRef = useRef([]);
-  useEffect(() => {
-    itemsRef.current = filteredQuickItems(belongings?.backpack, belongings);
-  }, [belongings]);
+  const items = useMemo(
+    () => filteredQuickItems(belongings?.backpack, belongings),
+    [belongings]
+  );
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -59,8 +59,6 @@ export default function WndQuickBag({ belongings, onUse, onClose }) {
     onClose();
     if (item.default_action) onUse(item.id, item.default_action);
   };
-
-  const items = itemsRef.current;
 
   return (
     <div className="wnd-overlay wnd-qb-overlay" onClick={onClose}>

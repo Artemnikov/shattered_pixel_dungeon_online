@@ -2,7 +2,7 @@
 // Frame coordinates taken from core/.../ui/Icons.java.
 import iconsUrl from '../assets/pixel-dungeon/interfaces/icons.png';
 
-export const ICON_FRAMES = {
+const ICON_FRAMES = {
   ENTER:    { x: 0,   y: 0,  w: 16, h: 16 },
   GOLD:     { x: 17,  y: 0,  w: 17, h: 16 },
   RANKINGS: { x: 34,  y: 0,  w: 17, h: 16 },

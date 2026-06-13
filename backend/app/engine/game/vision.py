@@ -61,9 +61,18 @@ class VisionMixin:
 
     def _view_distance(self, entity) -> int:
         """Resolve an entity's effective vision radius. Single hook point for
-        future Light/Blindness/Farsight buffs (mirrors SPD
+        Light/Blindness/Farsight buffs and per-floor overrides (mirrors SPD
         Level.updateFieldOfView's viewDist scaling). Clamped to the
         shadowcaster's supported range; missing field defaults to SPD's 8."""
+        # Per-floor override (e.g. YogDzewa fight shrinking level.viewDistance)
+        # takes precedence over the entity's own view distance, mirroring SPD
+        # where level.viewDistance is forced onto the hero directly.
+        floor_id = getattr(entity, "floor_id", None)
+        if floor_id is not None:
+            floor = self.floors.get(floor_id)
+            if floor is not None and floor.view_distance is not None:
+                return max(0, min(floor.view_distance, shadowcaster.MAX_DISTANCE))
+
         dist = getattr(entity, "view_distance", 8)
         # Farsight talent: check for dynamic override
         get_view = getattr(entity, "get_view_distance", None)
@@ -216,11 +225,31 @@ class VisionMixin:
         (matches SPD). The circular cutoff comes from the shadowcaster's ROUNDING
         table, not a separate dist_sq test."""
         floor = self._get_or_create_floor(floor_id or self.depth)
-
-        distance = max(0, min(radius, shadowcaster.MAX_DISTANCE))
-        fov = self._fov_from(pos, floor, distance, viewer_id=viewer_id)
-
         w, h = floor.width, floor.height
+
+        # SPD: a blinded (or "shadows"-debuffed) character has no shadowcast
+        # FOV at all -- only the "discoverable" sense-radius fallback below.
+        viewer = self.players.get(viewer_id) if viewer_id else None
+        blind = viewer is not None and viewer.has_buff("blindness")
+
+        if blind:
+            fov = [False] * (w * h)
+        else:
+            distance = max(0, min(radius, shadowcaster.MAX_DISTANCE))
+            fov = self._fov_from(pos, floor, distance, viewer_id=viewer_id)
+
+        if blind and floor.flags is not None:
+            for dy in (-1, 0, 1):
+                ny = pos.y + dy
+                if not (0 <= ny < h):
+                    continue
+                for dx in (-1, 0, 1):
+                    nx = pos.x + dx
+                    if not (0 <= nx < w):
+                        continue
+                    if floor.flags.discoverable[ny][nx]:
+                        fov[ny * w + nx] = True
+
         visible = []
         for y in range(h):
             base = y * w

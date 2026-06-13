@@ -2,22 +2,28 @@ import { useEffect, useRef, useState } from 'react';
 import AudioManager from '../audio/AudioManager';
 import ItemIcon from './ItemIcon';
 
-export default function RadialMenu({ items, size = 140, onSelect, onClose }) {
+export default function RadialMenu({ items, size = 140, onSelect, onAssign, onClose }) {
   const containerRef = useRef(null);
   const [activeIdx, setActiveIdx] = useState(-1);
   const activeRef = useRef(-1);
   const onSelectRef = useRef(onSelect);
+  const onAssignRef = useRef(onAssign);
   const onCloseRef = useRef(onClose);
   const itemsRef = useRef(items);
+  const longPressFiredRef = useRef(false);
+  const longPressTimerRef = useRef(null);
   const slotCount = items.length;
   const cx = size;
   const cy = size;
   const radius = size * 0.6;
   const iconSize = 28;
 
-  onSelectRef.current = onSelect;
-  onCloseRef.current = onClose;
-  itemsRef.current = items;
+  useEffect(() => {
+    onSelectRef.current = onSelect;
+    onAssignRef.current = onAssign;
+    onCloseRef.current = onClose;
+    itemsRef.current = items;
+  });
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onCloseRef.current(); };
@@ -25,21 +31,19 @@ export default function RadialMenu({ items, size = 140, onSelect, onClose }) {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  const angleForPoint = (clientX, clientY) => {
-    const el = containerRef.current;
-    if (!el) return -1;
-    const rect = el.getBoundingClientRect();
-    const px = clientX - rect.left - cx;
-    const py = clientY - rect.top - cy;
-    const dist = Math.sqrt(px * px + py * py);
-    if (dist < radius * 0.3 || dist > radius * 1.3) return -1;
-    const angle = (Math.atan2(py, px) + Math.PI * 2.5) % (Math.PI * 2);
-    return angle / (Math.PI * 2 / slotCount);
-  };
-
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+
+    const angleForPoint = (clientX, clientY) => {
+      const rect = el.getBoundingClientRect();
+      const px = clientX - rect.left - cx;
+      const py = clientY - rect.top - cy;
+      const dist = Math.sqrt(px * px + py * py);
+      if (dist < radius * 0.3 || dist > radius * 1.3) return -1;
+      const angle = (Math.atan2(py, px) + Math.PI * 2.5) % (Math.PI * 2);
+      return angle / (Math.PI * 2 / slotCount);
+    };
 
     const onPointerMove = (e) => {
       const raw = angleForPoint(e.clientX, e.clientY);
@@ -54,10 +58,13 @@ export default function RadialMenu({ items, size = 140, onSelect, onClose }) {
     };
 
     const onPointerUp = () => {
+      if (longPressFiredRef.current) { longPressFiredRef.current = false; return; }
       const idx = activeRef.current;
-      if (idx >= 0 && idx < slotCount && itemsRef.current[idx]) {
+      if (idx >= 0 && idx < slotCount) {
         AudioManager.play('CLICK');
-        onSelectRef.current(idx);
+        const item = itemsRef.current[idx];
+        if (item && item.default_action != null) onSelectRef.current(idx);
+        else onAssignRef.current(idx);
       }
       onCloseRef.current();
     };
@@ -73,11 +80,39 @@ export default function RadialMenu({ items, size = 140, onSelect, onClose }) {
   }, [slotCount, cx, cy, radius]);
 
   const handleSlotClick = (idx) => {
-    if (items[idx]) {
-      AudioManager.play('CLICK');
-      onSelect(idx);
-    }
+    if (longPressFiredRef.current) { longPressFiredRef.current = false; return; }
+    AudioManager.play('CLICK');
+    const item = items[idx];
+    if (item && item.default_action != null) onSelect(idx);
+    else onAssign(idx);
     onClose();
+  };
+
+  const handleSlotContextMenu = (e, idx) => {
+    e.preventDefault();
+    e.stopPropagation();
+    AudioManager.play('CLICK');
+    onAssign(idx);
+    onClose();
+  };
+
+  const handleSlotPointerDown = (e, idx) => {
+    e.stopPropagation();
+    activeRef.current = idx;
+    setActiveIdx(idx);
+    if (e.pointerType === 'touch') {
+      longPressFiredRef.current = false;
+      longPressTimerRef.current = setTimeout(() => {
+        longPressFiredRef.current = true;
+        AudioManager.play('CLICK');
+        onAssign(idx);
+        onClose();
+      }, 500);
+    }
+  };
+
+  const handleSlotPointerUp = () => {
+    clearTimeout(longPressTimerRef.current);
   };
 
   const slotPositions = [];
@@ -130,7 +165,8 @@ export default function RadialMenu({ items, size = 140, onSelect, onClose }) {
           return (
             <button
               key={i}
-              className={`radial-slot ${activeIdx === i ? 'active' : ''} ${!item ? 'empty' : ''}`}
+              className={`radial-slot ${activeIdx === i ? 'active' : ''} ${!item ? 'empty' : ''} ${item?.is_placeholder ? 'placeholder' : ''} ${!item || item.default_action == null ? 'assignable' : ''}`}
+              title={!item || item.default_action == null ? 'Assign Quickslot' : undefined}
               style={{
                 left: pos.x,
                 top: pos.y,
@@ -138,7 +174,10 @@ export default function RadialMenu({ items, size = 140, onSelect, onClose }) {
                 height: iconSize,
               }}
               onClick={(e) => { e.stopPropagation(); handleSlotClick(i); }}
-              onPointerDown={(e) => { e.stopPropagation(); activeRef.current = i; setActiveIdx(i); }}
+              onContextMenu={(e) => handleSlotContextMenu(e, i)}
+              onPointerDown={(e) => handleSlotPointerDown(e, i)}
+              onPointerUp={handleSlotPointerUp}
+              onPointerLeave={handleSlotPointerUp}
             >
               {item ? (
                 <ItemIcon item={item} size={iconSize} />

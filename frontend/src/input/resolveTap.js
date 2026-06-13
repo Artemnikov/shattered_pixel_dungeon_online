@@ -1,4 +1,4 @@
-export function resolveTapAction({ tileX, tileY, playerTile }) {
+export function resolveTapAction({ tileX, tileY, playerTile, mobs }) {
   if (!playerTile) {
     return { type: 'MOVE_TO', x: tileX, y: tileY };
   }
@@ -11,6 +11,15 @@ export function resolveTapAction({ tileX, tileY, playerTile }) {
 
   if (chebyshev === 0) {
     return { type: 'WAIT' };
+  }
+
+  if (chebyshev <= 1) {
+    const npc = mobs && Object.values(mobs).find(
+      m => m.type === 'npc' && Math.round(m.pos.x) === tileX && Math.round(m.pos.y) === tileY
+    );
+    if (npc) {
+      return { type: 'NPC_INTERACT', npc_id: npc.id };
+    }
   }
 
   if (chebyshev === 1) {

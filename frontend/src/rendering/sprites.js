@@ -99,6 +99,7 @@ export const ITEM_SPRITES = {
   "Goo Blob":         [7, 29],  // BLOB (QUEST+7, QUEST = xy(1,30) = idx 464)
   "Gold":             [2, 1],   // GOLD (UNCOLLECTIBLE+0 = xy(3,2) = idx 18)
   "Dewdrop":          [5, 1],   // DEWDROP (UNCOLLECTIBLE+3 = idx 21)
+  "Waterskin":        [0, 30],  // WATERSKIN = BAGS+0 = xy(1,31) -> idx 480 -> col0,row30
   "Golden Key":       [8, 3],   // GOLDEN_KEY (MISC_CONSUMABLE+8 = idx 56)
   "Crystal Key":      [9, 3],   // CRYSTAL_KEY (MISC_CONSUMABLE+9 = idx 57)
   "Rusty Key":        [7, 3],   // IRON_KEY (MISC_CONSUMABLE+7 = idx 55)
@@ -141,11 +142,35 @@ export const getItemSpriteCoords = (itemName, itemType) => {
   return ITEM_SPRITES["default"];
 };
 
+// Quickslot placeholders (depleted stackables) only carry a `kind`, not a
+// `name`/`type`/`appearance`. Map kind prefixes to a generic item-type sprite
+// so the slot shows a recognizable (dimmed) icon instead of going blank.
+const PLACEHOLDER_TYPE_BY_KIND_PREFIX = [
+  ['potion', 'potion'],
+  ['scroll', 'scroll'],
+  ['stone', 'throwable'],
+  ['boomerang', 'throwable'],
+  ['throwable_dagger', 'throwable'],
+  ['seed', 'seed'],
+  ['mystery_meat', 'food'],
+  ['berry', 'food'],
+  ['small_ration', 'food'],
+  ['ration', 'food'],
+  ['pasty', 'food'],
+  ['chargrilled_meat', 'food'],
+  ['dewdrop', 'dewdrop'],
+  ['gold', 'gold'],
+];
+
 // Resolve a serialized item to its sprite cell: server-sent per-run appearance
 // (potion colour / scroll rune) first, then the name/type lookup table.
 export const coordsForItem = (item) => {
   if (!item) return null;
   if (item.appearance) return [item.appearance.col, item.appearance.row];
+  if (item.is_placeholder && item.kind) {
+    const match = PLACEHOLDER_TYPE_BY_KIND_PREFIX.find(([prefix]) => item.kind.startsWith(prefix));
+    if (match) return getItemSpriteCoords(null, match[1]);
+  }
   return getItemSpriteCoords(item.name, item.type);
 };
 

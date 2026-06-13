@@ -65,7 +65,7 @@ function strBadge(item, strength) {
   return { text: `:${req}`, cls: strength != null && strength < req ? 'str-bad' : 'str-ok' };
 }
 
-function ItemSlot({ item, holderKey, equipped, strength, empty, onOpen, onContext, onDefaultAction }) {
+function ItemSlot({ item, holderKey, equipped, strength, empty, onOpen, onContext, onDefaultAction, selectMode, onSelectItem }) {
   const timerRef = useRef(null);
   const longFiredRef = useRef(false);
 
@@ -84,20 +84,26 @@ function ItemSlot({ item, holderKey, equipped, strength, empty, onOpen, onContex
 
   const openContext = (clientX, clientY) => onContext(item, clientX, clientY);
 
+  const selectable = item.default_action != null;
+
   const handleClick = () => {
     if (longFiredRef.current) { longFiredRef.current = false; return; }
     AudioManager.play('CLICK');
+    if (selectMode) {
+      if (selectable) onSelectItem(item);
+      return;
+    }
     onOpen(item);
   };
 
   return (
     <button
-      className={`inv-slot filled ${equipped ? 'equipped' : ''} ${tintClass(item)}`}
+      className={`inv-slot filled ${equipped ? 'equipped' : ''} ${tintClass(item)} ${selectMode && !selectable ? 'inv-slot-unselectable' : ''}`}
       title={item.name}
       onClick={handleClick}
-      onAuxClick={(e) => { if (e.button === 1) { e.preventDefault(); if (item.default_action) onDefaultAction(item); } }}
-      onContextMenu={(e) => { e.preventDefault(); AudioManager.play('CLICK'); openContext(e.clientX, e.clientY); }}
-      onPointerDown={(e) => {
+      onAuxClick={selectMode ? undefined : (e) => { if (e.button === 1) { e.preventDefault(); if (item.default_action) onDefaultAction(item); } }}
+      onContextMenu={selectMode ? undefined : (e) => { e.preventDefault(); AudioManager.play('CLICK'); openContext(e.clientX, e.clientY); }}
+      onPointerDown={selectMode ? undefined : (e) => {
         if (e.pointerType !== 'touch') return;
         longFiredRef.current = false;
         timerRef.current = setTimeout(() => {
@@ -105,12 +111,14 @@ function ItemSlot({ item, holderKey, equipped, strength, empty, onOpen, onContex
           openContext(e.clientX, e.clientY);
         }, LONG_PRESS_MS);
       }}
-      onPointerUp={() => { clearTimeout(timerRef.current); }}
-      onPointerLeave={() => { clearTimeout(timerRef.current); }}
+      onPointerUp={selectMode ? undefined : () => { clearTimeout(timerRef.current); }}
+      onPointerLeave={selectMode ? undefined : () => { clearTimeout(timerRef.current); }}
     >
       <ItemIcon item={item} size={32} />
       <ItemGlyph item={item} />
-      {item.quantity > 1 && <span className="inv-qty">{item.quantity}</span>}
+      {item.kind === 'waterskin'
+        ? <span className="inv-qty">{item.volume}/20</span>
+        : item.quantity > 1 && <span className="inv-qty">{item.quantity}</span>}
       {badge && <span className={`inv-str ${badge.cls}`}>{badge.text}</span>}
       {levelText(item) && (
         <span className={`inv-level ${item.level > 0 ? 'up' : 'down'}`}>{levelText(item)}</span>
@@ -120,7 +128,7 @@ function ItemSlot({ item, holderKey, equipped, strength, empty, onOpen, onContex
   );
 }
 
-export default function InventoryPane({ belongings, gold, energy, strength, onOpenItem, onContextMenu, onDefaultAction }) {
+export default function InventoryPane({ belongings, gold, energy, strength, onOpenItem, onContextMenu, onDefaultAction, selectMode, onSelectItem }) {
   const backpack = (belongings && belongings.backpack) || { items: [], capacity: 20 };
 
   // Bag tabs: backpack first, then any nested bags it contains.
@@ -152,6 +160,8 @@ export default function InventoryPane({ belongings, gold, energy, strength, onOp
             onOpen={onOpenItem}
             onContext={onContextMenu}
             onDefaultAction={onDefaultAction}
+            selectMode={selectMode}
+            onSelectItem={onSelectItem}
           />
         ))}
         <div className="inv-currency">
@@ -185,6 +195,8 @@ export default function InventoryPane({ belongings, gold, energy, strength, onOp
             onOpen={onOpenItem}
             onContext={onContextMenu}
             onDefaultAction={onDefaultAction}
+            selectMode={selectMode}
+            onSelectItem={onSelectItem}
           />
         ))}
         {Array.from({ length: emptyCount }).map((_, i) => (

@@ -21,7 +21,6 @@ from app.engine.entities.base import (
     Armor,
     Dewdrop,
     EntityType,
-    Faction,
     Food,
     Gold,
     HealthPotion,
@@ -72,6 +71,7 @@ from app.engine.entities.mobs import (
     Goo,
     Guard,
     HermitCrab,
+    Imp,
     Mimic,
     Monk,
     Necromancer,
@@ -80,6 +80,7 @@ from app.engine.entities.mobs import (
     PurpleShaman,
     Pylon,
     RatKing,
+    Shopkeeper,
     Rat,
     RedShaman,
     RipperDemon,
@@ -234,6 +235,8 @@ _MOB_CLASSES: Dict[str, type[MobEntity]] = {
     "DemonSpawner": DemonSpawner,
     "Pylon": Pylon,
     "RatKing": RatKing,
+    "Shopkeeper": Shopkeeper,
+    "Imp": Imp,
 }
 
 # Trap class (SPD) -> remake TrapType
@@ -279,7 +282,10 @@ def _spawn_mob(gen_mob: GenMob, width: int) -> MobEntity:
     pos = gen_mob.pos
     x = pos % width
     y = pos // width
-    mob = cls(id=str(uuid.uuid4()), pos=Position(x=x, y=y), faction=Faction.DUNGEON)
+    # Don't override faction here: most mobs default to Faction.DUNGEON, but
+    # NPCs (Shopkeeper, Imp, RatKing) override their class default to
+    # Faction.PLAYER so players don't attack them on contact.
+    mob = cls(id=str(uuid.uuid4()), pos=Position(x=x, y=y))
     # Set floor_level for depth-scaled mobs
     if hasattr(mob, 'floor_level'):
         mob.floor_level = gen_mob.depth
@@ -288,6 +294,8 @@ def _spawn_mob(gen_mob: GenMob, width: int) -> MobEntity:
 
 def _spawn_item(heap_items: list, cell_x: int, cell_y: int) -> Item:
     for item in heap_items:
+        if isinstance(item, Item):
+            return item.model_copy(update={"id": str(uuid.uuid4()), "pos": Position(x=cell_x, y=cell_y)})
         if isinstance(item, RolledItem):
             return _rolled_item_to_item(item, cell_x, cell_y)
         if isinstance(item, frozenset):
@@ -454,6 +462,8 @@ def gen_level_to_floor_state(gen_level: GenLevel, depth: int) -> FloorState:
         generation_meta={
             "seed": str(getattr(gen_level, '_seed', '')),
             "spd_generated": True,
+            **({"imp_shop_room": gen_level.imp_shop_room, "imp_shop_spawned": False}
+               if hasattr(gen_level, 'imp_shop_room') else {}),
         },
         dk_summon_spots=list(getattr(gen_level, 'dk_summon_spots', [])),
         yog_pos=getattr(gen_level, 'yog_pos', None),

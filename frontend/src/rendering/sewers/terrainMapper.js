@@ -32,14 +32,6 @@ const shouldUseCornerType = (grid, x, y, matcher, quadrant) => {
 
 const getFloorBase = (x, y) => pickVariant(TERRAIN_INDEX.FLOOR_VARIANTS, x, y);
 
-const tileInstr = (asset) => ({
-  srcIndex: asset.atlasIndex,
-  quadrant: QUADRANT.FULL,
-  ...(asset.rotate    != null && { rotate:    asset.rotate }),
-  ...(asset.srcOffset != null && { srcOffset: asset.srcOffset }),
-  ...(asset.crop      != null && { crop:      asset.crop }),
-});
-
 const getTerrainQuadrants = (grid, x, y, matcher, centerVariants, edgeByQuadrant, salt) => {
   const center = pickVariant(centerVariants, x, y, salt);
   const out = [];

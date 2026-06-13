@@ -144,11 +144,13 @@ export interface Player {
     | Key
     | Seed
     | Dewdrop
+    | Waterskin
     | Stone
     | Boomerang
     | ThrowableDagger
     | Throwable
     | GooBlob
+    | DwarfToken
     | VelvetPouch
     | ScrollHolder
     | MagicalHolster
@@ -210,11 +212,13 @@ export interface Player {
         | Key
         | Seed
         | Dewdrop
+        | Waterskin
         | Stone
         | Boomerang
         | ThrowableDagger
         | Throwable
         | GooBlob
+        | DwarfToken
         | VelvetPouch
         | ScrollHolder
         | MagicalHolster
@@ -277,11 +281,13 @@ export interface Player {
         | Key
         | Seed
         | Dewdrop
+        | Waterskin
         | Stone
         | Boomerang
         | ThrowableDagger
         | Throwable
         | GooBlob
+        | DwarfToken
         | VelvetPouch
         | ScrollHolder
         | MagicalHolster
@@ -373,11 +379,13 @@ export interface Belongings {
         | Key
         | Seed
         | Dewdrop
+        | Waterskin
         | Stone
         | Boomerang
         | ThrowableDagger
         | Throwable
         | GooBlob
+        | DwarfToken
         | VelvetPouch
         | ScrollHolder
         | MagicalHolster
@@ -440,11 +448,13 @@ export interface Belongings {
         | Key
         | Seed
         | Dewdrop
+        | Waterskin
         | Stone
         | Boomerang
         | ThrowableDagger
         | Throwable
         | GooBlob
+        | DwarfToken
         | VelvetPouch
         | ScrollHolder
         | MagicalHolster
@@ -507,11 +517,13 @@ export interface Belongings {
         | Key
         | Seed
         | Dewdrop
+        | Waterskin
         | Stone
         | Boomerang
         | ThrowableDagger
         | Throwable
         | GooBlob
+        | DwarfToken
         | VelvetPouch
         | ScrollHolder
         | MagicalHolster
@@ -574,11 +586,13 @@ export interface Belongings {
         | Key
         | Seed
         | Dewdrop
+        | Waterskin
         | Stone
         | Boomerang
         | ThrowableDagger
         | Throwable
         | GooBlob
+        | DwarfToken
         | VelvetPouch
         | ScrollHolder
         | MagicalHolster
@@ -641,11 +655,13 @@ export interface Belongings {
         | Key
         | Seed
         | Dewdrop
+        | Waterskin
         | Stone
         | Boomerang
         | ThrowableDagger
         | Throwable
         | GooBlob
+        | DwarfToken
         | VelvetPouch
         | ScrollHolder
         | MagicalHolster
@@ -667,6 +683,7 @@ export interface Bag {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   capacity?: number;
   items?: (
     | MeleeWeapon
@@ -722,11 +739,13 @@ export interface Bag {
     | Key
     | Seed
     | Dewdrop
+    | Waterskin
     | Stone
     | Boomerang
     | ThrowableDagger
     | Throwable
     | GooBlob
+    | DwarfToken
     | VelvetPouch
     | ScrollHolder
     | MagicalHolster
@@ -747,6 +766,7 @@ export interface MeleeWeapon {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   strength_requirement?: number;
   damage?: number;
   range?: number;
@@ -769,6 +789,7 @@ export interface Dagger {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   strength_requirement?: number;
   damage?: number;
   range?: number;
@@ -791,6 +812,7 @@ export interface WornShortsword {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   strength_requirement?: number;
   damage?: number;
   range?: number;
@@ -813,6 +835,7 @@ export interface Bow {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   strength_requirement?: number;
   damage?: number;
   range?: number;
@@ -834,6 +857,7 @@ export interface Staff {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   strength_requirement?: number;
   damage?: number;
   range?: number;
@@ -857,6 +881,7 @@ export interface MissileWeapon {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   strength_requirement?: number;
   damage?: number;
   range?: number;
@@ -864,6 +889,7 @@ export interface MissileWeapon {
   enchantment?: string | null;
   projectile_type?: string | null;
   surprise_damage_floor?: number;
+  tier?: number;
 }
 export interface Armor {
   kind?: "armor";
@@ -878,6 +904,7 @@ export interface Armor {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   strength_requirement?: number;
   tier?: number;
   enchantment?: ArmorEnchantment;
@@ -899,6 +926,7 @@ export interface Ring {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   strength_requirement?: number;
 }
 export interface Artifact {
@@ -914,6 +942,7 @@ export interface Artifact {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   strength_requirement?: number;
   charge?: number;
   charge_cap?: number;
@@ -931,6 +960,7 @@ export interface BrokenSeal {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   strength_requirement?: number;
   charge?: number;
   charge_cap?: number;
@@ -948,6 +978,7 @@ export interface CloakOfShadows {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   strength_requirement?: number;
   charge?: number;
   charge_cap?: number;
@@ -966,6 +997,7 @@ export interface Wand {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   damage?: number;
   charges?: number;
   max_charges?: number;
@@ -985,6 +1017,7 @@ export interface HealthPotion {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   effect?: string;
 }
 export interface RevivingPotion {
@@ -1000,6 +1033,7 @@ export interface RevivingPotion {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   effect?: string;
 }
 export interface FuryPotion {
@@ -1015,6 +1049,7 @@ export interface FuryPotion {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   effect?: string;
 }
 export interface PotionOfStrength {
@@ -1030,6 +1065,7 @@ export interface PotionOfStrength {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   effect?: string;
 }
 export interface PotionOfHaste {
@@ -1045,6 +1081,7 @@ export interface PotionOfHaste {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   effect?: string;
 }
 export interface PotionOfInvisibility {
@@ -1060,6 +1097,7 @@ export interface PotionOfInvisibility {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   effect?: string;
 }
 export interface PotionOfLevitation {
@@ -1075,6 +1113,7 @@ export interface PotionOfLevitation {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   effect?: string;
 }
 export interface PotionOfMindVision {
@@ -1090,6 +1129,7 @@ export interface PotionOfMindVision {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   effect?: string;
 }
 export interface PotionOfFrost {
@@ -1105,6 +1145,7 @@ export interface PotionOfFrost {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   effect?: string;
 }
 export interface PotionOfLiquidFlame {
@@ -1120,6 +1161,7 @@ export interface PotionOfLiquidFlame {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   effect?: string;
 }
 export interface PotionOfToxicGas {
@@ -1135,6 +1177,7 @@ export interface PotionOfToxicGas {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   effect?: string;
 }
 export interface PotionOfParalyticGas {
@@ -1150,6 +1193,7 @@ export interface PotionOfParalyticGas {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   effect?: string;
 }
 export interface PotionOfPurity {
@@ -1165,6 +1209,7 @@ export interface PotionOfPurity {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   effect?: string;
 }
 export interface PotionOfExperience {
@@ -1180,6 +1225,7 @@ export interface PotionOfExperience {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   effect?: string;
 }
 export interface ElixirOfAquaticRejuvenation {
@@ -1195,6 +1241,7 @@ export interface ElixirOfAquaticRejuvenation {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   effect?: string;
 }
 export interface Potion {
@@ -1210,6 +1257,7 @@ export interface Potion {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   effect?: string;
 }
 export interface ScrollOfRage {
@@ -1225,6 +1273,7 @@ export interface ScrollOfRage {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
 }
 export interface ScrollOfMetamorphosis {
   kind?: "scroll_of_metamorphosis";
@@ -1239,6 +1288,7 @@ export interface ScrollOfMetamorphosis {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
 }
 export interface ScrollOfUpgrade {
   kind?: "scroll_of_upgrade";
@@ -1253,6 +1303,7 @@ export interface ScrollOfUpgrade {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
 }
 export interface ScrollOfIdentify {
   kind?: "scroll_of_identify";
@@ -1267,6 +1318,7 @@ export interface ScrollOfIdentify {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
 }
 export interface ScrollOfMagicMapping {
   kind?: "scroll_of_magic_mapping";
@@ -1281,6 +1333,7 @@ export interface ScrollOfMagicMapping {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
 }
 export interface ScrollOfTeleportation {
   kind?: "scroll_of_teleportation";
@@ -1295,6 +1348,7 @@ export interface ScrollOfTeleportation {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
 }
 export interface ScrollOfRemoveCurse {
   kind?: "scroll_of_remove_curse";
@@ -1309,6 +1363,7 @@ export interface ScrollOfRemoveCurse {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
 }
 export interface ScrollOfRecharging {
   kind?: "scroll_of_recharging";
@@ -1323,6 +1378,7 @@ export interface ScrollOfRecharging {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
 }
 export interface ScrollOfLullaby {
   kind?: "scroll_of_lullaby";
@@ -1337,6 +1393,7 @@ export interface ScrollOfLullaby {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
 }
 export interface ScrollOfTerror {
   kind?: "scroll_of_terror";
@@ -1351,6 +1408,7 @@ export interface ScrollOfTerror {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
 }
 export interface ScrollOfMirrorImage {
   kind?: "scroll_of_mirror_image";
@@ -1365,6 +1423,7 @@ export interface ScrollOfMirrorImage {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
 }
 export interface ScrollOfRetribution {
   kind?: "scroll_of_retribution";
@@ -1379,6 +1438,7 @@ export interface ScrollOfRetribution {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
 }
 export interface ScrollOfTransmutation {
   kind?: "scroll_of_transmutation";
@@ -1393,6 +1453,7 @@ export interface ScrollOfTransmutation {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
 }
 export interface Scroll {
   kind?: "scroll";
@@ -1407,6 +1468,7 @@ export interface Scroll {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
 }
 export interface Gold {
   kind?: "gold";
@@ -1421,6 +1483,7 @@ export interface Gold {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
 }
 export interface MysteryMeat {
   kind?: "mystery_meat";
@@ -1435,6 +1498,7 @@ export interface MysteryMeat {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   energy?: number;
 }
 export interface Berry {
@@ -1450,6 +1514,7 @@ export interface Berry {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   energy?: number;
 }
 export interface SmallRation {
@@ -1465,6 +1530,7 @@ export interface SmallRation {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   energy?: number;
 }
 export interface Ration {
@@ -1480,6 +1546,7 @@ export interface Ration {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   energy?: number;
 }
 export interface Pasty {
@@ -1495,6 +1562,7 @@ export interface Pasty {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   energy?: number;
 }
 export interface ChargrilledMeat {
@@ -1510,6 +1578,7 @@ export interface ChargrilledMeat {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   energy?: number;
 }
 export interface Food {
@@ -1525,6 +1594,7 @@ export interface Food {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   energy?: number;
 }
 export interface Key {
@@ -1540,6 +1610,7 @@ export interface Key {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   key_id?: string;
 }
 export interface Seed {
@@ -1555,6 +1626,7 @@ export interface Seed {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   plant_type?: string;
 }
 export interface Dewdrop {
@@ -1570,6 +1642,23 @@ export interface Dewdrop {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
+}
+export interface Waterskin {
+  kind?: "waterskin";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  for_sale?: boolean;
+  volume?: number;
 }
 export interface Stone {
   kind?: "stone";
@@ -1584,6 +1673,7 @@ export interface Stone {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   damage?: number;
   range?: number;
   consumable?: boolean;
@@ -1602,6 +1692,7 @@ export interface Boomerang {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   damage?: number;
   range?: number;
   consumable?: boolean;
@@ -1620,6 +1711,7 @@ export interface ThrowableDagger {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   damage?: number;
   range?: number;
   consumable?: boolean;
@@ -1638,6 +1730,7 @@ export interface Throwable {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   damage?: number;
   range?: number;
   consumable?: boolean;
@@ -1656,6 +1749,22 @@ export interface GooBlob {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
+}
+export interface DwarfToken {
+  kind?: "dwarf_token";
+  id?: string;
+  name?: string;
+  type?: string;
+  pos?: Position | null;
+  quantity?: number;
+  level?: number;
+  level_known?: boolean;
+  cursed?: boolean;
+  cursed_known?: boolean;
+  unique?: boolean;
+  kept_though_lost?: boolean;
+  for_sale?: boolean;
 }
 export interface VelvetPouch {
   kind?: "velvet_pouch";
@@ -1670,6 +1779,7 @@ export interface VelvetPouch {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   capacity?: number;
   items?: (
     | MeleeWeapon
@@ -1725,11 +1835,13 @@ export interface VelvetPouch {
     | Key
     | Seed
     | Dewdrop
+    | Waterskin
     | Stone
     | Boomerang
     | ThrowableDagger
     | Throwable
     | GooBlob
+    | DwarfToken
     | VelvetPouch
     | ScrollHolder
     | MagicalHolster
@@ -1750,6 +1862,7 @@ export interface ScrollHolder {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   capacity?: number;
   items?: (
     | MeleeWeapon
@@ -1805,11 +1918,13 @@ export interface ScrollHolder {
     | Key
     | Seed
     | Dewdrop
+    | Waterskin
     | Stone
     | Boomerang
     | ThrowableDagger
     | Throwable
     | GooBlob
+    | DwarfToken
     | VelvetPouch
     | ScrollHolder
     | MagicalHolster
@@ -1830,6 +1945,7 @@ export interface MagicalHolster {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   capacity?: number;
   items?: (
     | MeleeWeapon
@@ -1885,11 +2001,13 @@ export interface MagicalHolster {
     | Key
     | Seed
     | Dewdrop
+    | Waterskin
     | Stone
     | Boomerang
     | ThrowableDagger
     | Throwable
     | GooBlob
+    | DwarfToken
     | VelvetPouch
     | ScrollHolder
     | MagicalHolster
@@ -1910,6 +2028,7 @@ export interface PotionBandolier {
   cursed_known?: boolean;
   unique?: boolean;
   kept_though_lost?: boolean;
+  for_sale?: boolean;
   capacity?: number;
   items?: (
     | MeleeWeapon
@@ -1965,11 +2084,13 @@ export interface PotionBandolier {
     | Key
     | Seed
     | Dewdrop
+    | Waterskin
     | Stone
     | Boomerang
     | ThrowableDagger
     | Throwable
     | GooBlob
+    | DwarfToken
     | VelvetPouch
     | ScrollHolder
     | MagicalHolster

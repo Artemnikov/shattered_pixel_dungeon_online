@@ -155,6 +155,51 @@ def generator_random_class_index(deck: _CategoryDeck, rng: SPDRandom) -> int:
 _BASE_REGION_SECRETS = (2.0, 2.25, 2.5, 2.75, 3.0)
 
 
+class ImpQuestState:
+    """Mirrors actors/mobs/npcs/Imp.Quest's static fields: tracks the
+    Golem/Monk token-collection quest spawned in AmbitiousImpRoom (depths
+    17-19) and resolved via ImpShopRoom on floor 20."""
+
+    def __init__(self) -> None:
+        self.spawned: bool = False
+        self._spawn_depth: Optional[int] = None
+        self.alternative: bool = False
+        self.given: bool = False
+        self.completed: bool = False
+        self.reward = None  # type: Optional[object] -- a Ring item once rolled
+
+    def maybe_spawn(self, rng: SPDRandom, depth: int):
+        """Imp.Quest.spawn(): rolled once per depth 17-19 after a floor's
+        other rooms are decided. Returns an AmbitiousImpRoom if it spawns.
+
+        _init_rooms() may be re-invoked across builder retries for the same
+        depth (see build_floor); once spawned for `depth`, re-add the room
+        on each retry without re-rolling so the builder eventually places it."""
+        from app.engine.dungeon.spd_levelgen.room_types import AmbitiousImpRoom
+
+        if self.spawned and self._spawn_depth == depth:
+            return AmbitiousImpRoom()
+        if self.spawned or depth <= 16:
+            return None
+        if rng.IntMax(20 - depth) != 0:
+            return None
+
+        self.spawned = True
+        self._spawn_depth = depth
+        if depth == 18:
+            self.alternative = rng.IntMax(2) == 0
+        elif depth == 19:
+            self.alternative = False
+        else:  # depth == 17 (default)
+            self.alternative = True
+        self.given = False
+
+        from app.engine.entities.base import Ring
+        self.reward = Ring(name="Ring", level=2, level_known=True, cursed=True, cursed_known=False)
+
+        return AmbitiousImpRoom()
+
+
 def is_boss_level(depth: int) -> bool:
     return depth in (5, 10, 15, 20, 25)
 
@@ -201,6 +246,9 @@ class RunState:
         # everything createItems/createMobs need), threaded across the run.
         # Populated by init_for_run via Generator.fullReset's RNG sequence.
         self.generator_state: Optional[GeneratorState] = None
+
+        # Imp quest (actors/mobs/npcs/Imp.Quest), depths 17-19 + floor 20 shop.
+        self.imp_quest = ImpQuestState()
 
     @property
     def potion_deck(self) -> _CategoryDeck:

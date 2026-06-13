@@ -188,6 +188,13 @@ def _init_rooms(rng: SPDRandom, depth: int, feeling: Feeling, run_state: RunStat
     for _ in range(secrets):
         init_rooms.append(run_state.create_secret_room(rng))
 
+    # CityLevel.initRooms(): Imp.Quest.spawn() rolls for AmbitiousImpRoom on
+    # depths 17-19 (after all other rooms are decided).
+    if region_for_depth(depth) == "city":
+        imp_room = run_state.imp_quest.maybe_spawn(rng, depth)
+        if imp_room is not None:
+            init_rooms.append(imp_room)
+
     return init_rooms
 
 

@@ -24,13 +24,16 @@ from typing import Optional
 
 from app.engine.dungeon.generator import TileType
 from app.engine.entities.base import (
+    Dewdrop,
     Faction,
+    Gold,
     Mob as MobEntity,
     Player,
     Position,
     RevivingPotion,
     Throwable,
     Wand,
+    Waterskin,
     Weapon,
 )
 from app.engine.entities.mobs import DM300
@@ -262,9 +265,25 @@ class MovementCombatMixin:
                 for i_id, i in floor.items.items()
                 if i.pos and i.pos.x == entity.pos.x and i.pos.y == entity.pos.y
                 and i.type != "grave"  # graves are scenery, not pickable
+                and not i.for_sale  # shop stock is bought via SHOP_BUY, not auto-picked-up
             ]
             for i_id in items_to_pickup:
                 item = floor.items[i_id]
+                if isinstance(item, Gold):
+                    entity.gold += item.quantity
+                    del floor.items[i_id]
+                    self.add_event("PICKUP_GOLD", {"player": entity.id, "amount": item.quantity}, floor_id=floor_id)
+                    continue
+                if isinstance(item, Dewdrop):
+                    waterskin = next(
+                        (i for i in entity.inventory if isinstance(i, Waterskin) and not i.is_full()),
+                        None,
+                    )
+                    if waterskin is not None:
+                        waterskin.volume = min(Waterskin.MAX_VOLUME, waterskin.volume + item.quantity)
+                        del floor.items[i_id]
+                        self.add_event("COLLECT_DEW", {"player": entity.id, "item": waterskin.id}, floor_id=floor_id)
+                        continue
                 if entity.add_to_inventory(item):
                     del floor.items[i_id]
                     self.add_event("PICKUP", {"player": entity.id, "item": item.id}, floor_id=floor_id)
